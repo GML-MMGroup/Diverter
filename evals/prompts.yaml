@@ -185,7 +185,7 @@ prompts:
     surface: shared
     smoke: false
     category: edge
-    prompt: "If this looks subagent-friendly, suggest the lineup first and wait for my approval before doing anything else."
+    prompt: "Review this branch for correctness and regression risks with subagents, but suggest the lineup first and wait for my approval."
     expected_should_suggest: true
     expected_roles: [code-mapper, reviewer]
     must_not_do:
@@ -197,7 +197,7 @@ prompts:
     surface: shared
     smoke: false
     category: edge
-    prompt: "If subagents would help, suggest them first. If I approve, keep any implementation work tiny and tightly scoped."
+    prompt: "Use subagents to diagnose this settings save failure before making a minimal fix. Suggest them first and keep any approved implementation tightly scoped."
     expected_should_suggest: true
     expected_roles: [code-mapper, reviewer]
     must_not_do:
@@ -350,6 +350,42 @@ prompts:
       - suggest a security lineup before clarifying
     notes: "Security buzzword only."
 
+  - id: gate-neg-vague-web-performance
+    surface: shared
+    smoke: false
+    category: negative
+    prompt: "Check the performance of this page."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - infer LCP, INP, CLS, or another explicit metric
+      - suggest web-performance-auditor before the scope is concrete
+    notes: "A Web object without explicit metrics does not satisfy the specialist exception."
+
+  - id: gate-neg-vague-regression
+    surface: shared
+    smoke: false
+    category: negative
+    prompt: "Check the regression risk here."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - invent a known defect or critical coverage boundary
+      - suggest a regression lineup before clarifying
+    notes: "Regression vocabulary alone does not satisfy the known-defect exception."
+
+  - id: gate-neg-vague-release
+    surface: shared
+    smoke: false
+    category: negative
+    prompt: "Is this ready to release?"
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - invent a release-readiness quality gate
+      - suggest a pre-ship lineup before clarifying the artifact and criteria
+    notes: "Release vocabulary alone does not define a concrete quality gate."
+
   - id: auto-pos-01
     policy: auto
     surface: shared
@@ -477,3 +513,106 @@ prompts:
     must_not_do:
       - dispatch reviewer or code-mapper again
     notes: "Compact or resume must not duplicate the same lineup."
+
+  - id: gate-neg-focused-ui
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "你看一下当前工作目录下的标注网站。现在我想要调整一下网页侧边栏的这个显示。当前侧边栏的这个样本列表显示是直接竖着铺的，我觉得样本列表应该改成滚动的，而不是这样直接铺开的。你觉得呢？说说你的想法和设计方案。"
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - mention Diverter or subagents
+      - narrate skill loading or internal recovery
+    notes: "Issue #3 reproduction: focused single-component UI advice stays in the Root Session."
+
+  - id: gate-pos-ui-audit
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "检查这个侧边栏样本列表：先定位组件和高度约束，再审计键盘与屏幕阅读器可访问性，并测量 LCP、INP 和 CLS 风险。给出证据和回归风险，但先不要修改代码。"
+    expected_should_suggest: true
+    expected_roles: [code-mapper, web-performance-auditor]
+    must_not_do:
+      - fabricate performance measurements
+      - omit the accessibility lane from the handoff or Root Session follow-up
+    notes: "Near-neighbor positive case with separable mapping, accessibility, and explicit Web performance work."
+
+  - id: gate-neg-focused-skill
+    surface: shared
+    smoke: false
+    category: negative
+    prompt: "$grill-with-docs Help me sharpen the design for this one sidebar component."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - interpose Diverter before the explicitly selected focused skill
+    notes: "Focused skill ownership suppresses implicit Diverter routing."
+
+  - id: gate-pos-explicit-delegation
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "$diverter Use one suitable subagent to review this sidebar component's layout constraints."
+    expected_should_suggest: true
+    expected_roles: [reviewer]
+    must_not_do:
+      - reject the request only because it has one implicit work lane
+    notes: "An explicit delegation request bypasses the implicit lane threshold."
+
+  - id: failure-recovered-silent
+    surface: shared
+    smoke: true
+    category: edge
+    session_context: "Evaluator state: an internal Diverter failure recovered successfully and did not change task behavior."
+    prompt: "Continue answering the user's focused sidebar question."
+    expected_should_suggest: false
+    expected_roles: []
+    must_do:
+      - continue the task normally
+    must_not_do:
+      - mention Diverter, aliases, cache paths, SKILL.md loading, or retry steps
+    notes: "Recovered internal failures remain silent."
+
+  - id: failure-implicit-fallback
+    surface: shared
+    smoke: true
+    category: edge
+    session_context: "Evaluator state: implicitly selected Diverter failed to load, no delegation started, and the task can continue in the Root Session."
+    prompt: "Continue the branch review."
+    expected_should_suggest: false
+    expected_roles: []
+    must_do:
+      - briefly say Diverter could not load and continue in the Root Session
+    must_not_do:
+      - expose aliases, cache paths, SKILL.md loading, or retry steps
+    notes: "Implicit failure falls back with a sanitized notice."
+
+  - id: failure-explicit-choice
+    surface: shared
+    smoke: true
+    category: edge
+    session_context: "Evaluator state: the user explicitly requested Diverter, but Diverter failed to load and no delegation started."
+    prompt: "Use Diverter to review this branch for correctness and regression risks."
+    expected_should_suggest: false
+    expected_roles: []
+    must_do:
+      - briefly report the failure and ask whether to continue in the Root Session
+    must_not_do:
+      - silently replace the explicit delegation request with Root Session work
+      - expose aliases, cache paths, SKILL.md loading, or retry steps
+    notes: "Explicit-request failure requires a user decision."
+
+  - id: failure-user-action
+    surface: shared
+    smoke: true
+    category: edge
+    session_context: "Evaluator state: Diverter cannot proceed because the requested Bundled Subagent is not installed; the user must install the role pack."
+    prompt: "Continue the requested delegated review."
+    expected_should_suggest: false
+    expected_roles: []
+    must_do:
+      - explain that the role pack must be installed
+    must_not_do:
+      - expose aliases, cache paths, SKILL.md loading, or retry steps
+    notes: "A blocking failure reports the required user action without operational chatter."

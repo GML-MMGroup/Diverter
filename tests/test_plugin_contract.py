@@ -99,6 +99,33 @@ class PluginContractTest(unittest.TestCase):
         self.assertLess(native_stop, trigger)
         self.assertIn("Do not invoke or mention Diverter", result.stdout)
 
+    def test_session_start_exposes_coarse_eligibility_and_sanitized_failures(
+        self,
+    ) -> None:
+        result = subprocess.run(
+            [sys.executable, ROOT / "hooks" / "session_start.py"],
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+
+        gate = result.stdout
+        self.assertIn("at least two separable work or evidence lanes", gate)
+        self.assertIn("one concrete high-risk specialist boundary", gate)
+        self.assertIn("explicit request to use subagents", gate)
+        self.assertIn("explicitly selected focused skill", gate)
+        self.assertIn("Sanitized Failure Reporting", gate)
+        self.assertIn("internal failure recovers successfully", gate)
+        self.assertIn("continuing in the main thread", gate)
+        self.assertIn("ask whether to continue in the main thread", gate)
+        for internal_detail in (
+            "skill aliases",
+            "plugin cache paths",
+            "`SKILL.md` loading",
+            "retry steps",
+        ):
+            self.assertIn(internal_detail, gate)
+
     def test_plugin_package_and_session_start_hook_are_discoverable(self) -> None:
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
         marketplace = json.loads(
@@ -186,6 +213,27 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("do not switch the CLI Worker to full access", skill)
         self.assertIn("delegation_context: delegated-subagent", skill)
 
+    def test_core_skill_refines_eligibility_and_sanitizes_failures(self) -> None:
+        skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
+        rules = (
+            ROOT / "skills" / "diverter" / "references" / "decision-rules.md"
+        ).read_text()
+
+        for phrase in (
+            "at least two separable work or evidence lanes",
+            "one concrete high-risk specialist boundary",
+            "explicit request to use subagents",
+            "explicitly selected focused skill",
+            "Sanitized Failure Reporting",
+            "internal failure recovers successfully",
+            "ask whether to continue in the Root Session",
+        ):
+            self.assertIn(phrase, skill)
+
+        self.assertIn("Explicit delegation request", rules)
+        self.assertIn("Focused skill ownership", rules)
+        self.assertIn("Vague risk language", rules)
+
     def test_native_role_spawn_uses_no_history_or_model_overrides(self) -> None:
         skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
         handoff_schema = (
@@ -243,6 +291,8 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("$diverter-mode status", guide)
         self.assertIn("Diverter is installed in `<policy>` mode.", guide)
         self.assertIn("Python 3.11", guide)
+        self.assertIn("$MARKETPLACE_NAME/$PLUGIN_NAME/$VERSION", guide)
+        self.assertIn("repeated directory names are valid", guide)
         self.assertNotIn("npx skills", guide)
         self.assertNotIn("install-agents-gate.py", guide)
         self.assertNotIn("--scope", guide)
@@ -281,10 +331,21 @@ class PluginContractTest(unittest.TestCase):
             "auto-native-bypass",
             "auto-failure-recovery",
             "auto-idempotency",
+            "gate-neg-focused-ui",
+            "gate-pos-ui-audit",
+            "gate-neg-vague-web-performance",
+            "gate-neg-vague-regression",
+            "gate-neg-vague-release",
+            "failure-recovered-silent",
+            "failure-implicit-fallback",
+            "failure-explicit-choice",
+            "failure-user-action",
         ):
             self.assertIn(f"id: {case_id}", prompts)
 
         scenarios = (ROOT / "evals" / "scenarios.md").read_text()
+        rubric = (ROOT / "evals" / "rubric.md").read_text()
+        results_template = (ROOT / "evals" / "results-template.md").read_text()
         self.assertIn("hooks/session_start.py", scenarios)
         self.assertIn("DIVERTER_PLUGIN_ROOT", scenarios)
         self.assertIn(
@@ -298,6 +359,8 @@ class PluginContractTest(unittest.TestCase):
         self.assertTrue(
             (ROOT / "evals" / "fixtures" / "settings-save" / "settings_save.py").is_file()
         )
+        self.assertIn("sanitized_failure_reporting", rubric)
+        self.assertIn("Score / 6", results_template)
 
     def test_readmes_explain_native_proactive_delegation_boundary(self) -> None:
         english = (ROOT / "README.md").read_text()

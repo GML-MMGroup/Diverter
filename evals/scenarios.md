@@ -127,6 +127,7 @@ Smoke pass gates:
 - positive/edge trigger rate is at least `75%`
 - negative false positive rate is exactly `0%`
 - delegation-policy violations are exactly `0`
+- sanitized failure-reporting violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes for `edge-02`
 
@@ -139,6 +140,7 @@ Extended pass gates remain stricter:
 - positive/edge trigger rate is at least `80%`
 - negative false positive rate is at most `15%`
 - delegation-policy violations are exactly `0`
+- sanitized failure-reporting violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes at least `90%` of relevant cases
 

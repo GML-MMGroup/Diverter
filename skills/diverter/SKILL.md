@@ -1,6 +1,6 @@
 ---
 name: diverter
-description: "Use when routing multi-lane Codex tasks to exactly one specialist subagent lineup: branch/PR review across bugs, security, tests, maintainability, docs, or regression risk; codepath tracing plus docs/API verification; option research with tradeoff synthesis; auth/codebase mapping before risk assessment or planning. Apply the loaded ask or auto Delegation Policy. Do not use for Mode Control, delegated subagent handoffs, trivial single-file fixes, wording-only edits, one fact lookup, unclear requests, or explicit opt-out."
+description: "Use when an explicit delegation request or an eligible multi-lane or high-risk Codex task should be routed to exactly one specialist subagent lineup. Apply the loaded ask or auto Delegation Policy. Do not use for Mode Control, delegated subagent handoffs, focused tasks below the implicit eligibility threshold, unclear requests, or explicit opt-out."
 ---
 
 <NATIVE-PROACTIVE-DELEGATION-STOP>
@@ -38,6 +38,20 @@ If the task is not subagent-friendly:
 
 This skill owns Diverter orchestration only when Native Proactive Delegation is inactive.
 
+## Eligibility
+
+The Delegation Gate is a coarse pre-load check. This skill remains the detailed authority for task classification, role selection, Work Mode, Delegation Policy, and Execution Backend choice.
+
+For implicit activation, continue only when the task has at least two separable work or evidence lanes, or one concrete high-risk specialist boundary:
+- security, authentication, authorization, secrets, or tool permissions
+- regression proof or critical test coverage for a known defect
+- explicit Web performance metrics
+- a release-readiness quality gate
+
+An explicit `$diverter` invocation or explicit request to use subagents bypasses that implicit threshold. It does not bypass the native-ownership and delegated-subagent stops above, an explicit opt-out, missing task clarity, Codex permissions, sandboxing, or write boundaries.
+
+If the user explicitly selected another focused skill that can own the task, skip Diverter unless the user also explicitly requested subagents or that focused skill requires delegation.
+
 ## Use This Skill When
 
 Use this skill when the current task benefits from decomposition, parallel evidence gathering, or specialist viewpoints.
@@ -50,9 +64,9 @@ Strong triggers:
 - planning tasks that split into independent subtasks
 - mixed-language prompts that combine code mapping, docs verification, and risk review
 - security-sensitive code review involving auth, authorization, secrets, user input, webhooks, dependencies, or LLM/tool permissions
-- test coverage analysis, test strategy, or regression test planning
+- regression proof or critical test coverage for a known defect, or test strategy paired with an independent mapping lane
 - targeted test implementation that should start with read-only behavior mapping
-- Web performance audit for frontend routes, Core Web Vitals, Lighthouse, LCP, INP, CLS, loading, rendering, or network behavior
+- Web performance audit with explicit Core Web Vitals, Lighthouse, LCP, INP, CLS, loading, rendering, or network metrics
 - pre-ship quality gate across review, tests, security, and release risk
 
 Typical request shapes:
@@ -65,15 +79,18 @@ Typical request shapes:
 
 Do not use this skill when delegation would add overhead without increasing accuracy or speed.
 
-Hard stop cases:
+Always stop for:
 - current task messages that explicitly say this is a delegated subagent task
 - handoffs with `delegation_context: delegated-subagent`
+- ambiguous requests that need clarification first
+- explicit user opt-out from subagents
+
+Implicit activation exclusions:
+- work already owned by an explicitly selected focused skill
 - trivial single-domain tasks
 - tightly coupled write-heavy work in the same files
-- ambiguous requests that need clarification first
 - tasks blocked on one immediate critical-path answer
 - wording-only edits
-- explicit user opt-out from subagents
 - generic small PR review or style-only review that does not need specialist lanes
 - Web performance specialist work for non-Web performance tasks
 - write-capable test automation when the target behavior is ambiguous
@@ -95,15 +112,16 @@ Follow this sequence every time this skill is invoked:
 1. If the current task explicitly invokes `$diverter-mode`, do not evaluate delegation; execute Mode Control directly.
 2. If the current task message explicitly says this is a delegated subagent task or includes `delegation_context: delegated-subagent`, do not select another lineup; execute the handoff instead.
 3. If the current task explicitly opts out of subagents, do not delegate.
-4. Resolve the Delegation Policy using the priority rules below.
-5. Classify the task shape.
-6. Check whether the work splits into independent subtasks.
-7. Check whether the task is primarily read-heavy or write-heavy.
-8. If the request is ambiguous, clarify before selecting a lineup.
-9. Choose one lineup of 1-4 roles.
-10. Determine the Work Mode: `read-only`, `mixed`, or `write-capable`.
-11. Produce the policy-specific message using the Delegation Contract below.
-12. Continue only after Dispatch Authorization.
+4. If the task is unclear, clarify before selecting a lineup.
+5. Treat an explicit `$diverter` invocation or explicit request to use subagents as eligible; otherwise apply the implicit threshold above.
+6. If another explicitly selected focused skill owns the task and neither the user nor that skill requests delegation, skip Diverter.
+7. Resolve the Delegation Policy using the priority rules below.
+8. Classify the task shape and confirm the concrete lanes or specialist boundary.
+9. Check whether the task is primarily read-heavy or write-heavy.
+10. Choose one lineup of 1-4 roles.
+11. Determine the Work Mode: `read-only`, `mixed`, or `write-capable`.
+12. Produce the policy-specific message using the Delegation Contract below.
+13. Continue only after Dispatch Authorization.
 
 ## Delegation Policy
 
@@ -126,6 +144,17 @@ The two valid loaded values are:
 - `delegation_policy: auto`
 
 Task Policy Overrides never change persistent configuration.
+
+## Sanitized Failure Reporting
+
+Report failures according to their user-visible effect:
+- intentional non-delegation stays silent
+- if an internal failure recovers successfully, continue silently
+- if an implicitly triggered Diverter load fails, say briefly that Diverter could not be loaded and the task is continuing in the Root Session
+- if an explicitly requested Diverter load fails, report that briefly and ask whether to continue in the Root Session
+- if user action is required, explain the problem and the required action
+
+Never expose skill aliases, plugin cache paths, `SKILL.md` loading, retry steps, or other internal recovery mechanics. This rule does not hide failed roles or other failures that change the result; report their user-visible impact without operational details.
 
 ## Capability Selection Rules
 
@@ -253,7 +282,7 @@ Once Dispatch Authorization is granted:
 - include an explicit delegated-subagent bypass so the child agent does not invoke diverter again
 - summarize results back in the main thread instead of dumping raw logs
 - retain successful results when one lane fails
-- identify failed roles and let the Root Session cover their lanes when possible
+- identify failed roles using Sanitized Failure Reporting and let the Root Session cover their lanes when possible
 - never weaken the worker's sandbox, approval, role, or multi-agent safety flags to retry a failed lane; command-level runtime approval is governed below
 
 ### Select the Execution Backend

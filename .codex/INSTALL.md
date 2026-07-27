@@ -23,7 +23,7 @@ codex plugin marketplace add GML-MMGroup/Diverter
 codex plugin add diverter@diverter --json
 ```
 
-Keep the returned `installedPath`; use that exact absolute path as `DIVERTER_PLUGIN` below. Do not infer a versioned cache directory because Git-backed marketplace plugins may use `local` as their cache version.
+Keep the returned `installedPath`; use that exact absolute path as `DIVERTER_PLUGIN` below. The documented cache layout is `$MARKETPLACE_NAME/$PLUGIN_NAME/$VERSION`; repeated directory names are valid when the marketplace and plugin names match. Do not infer a versioned cache directory because Git-backed marketplace plugins may use `local` as their cache version.
 
 ### 3. Choose the global Bundled Subagents
 

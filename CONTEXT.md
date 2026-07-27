@@ -112,3 +112,7 @@ _Avoid_: Advisory gate, execution backend
 **Delegation Gate Activation**:
 The delivery of the Delegation Gate to a Root Session so that the checkpoint applies throughout that session.
 _Avoid_: Automatic subagent trigger, AGENTS gate
+
+**Sanitized Failure Reporting**:
+The user-visible reporting rule that hides internal operational details while still reporting failures that change task execution or require user action. Intentional non-delegation and internal failures that recover successfully remain silent.
+_Avoid_: Operational chatter, silent failure, no-operational-chatter

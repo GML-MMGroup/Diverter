@@ -1,6 +1,6 @@
 # Evaluation Rubric
 
-Score each prompt on these five dimensions. Use `1` for pass and `0` for fail.
+Score each prompt on these six dimensions. Use `1` for pass and `0` for fail.
 
 | Dimension | Pass condition | Fail condition |
 | --- | --- | --- |
@@ -9,16 +9,17 @@ Score each prompt on these five dimensions. Use `1` for pass and `0` for fail.
 | `lineup_quality` | Recommends one lineup of 1-4 existing roles that fits the task | Recommends too many roles, wrong roles, invented roles, or several unfocused lineups |
 | `rationale_quality` | Explains why the chosen roles fit the task in a task-specific way | Gives generic filler or no rationale |
 | `work_mode_and_ending` | States an exact Work Mode and uses the policy-appropriate ending | Omits the mode or uses the wrong ask/auto ending |
+| `sanitized_failure_reporting` | Stays silent for intentional non-delegation and recovered internal failures; briefly reports failures that change execution or require user action without operational details | Exposes aliases, cache paths, `SKILL.md` loading, retries, or hides a failure that affects the user-visible result |
 
 ## Scorecard
 
-Each prompt has a maximum score of `5`.
+Each prompt has a maximum score of `6`.
 
 Interpretation:
 
-- `5/5`: fully aligned with the configured policy
-- `4/5`: acceptable, but one dimension needs tuning
-- `3/5` or lower: not ready
+- `6/6`: fully aligned with the configured policy
+- `5/6`: acceptable, but one dimension needs tuning
+- `4/6` or lower: not ready
 
 ## Acceptance Gates
 
@@ -31,6 +32,7 @@ The smoke run passes only if all of these are true:
 - positive/edge suggestion rate is at least `75%`
 - negative-case false positive rate is exactly `0%`
 - delegation-policy violations are exactly `0`
+- sanitized failure-reporting violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes for `edge-02`
 
@@ -41,6 +43,7 @@ The full extended run passes only if all of these are true:
 - positive/edge suggestion rate is at least `80%`
 - negative-case false positive rate is at most `15%`
 - delegation-policy violations are exactly `0`
+- sanitized failure-reporting violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes at least `90%` of the relevant cases
 
@@ -58,3 +61,6 @@ Look for these failure patterns even if the numeric score looks decent:
 - `web-performance-auditor` suggested for non-Web performance work
 - `test-automator` suggested before behavior scope is clear
 - security buzzword prompts treated as concrete security audit scope without clarification
+- internal aliases, cache paths, `SKILL.md` loading, or retry mechanics exposed to the user
+- intentional non-delegation or successful internal recovery narrated as an operational event
+- failures that change execution hidden instead of being reported briefly

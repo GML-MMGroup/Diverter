@@ -26,12 +26,13 @@
 | Positive/edge suggestion rate |  |  |
 | Negative-case false positive rate |  |  |
 | Delegation-policy violations |  |  |
+| Sanitized failure-reporting violations |  |  |
 | `>4` role violations |  |  |
 | Fallback correctness rate |  |  |
 
 ## Prompt-by-Prompt Results
 
-| ID | Suite | Policy | Score / 5 | Delegated? | Roles used | Policy-appropriate ending? | Notes |
+| ID | Suite | Policy | Score / 6 | Delegated? | Roles used | Policy-appropriate ending? | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  |  |
 
