@@ -22,14 +22,9 @@ Diverter 让 Codex 更懂得何时分工：复杂任务按需召集专家，简�
 
 ## ✨ 看 Diverter 如何分工
 
-<p align="center">
-  <a href="https://github.com/GML-MMGroup/Diverter/releases/download/v0.3.2/diverter-promo.mp4">
-    <img src="assets/diverter-promo-cover.png" alt="Diverter 判断任务应留在主线程，还是组建专业阵容" width="800">
-  </a>
-</p>
+https://github.com/user-attachments/assets/23fd8f12-946e-43dc-8376-0a6e2d0f6948
 
 <p align="center">
-  <a href="https://github.com/GML-MMGroup/Diverter/releases/download/v0.3.2/diverter-promo.mp4"><strong>▶ 观看产品演示</strong></a><br>
   <sub>一次发布审计如何拆给不同专家，再带着同样的安全边界汇总返回。</sub>
 </p>
 

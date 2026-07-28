@@ -22,14 +22,9 @@ Diverter helps Codex know when to delegate: complex tasks call in specialists as
 
 ## ✨ See Diverter in action
 
-<p align="center">
-  <a href="https://github.com/GML-MMGroup/Diverter/releases/download/v0.3.2/diverter-promo.mp4">
-    <img src="assets/diverter-promo-cover.png" alt="Diverter decides when work stays in the main thread and when to build a specialist lineup" width="800">
-  </a>
-</p>
+https://github.com/user-attachments/assets/23fd8f12-946e-43dc-8376-0a6e2d0f6948
 
 <p align="center">
-  <a href="https://github.com/GML-MMGroup/Diverter/releases/download/v0.3.2/diverter-promo.mp4"><strong>▶ Watch the product tour</strong></a><br>
   <sub>A release audit splits across specialists, then returns through the same guardrails.</sub>
 </p>
 
