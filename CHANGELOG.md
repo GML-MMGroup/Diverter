@@ -4,6 +4,13 @@
 
 - No unreleased changes.
 
+## 0.3.2 - 2026-07-28
+
+- Keep focused, single-lane work in the root session while reserving implicit delegation for separable evidence lanes and concrete specialist risks.
+- Respect explicit subagent requests and focused-skill ownership, so the user's chosen workflow stays in charge.
+- Report execution-changing failures briefly without exposing aliases, cache paths, skill-loading mechanics, or retries; recovered internal failures stay silent.
+- Clarify that repeated marketplace and plugin directory names are valid and keep the returned `installedPath` authoritative.
+
 ## 0.3.1 - 2026-07-18
 
 - Use `agent_type` with `fork_turns: "none"` so native subagents reliably apply each role's configured model and reasoning effort.
