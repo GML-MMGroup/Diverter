@@ -12,49 +12,30 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
   <a href="https://github.com/openai/codex"><img src="https://img.shields.io/badge/OpenAI-Codex-000000?labelColor=555555" alt="OpenAI Codex"></a>
   <a href="https://github.com/GML-MMGroup/Diverter/stargazers"><img src="https://img.shields.io/github/stars/GML-MMGroup/Diverter?style=flat" alt="GitHub Stars"></a>
-  <a href="https://github.com/GML-MMGroup/Diverter"><img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Status: Active"></a>
-  <a href="https://github.com/GML-MMGroup/Diverter"><img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg" alt="PRs Welcome"></a>
-  <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python 3.11+">
 </p>
 
 <p align="center">
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-Diverter 只在任务值得分派时，为 Codex 选择有边界的专业阵容；简单任务继续留在主线程。
+Diverter 让 Codex 更懂得何时分工：复杂任务按需召集专家，简单任务留在主线程。
 
-## ✨ 让 Codex 更懂得如何分工
+## ✨ 看 Diverter 如何分工
 
-简单任务留在主线程，复杂任务交给合适的专家；该分派时才分派，每一次协作都守住边界。
+<p align="center">
+  <a href="https://github.com/GML-MMGroup/Diverter/releases/download/v0.3.2/diverter-promo.mp4">
+    <img src="assets/diverter-promo-cover.png" alt="Diverter 判断任务应留在主线程，还是组建专业阵容" width="800">
+  </a>
+</p>
 
-<table>
-  <tr>
-    <td width="25%" align="center">
-      <a href="assets/diverter-demo-stay-focused.png">
-        <img src="assets/diverter-demo-stay-focused.png" alt="Stay Focused：小任务留在主线程，所有专家分流保持关闭">
-      </a>
-    </td>
-    <td width="25%" align="center">
-      <a href="assets/diverter-demo-split-evidence.png">
-        <img src="assets/diverter-demo-split-evidence.png" alt="Split the Evidence：Diverter 将代码检查与官方文档核验分派给只读专家">
-      </a>
-    </td>
-    <td width="25%" align="center">
-      <a href="assets/diverter-demo-bring-experts.png">
-        <img src="assets/diverter-demo-bring-experts.png" alt="Bring the Experts：Diverter 为高风险安全审查选择三名只读专家">
-      </a>
-    </td>
-    <td width="25%" align="center">
-      <a href="assets/diverter-demo-write-guardrails.png">
-        <img src="assets/diverter-demo-write-guardrails.png" alt="Write with Guardrails：Diverter 在 mixed 模式下将检查与有边界的测试写入分开">
-      </a>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <a href="https://github.com/GML-MMGroup/Diverter/releases/download/v0.3.2/diverter-promo.mp4"><strong>▶ 观看产品演示</strong></a><br>
+  <sub>一次发布审计如何拆给不同专家，再带着同样的安全边界汇总返回。</sub>
+</p>
 
 ## 🚀 快速开始
 
-**建议使用 Codex CLI `0.145.0-alpha.20` 或更高版本，以获得 Diverter 完整的原生子代理体验。**
+**建议使用 Codex CLI `0.145.0+`，以获得 Diverter 完整的原生子代理体验。**
 
 1. 告诉 Codex：
 

@@ -12,49 +12,30 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
   <a href="https://github.com/openai/codex"><img src="https://img.shields.io/badge/OpenAI-Codex-000000?labelColor=555555" alt="OpenAI Codex"></a>
   <a href="https://github.com/GML-MMGroup/Diverter/stargazers"><img src="https://img.shields.io/github/stars/GML-MMGroup/Diverter?style=flat" alt="GitHub Stars"></a>
-  <a href="https://github.com/GML-MMGroup/Diverter"><img src="https://img.shields.io/badge/Status-Active-brightgreen.svg" alt="Status: Active"></a>
-  <a href="https://github.com/GML-MMGroup/Diverter"><img src="https://img.shields.io/badge/PRs-Welcome-brightgreen.svg" alt="PRs Welcome"></a>
-  <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python 3.11+">
 </p>
 
 <p align="center">
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-Diverter routes suitable Codex work to a bounded specialist lineup while simple tasks stay in the main thread.
+Diverter helps Codex know when to delegate: complex tasks call in specialists as needed, while simple tasks stay in the main thread.
 
-## ✨ A delegation instinct for Codex
+## ✨ See Diverter in action
 
-Diverter knows when to stay focused, when to split the work, which specialists to bring in, and how to keep every handoff bounded.
+<p align="center">
+  <a href="https://github.com/GML-MMGroup/Diverter/releases/download/v0.3.2/diverter-promo.mp4">
+    <img src="assets/diverter-promo-cover.png" alt="Diverter decides when work stays in the main thread and when to build a specialist lineup" width="800">
+  </a>
+</p>
 
-<table>
-  <tr>
-    <td width="25%" align="center">
-      <a href="assets/diverter-demo-stay-focused.png">
-        <img src="assets/diverter-demo-stay-focused.png" alt="Stay Focused: a small task remains in the main thread while every specialist route stays closed">
-      </a>
-    </td>
-    <td width="25%" align="center">
-      <a href="assets/diverter-demo-split-evidence.png">
-        <img src="assets/diverter-demo-split-evidence.png" alt="Split the Evidence: Diverter sends code inspection and official documentation verification to read-only specialists">
-      </a>
-    </td>
-    <td width="25%" align="center">
-      <a href="assets/diverter-demo-bring-experts.png">
-        <img src="assets/diverter-demo-bring-experts.png" alt="Bring the Experts: Diverter assigns a high-risk security review to three read-only specialists">
-      </a>
-    </td>
-    <td width="25%" align="center">
-      <a href="assets/diverter-demo-write-guardrails.png">
-        <img src="assets/diverter-demo-write-guardrails.png" alt="Write with Guardrails: Diverter separates inspection from bounded test writing in mixed mode">
-      </a>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <a href="https://github.com/GML-MMGroup/Diverter/releases/download/v0.3.2/diverter-promo.mp4"><strong>▶ Watch the product tour</strong></a><br>
+  <sub>A release audit splits across specialists, then returns through the same guardrails.</sub>
+</p>
 
 ## 🚀 Quick Start
 
-**Codex CLI `0.145.0-alpha.20` or later is recommended for the full native subagent experience.**
+**Codex CLI `0.145.0+` is recommended for the full native subagent experience.**
 
 1. Tell Codex:
 
