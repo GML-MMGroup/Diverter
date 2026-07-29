@@ -22,9 +22,9 @@ Diverter helps Codex know when to delegate: complex tasks call in specialists as
 
 ## ✨ See Diverter in action
 
-https://github.com/user-attachments/assets/23fd8f12-946e-43dc-8376-0a6e2d0f6948
-
 <p align="center">
+  <img src="assets/diverter-promo.gif" alt="Diverter delegates a release audit to specialist subagents and merges their results" width="720">
+  <br>
   <sub>A release audit splits across specialists, then returns through the same guardrails.</sub>
 </p>
 
