@@ -298,7 +298,11 @@ def policy_order(
 
 
 def verify_root_only(
-    root_records: list[dict[str, Any]], scenario: str, root_progress_scope: str
+    root_records: list[dict[str, Any]],
+    scenario: str,
+    root_progress_scope: str,
+    expected_root_model: str | None,
+    expected_root_effort: str | None,
 ) -> dict[str, Any]:
     root_calls = function_calls(root_records)
     spawn_calls = [call for _, call in root_calls if call.get("name") == "spawn_agent"]
@@ -320,12 +324,29 @@ def verify_root_only(
         and (boundary is None or when > boundary)
         for when, call in root_calls
     )
+    root_contexts = payloads(root_records, "turn_context")
     checks = {
         "zero_native_spawn": not spawn_calls,
         "root_continues": root_continues,
         "policy_or_inert_boundary": policy_check,
+        "root_model_frozen": not expected_root_model
+        or (
+            bool(root_contexts)
+            and all(context.get("model") == expected_root_model for context in root_contexts)
+        ),
+        "root_effort_frozen": not expected_root_effort
+        or (
+            bool(root_contexts)
+            and all(context.get("effort") == expected_root_effort for context in root_contexts)
+        ),
     }
-    return {"ok": all(checks.values()), "checks": checks, "scenario": scenario}
+    return {
+        "ok": all(checks.values()),
+        "checks": checks,
+        "scenario": scenario,
+        "root_models": [context.get("model") for context in root_contexts],
+        "root_reasoning_efforts": [context.get("effort") for context in root_contexts],
+    }
 
 
 def verify_spawn_failure(
@@ -711,7 +732,11 @@ def main() -> int:
             )
         else:
             report = verify_root_only(
-                root_records, args.scenario, args.root_progress_scope
+                root_records,
+                args.scenario,
+                args.root_progress_scope,
+                args.expected_root_model,
+                args.expected_root_effort,
             )
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
         print(json.dumps({"ok": False, "error": str(error)}))

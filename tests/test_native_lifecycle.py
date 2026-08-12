@@ -420,8 +420,18 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
 
     def test_accepts_ask_refusal_with_zero_spawn_and_root_continuation(self) -> None:
         root_records = [
+            {
+                "timestamp": "2026-08-13T09:59:59Z",
+                "type": "turn_context",
+                "payload": {"turn_id": "proposal", "model": "gpt-5.6-terra", "effort": "high"},
+            },
             message("2026-08-13T10:00:00Z", "assistant", "Dispatch Recommendation"),
             message("2026-08-13T10:00:01Z", "user", "Dispatch Refused"),
+            {
+                "timestamp": "2026-08-13T10:00:01.500000Z",
+                "type": "turn_context",
+                "payload": {"turn_id": "refusal", "model": "gpt-5.6-terra", "effort": "high"},
+            },
             exec_call(
                 "2026-08-13T10:00:02Z",
                 'await tools.exec_command({"cmd":"root-only-artifact"})',
@@ -436,10 +446,49 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             "ask-refused",
             "--root-progress-scope",
             "root-only-artifact",
+            "--expected-root-model",
+            "gpt-5.6-terra",
+            "--expected-root-effort",
+            "high",
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(json.loads(result.stdout)["ok"])
+
+    def test_rejects_root_only_effort_drift(self) -> None:
+        root_records = [
+            {
+                "timestamp": "2026-08-13T10:00:00Z",
+                "type": "turn_context",
+                "payload": {"turn_id": "first", "model": "gpt-5.6-terra", "effort": "high"},
+            },
+            {
+                "timestamp": "2026-08-13T10:00:01Z",
+                "type": "turn_context",
+                "payload": {"turn_id": "second", "model": "gpt-5.6-terra", "effort": "medium"},
+            },
+            exec_call(
+                "2026-08-13T10:00:02Z",
+                'await tools.exec_command({"cmd":"root-only-artifact"})',
+                "root-only",
+            ),
+        ]
+
+        result = self.run_verifier(
+            root_records,
+            None,
+            "--scenario",
+            "native-absence",
+            "--root-progress-scope",
+            "root-only-artifact",
+            "--expected-root-model",
+            "gpt-5.6-terra",
+            "--expected-root-effort",
+            "high",
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["root_effort_frozen"])
 
     def test_accepts_silent_root_continuation_for_preactivation_bypasses(self) -> None:
         root_records = [
