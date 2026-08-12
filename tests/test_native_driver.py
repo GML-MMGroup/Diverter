@@ -10,6 +10,15 @@ DRIVER = ROOT / "scripts" / "run-native-lifecycle.py"
 
 
 class NativeLifecycleDriverTest(unittest.TestCase):
+    def test_freezes_matrix_metadata_and_resume_effort(self) -> None:
+        driver = DRIVER.read_text()
+
+        self.assertGreaterEqual(driver.count("model_reasoning_effort"), 2)
+        self.assertIn('"codex_version"', driver)
+        self.assertIn('"installed_roles"', driver)
+        self.assertIn('"workspace_fixture_hash"', driver)
+        self.assertIn("expected exactly one native child session", driver)
+
     def test_rejects_contaminated_codex_home_before_running_codex(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             base = Path(temp_dir)

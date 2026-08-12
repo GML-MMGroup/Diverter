@@ -104,11 +104,14 @@ def discover_rollouts(
         (path, meta)
         for path, meta in candidates
         if meta.get("parent_thread_id") in root_ids
-        and (expected_role is None or child_role(meta) == expected_role)
     ]
+    if len(children) > 1:
+        raise ValueError("expected exactly one native child session")
     if not children:
         return root_path, None, root_meta, None
-    child_path, child_meta = max(children, key=lambda item: item[0].stat().st_mtime_ns)
+    child_path, child_meta = children[0]
+    if expected_role is not None and child_role(child_meta) != expected_role:
+        raise ValueError(f"unexpected child role: {child_role(child_meta)}")
     return root_path, child_path, root_meta, child_meta
 
 
@@ -176,7 +179,8 @@ def main() -> int:
         workspace = args.workspace.resolve()
         codex_home = args.codex_home.resolve()
         evidence = args.evidence_dir.resolve()
-        if not workspace.is_dir() or not snapshot(workspace):
+        initial_snapshot = snapshot(workspace) if workspace.is_dir() else {}
+        if not workspace.is_dir() or not initial_snapshot:
             raise ValueError("workspace must be a non-empty directory")
         if codex_home.is_relative_to(workspace) or evidence.is_relative_to(workspace):
             raise ValueError("codex home and evidence directory must be outside the workspace")
@@ -193,6 +197,13 @@ def main() -> int:
         revision = subprocess.run(
             ["git", "rev-parse", "HEAD"],
             cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
+        codex_version = subprocess.run(
+            ["codex", "--version"],
+            env=env,
             text=True,
             capture_output=True,
             check=True,
@@ -241,11 +252,16 @@ def main() -> int:
         )
         metadata = {
             "plugin_revision": revision,
+            "codex_version": codex_version,
             "installed_path": str(installed_path),
+            "installed_roles": sorted(path.stem for path in (codex_home / "agents").glob("*.toml")),
             "policy": args.policy,
             "scenario": args.scenario,
             "root_model": args.model,
             "root_reasoning_effort": args.reasoning_effort,
+            "workspace_fixture_hash": hashlib.sha256(
+                json.dumps(initial_snapshot, sort_keys=True).encode("utf-8")
+            ).hexdigest(),
         }
         if args.prepare_only:
             (evidence / "run-metadata.json").write_text(
@@ -254,7 +270,7 @@ def main() -> int:
             print(json.dumps({"ok": True, "prepared": True, **metadata}, sort_keys=True))
             return 0
 
-        before = snapshot(workspace)
+        before = initial_snapshot
         codex_command = [
             "codex",
             "exec",
@@ -294,6 +310,8 @@ def main() -> int:
                     "--dangerously-bypass-hook-trust",
                     "--model",
                     args.model,
+                    "--config",
+                    f'model_reasoning_effort="{args.reasoning_effort}"',
                     session_id,
                     resume_prompt,
                 ],
@@ -325,18 +343,22 @@ def main() -> int:
             args.scenario,
             "--root-progress-scope",
             args.root_progress_scope,
+            "--expected-root-model",
+            args.model,
+            "--expected-root-effort",
+            args.reasoning_effort,
         ]
-        if child_copy:
+        if child_copy or args.scenario == "failure":
             verifier.extend(
                 [
-                    "--child-rollout",
-                    str(child_copy),
                     "--expected-role",
                     args.expected_role,
                     "--verification-scope",
                     args.verification_scope or "",
                 ]
             )
+            if child_copy:
+                verifier.extend(["--child-rollout", str(child_copy)])
             if args.policy == "auto":
                 verifier.extend(["--policy", "auto"])
             elif args.scenario == "normal":
@@ -363,6 +385,10 @@ def main() -> int:
                 "root_session_id": root_meta.get("session_id", root_meta.get("id")),
                 "child_session_id": child_meta.get("id") if child_meta else None,
                 "verifier_ok": report.get("ok"),
+                "observed_root_models": report.get("root_models"),
+                "observed_root_reasoning_efforts": report.get("root_reasoning_efforts"),
+                "observed_child_model": report.get("child_model"),
+                "observed_child_reasoning_effort": report.get("child_reasoning_effort"),
             }
         )
         (evidence / "run-metadata.json").write_text(

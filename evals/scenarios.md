@@ -131,6 +131,8 @@ python3 scripts/verify-native-lifecycle.py \
   --policy auto \
   --root-progress-scope root-brief.md \
   --verification-scope verify-integrated-brief \
+  --expected-root-model gpt-5.6-terra \
+  --expected-root-effort high \
   --require-followup
 ```
 
@@ -145,12 +147,14 @@ python3 scripts/verify-native-lifecycle.py \
   --policy auto \
   --root-progress-scope root-brief.md \
   --verification-scope verify-integrated-brief \
+  --expected-root-model gpt-5.6-terra \
+  --expected-root-effort high \
   --root-write-scope root-brief.md \
   --child-write-scope child-evidence.md \
   --ownership-manifest /absolute/path/to/ownership-manifest.json
 ```
 
-The verifier accepts real `custom_tool_call` / `exec` patch records, requires scoped Root progress and verification evidence, pairs child completion results by turn ID, checks normalized handoff scopes for duplicates, validates same-child follow-up ordering, and rejects hash changes outside declared Write Ownership. Its root-only modes cover `ask-refused`, `native-absence`, and `missing-role`; `failure` requires an observed child abort or failed tool event, a marked affected-lane report, Root takeover evidence, and no substitute spawn.
+The verifier accepts real `custom_tool_call` / `exec` patch records, requires scoped Root progress and verification evidence, pairs child completion results by turn ID, checks normalized handoff scopes for duplicates, enforces exactly one child for the standard families, validates same-child follow-up ordering, freezes every Root turn's model and effort, and rejects hash changes or cross-lane mutations outside declared Write Ownership. Its root-only modes cover `ask-refused`, `native-absence`, and `missing-role`; `failure` accepts either a failed spawn with no Child rollout or a child-side abort/tool failure, then requires a marked affected-lane report, Root takeover evidence, and no substitute spawn.
 
 An absent mandatory event is a failure, not an inferred pass.
 

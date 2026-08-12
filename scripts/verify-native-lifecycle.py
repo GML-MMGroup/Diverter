@@ -177,6 +177,10 @@ def failed_tool_events(
         "operation not permitted",
         "read-only file system",
         "sandbox denied",
+        "spawn failed",
+        "failed to spawn",
+        "unavailable",
+        "not available",
     )
     found = []
     for record in records:
@@ -214,13 +218,29 @@ def scope_key(arguments: dict[str, Any]) -> str | None:
 
 
 def meaningful_call(call: dict[str, Any], marker: str) -> bool:
-    return call.get("name") not in BOOKKEEPING_TOOLS and marker in call_text(call)
+    if call.get("name") in BOOKKEEPING_TOOLS:
+        return False
+    nested_tools = re.findall(r"tools\.([A-Za-z0-9_]+)\s*\(", call_text(call))
+    return not any(tool in BOOKKEEPING_TOOLS for tool in nested_tools) and marker in call_text(call)
 
 
 def patch_call(call: dict[str, Any]) -> bool:
     if call.get("name") == "apply_patch":
         return True
     return call.get("name") == "exec" and "tools.apply_patch" in call_text(call)
+
+
+def scoped_mutation_call(call: dict[str, Any], scopes: list[str]) -> bool:
+    text = call_text(call)
+    if not any(scope in text for scope in scopes):
+        return False
+    return patch_call(call) or call.get("name") in {"exec_command", "write_stdin"} or (
+        call.get("name") == "exec"
+        and any(
+            token in text
+            for token in ("tools.exec_command", "tools.write_stdin", "tools.apply_patch")
+        )
+    )
 
 
 def scope_matches(path: str, scope: str) -> bool:
@@ -308,6 +328,72 @@ def verify_root_only(
     return {"ok": all(checks.values()), "checks": checks, "scenario": scenario}
 
 
+def verify_spawn_failure(
+    root_records: list[dict[str, Any]],
+    expected_role: str,
+    policy: str | None,
+    verification_scope: str,
+    failure_report_marker: str,
+    expected_root_model: str | None,
+    expected_root_effort: str | None,
+) -> dict[str, Any]:
+    root_calls = function_calls(root_records)
+    spawns = [
+        (when, call, decoded_arguments(call))
+        for when, call in root_calls
+        if call.get("name") == "spawn_agent"
+    ]
+    spawn_when, spawn_call, spawn_arguments = spawns[0] if spawns else (None, {}, {})
+    spawn_call_id = spawn_call.get("call_id")
+    failed_outputs = [
+        (when, payload)
+        for when, payload in failed_tool_events(root_records)
+        if payload.get("call_id") == spawn_call_id
+    ]
+    failure_when = failed_outputs[0][0] if failed_outputs else None
+    report_after_failure = any(
+        when > failure_when and failure_report_marker in text
+        for when, text in messages(root_records, "assistant")
+        if failure_when is not None
+    )
+    root_takeover = any(
+        when > failure_when and meaningful_call(call, verification_scope)
+        for when, call in root_calls
+        if failure_when is not None
+    )
+    root_contexts = payloads(root_records, "turn_context")
+    checks = {
+        "native_spawn_attempt": len(spawns) == 1
+        and spawn_arguments.get("agent_type") == expected_role
+        and spawn_arguments.get("fork_turns") == "none"
+        and "model" not in spawn_arguments
+        and "reasoning_effort" not in spawn_arguments,
+        "policy_order": policy_order(root_records, policy, spawn_when),
+        "spawn_failure_observed": bool(failed_outputs),
+        "failure_reported": report_after_failure,
+        "root_takeover": root_takeover,
+        "no_substitute_spawn": len(spawns) == 1,
+        "root_model_frozen": not expected_root_model
+        or (
+            bool(root_contexts)
+            and all(context.get("model") == expected_root_model for context in root_contexts)
+        ),
+        "root_effort_frozen": not expected_root_effort
+        or (
+            bool(root_contexts)
+            and all(context.get("effort") == expected_root_effort for context in root_contexts)
+        ),
+    }
+    return {
+        "ok": all(checks.values()),
+        "checks": checks,
+        "scenario": "failure",
+        "failure_kind": "spawn",
+        "root_models": [context.get("model") for context in root_contexts],
+        "root_reasoning_efforts": [context.get("effort") for context in root_contexts],
+    }
+
+
 def verify_child(
     root_records: list[dict[str, Any]],
     child_records: list[dict[str, Any]],
@@ -321,10 +407,13 @@ def verify_child(
     child_write_scope: str | None,
     manifest: dict[str, dict[str, str]] | None,
     failure_report_marker: str,
+    expected_root_model: str | None,
+    expected_root_effort: str | None,
 ) -> dict[str, Any]:
     root_meta = next(iter(payloads(root_records, "session_meta")), {})
     child_meta = next(iter(payloads(child_records, "session_meta")), {})
-    root_context = next(iter(payloads(root_records, "turn_context")), {})
+    root_contexts = payloads(root_records, "turn_context")
+    root_context = next(iter(root_contexts), {})
     child_contexts = payloads(child_records, "turn_context")
     child_context = next(iter(child_contexts), {})
     child_session_id = child_meta.get("id")
@@ -455,6 +544,16 @@ def verify_child(
             )
             root_patches = [call for _, call in root_calls if patch_call(call)]
             child_patches = [call for _, call in child_calls if patch_call(call)]
+            root_mutations = [
+                call
+                for _, call in root_calls
+                if scoped_mutation_call(call, owned)
+            ]
+            child_mutations = [
+                call
+                for _, call in child_calls
+                if scoped_mutation_call(call, owned)
+            ]
             write_ownership = write_ownership and any(
                 root_write_scope in call_text(call) for call in root_patches
             )
@@ -462,10 +561,10 @@ def verify_child(
                 child_write_scope in call_text(call) for call in child_patches
             )
             write_ownership = write_ownership and all(
-                child_write_scope not in call_text(call) for call in root_patches
+                child_write_scope not in call_text(call) for call in root_mutations
             )
             write_ownership = write_ownership and all(
-                root_write_scope not in call_text(call) for call in child_patches
+                root_write_scope not in call_text(call) for call in child_mutations
             )
             for scope in owned:
                 path = next((path for path in changed if scope_matches(path, scope)), None)
@@ -481,6 +580,15 @@ def verify_child(
             if last_terminal is not None
         )
         no_substitute_spawn = len(spawn_calls) == 1
+
+    root_model_frozen = not expected_root_model or (
+        bool(root_contexts)
+        and all(context.get("model") == expected_root_model for context in root_contexts)
+    )
+    root_effort_frozen = not expected_root_effort or (
+        bool(root_contexts)
+        and all(context.get("effort") == expected_root_effort for context in root_contexts)
+    )
 
     checks = {
         "native_spawn": bool(matching_spawns)
@@ -501,6 +609,7 @@ def verify_child(
         "root_progress_while_child_active": root_progress,
         "root_integration_verification": integration_verification,
         "leaf_child": all(call.get("name") != "spawn_agent" for _, call in child_calls),
+        "single_child_spawn": len(spawn_calls) == 1,
         "no_duplicate_scope_spawn": no_duplicate_scope,
         "same_child_followup": not require_followup
         or (
@@ -512,6 +621,8 @@ def verify_child(
         "write_ownership": write_ownership,
         "failure_reported": failure_reported,
         "no_substitute_spawn": no_substitute_spawn,
+        "root_model_frozen": root_model_frozen,
+        "root_effort_frozen": root_effort_frozen,
     }
     return {
         "ok": all(checks.values()),
@@ -520,8 +631,8 @@ def verify_child(
         "child_session_id": child_session_id,
         "child_path": child_path,
         "child_turn_ids": unique_turn_ids,
-        "root_model": root_context.get("model"),
-        "root_reasoning_effort": root_context.get("effort"),
+        "root_models": [context.get("model") for context in root_contexts],
+        "root_reasoning_efforts": [context.get("effort") for context in root_contexts],
         "child_model": child_context.get("model"),
         "child_reasoning_effort": child_context.get("effort"),
         "artifact_hashes": hashes,
@@ -548,29 +659,40 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--child-write-scope")
     parser.add_argument("--ownership-manifest", type=Path)
     parser.add_argument("--failure-report-marker", default="Affected Child Lane")
+    parser.add_argument("--expected-root-model")
+    parser.add_argument("--expected-root-effort")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    child_scenarios = {"normal", "failure"}
-    if args.scenario in child_scenarios and (
-        args.child_rollout is None
-        or not args.expected_role
-        or not args.verification_scope
+    if args.scenario in {"normal", "failure"} and (
+        not args.expected_role or not args.verification_scope
     ):
         print(
             json.dumps(
                 {
                     "ok": False,
-                    "error": "child scenarios require --child-rollout, --expected-role, and --verification-scope",
+                    "error": "normal/failure scenarios require --expected-role and --verification-scope",
                 }
             )
         )
         return 2
     try:
         root_records = load_jsonl(args.root_rollout)
-        if args.scenario in child_scenarios:
+        if args.scenario == "failure" and args.child_rollout is None:
+            report = verify_spawn_failure(
+                root_records,
+                args.expected_role,
+                args.policy,
+                args.verification_scope,
+                args.failure_report_marker,
+                args.expected_root_model,
+                args.expected_root_effort,
+            )
+        elif args.scenario in {"normal", "failure"}:
+            if args.child_rollout is None:
+                raise ValueError("normal scenario requires --child-rollout")
             report = verify_child(
                 root_records,
                 load_jsonl(args.child_rollout),
@@ -584,6 +706,8 @@ def main() -> int:
                 args.child_write_scope,
                 load_manifest(args.ownership_manifest),
                 args.failure_report_marker,
+                args.expected_root_model,
+                args.expected_root_effort,
             )
         else:
             report = verify_root_only(
