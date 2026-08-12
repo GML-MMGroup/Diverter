@@ -102,13 +102,35 @@ Prompt-injected failure prose is only a Router Contract probe and cannot pass th
 
 ## Lifecycle Verifier
 
-Run the repository verifier against the persisted root and child records:
+Use the real driver for release evidence. It creates a clean `CODEX_HOME`, installs the current committed revision through a local marketplace, installs the selected native role, sets the policy, runs a persisted `codex exec` session, captures Root/child rollouts plus before/after workspace hashes, and invokes the verifier:
+
+```bash
+python3 scripts/run-native-lifecycle.py \
+  --workspace /absolute/path/to/non-empty-fixture \
+  --prompt-file /absolute/path/to/family-1-prompt.txt \
+  --codex-home /absolute/path/to/new-empty-codex-home \
+  --evidence-dir /absolute/path/to/new-empty-evidence-dir \
+  --expected-role docs-researcher \
+  --policy auto \
+  --model gpt-5.6-terra \
+  --reasoning-effort high \
+  --root-progress-scope root-brief.md \
+  --verification-scope verify-integrated-brief
+```
+
+For `ask`, put the exact second-turn marker `Dispatch Authorization` or `Dispatch Refused` in `--resume-prompt-file`. For `native-absence`, the driver disables the native multi-agent features. For `missing-role`, it physically omits the requested role installation. Never copy authentication into the clean home; if the supported host cannot access its existing account identity there, record the run as blocked.
+
+The parser can also verify retained rollout evidence directly:
 
 ```bash
 python3 scripts/verify-native-lifecycle.py \
   --root-rollout /absolute/path/to/root.jsonl \
   --child-rollout /absolute/path/to/child.jsonl \
   --expected-role docs-researcher \
+  --scenario normal \
+  --policy auto \
+  --root-progress-scope root-brief.md \
+  --verification-scope verify-integrated-brief \
   --require-followup
 ```
 
@@ -119,11 +141,16 @@ python3 scripts/verify-native-lifecycle.py \
   --root-rollout /absolute/path/to/root.jsonl \
   --child-rollout /absolute/path/to/child.jsonl \
   --expected-role test-automator \
+  --scenario normal \
+  --policy auto \
+  --root-progress-scope root-brief.md \
+  --verification-scope verify-integrated-brief \
   --root-write-scope root-brief.md \
-  --child-write-scope child-evidence.md
+  --child-write-scope child-evidence.md \
+  --ownership-manifest /absolute/path/to/ownership-manifest.json
 ```
 
-The verifier checks native spawn parameters, persisted role resolution, parent-child linkage, child lifecycle completion, spawn return timing, Root progress during the child interval, post-child integration verification, Leaf Child behavior, duplicate same-scope dispatch, same-child follow-up when requested, and observable disjoint patch ownership.
+The verifier accepts real `custom_tool_call` / `exec` patch records, requires scoped Root progress and verification evidence, pairs child completion results by turn ID, checks normalized handoff scopes for duplicates, validates same-child follow-up ordering, and rejects hash changes outside declared Write Ownership. Its root-only modes cover `ask-refused`, `native-absence`, and `missing-role`; `failure` requires an observed child abort or failed tool event, a marked affected-lane report, Root takeover evidence, and no substitute spawn.
 
 An absent mandatory event is a failure, not an inferred pass.
 

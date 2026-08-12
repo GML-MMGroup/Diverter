@@ -29,7 +29,7 @@
     ],
     "websiteURL": "https://github.com/GML-MMGroup/Diverter",
     "defaultPrompt": [
-      "Route this task to a specialist subagent lineup when useful."
+      "Split this task into a useful Root Lane and bounded native Child Lanes when beneficial."
     ],
     "composerIcon": "./assets/diverter-icon.png",
     "logo": "./assets/diverter-icon.png"

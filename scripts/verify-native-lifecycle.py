@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Verify observable Diverter lifecycle invariants from native Codex rollouts."""
+"""Verify Diverter behavior from persisted native Codex rollout records."""
 
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from datetime import datetime
 import json
 from pathlib import Path
+import re
 import sys
 from typing import Any
 
@@ -18,6 +20,14 @@ ORCHESTRATION_TOOLS = {
     "send_message",
     "spawn_agent",
     "wait_agent",
+}
+BOOKKEEPING_TOOLS = ORCHESTRATION_TOOLS | {
+    "create_goal",
+    "get_goal",
+    "update_goal",
+    "update_plan",
+    "wait",
+    "write_stdin",
 }
 
 
@@ -36,6 +46,23 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return records
 
 
+def load_manifest(path: Path | None) -> dict[str, dict[str, str]] | None:
+    if path is None:
+        return None
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise ValueError(f"{path}: expected a JSON object")
+    before = manifest.get("before")
+    after = manifest.get("after")
+    if not isinstance(before, dict) or not isinstance(after, dict):
+        raise ValueError(f"{path}: expected before and after hash objects")
+    if not all(isinstance(key, str) and isinstance(value, str) for key, value in before.items()):
+        raise ValueError(f"{path}: invalid before hash map")
+    if not all(isinstance(key, str) and isinstance(value, str) for key, value in after.items()):
+        raise ValueError(f"{path}: invalid after hash map")
+    return {"before": before, "after": after}
+
+
 def timestamp(record: dict[str, Any]) -> datetime | None:
     value = record.get("timestamp")
     if not isinstance(value, str):
@@ -52,6 +79,23 @@ def payloads(records: list[dict[str, Any]], kind: str) -> list[dict[str, Any]]:
         for record in records
         if record.get("type") == kind and isinstance(record.get("payload"), dict)
     ]
+
+
+def timed_payloads(
+    records: list[dict[str, Any]], record_type: str, payload_type: str
+) -> list[tuple[datetime, dict[str, Any]]]:
+    found = []
+    for record in records:
+        payload = record.get("payload")
+        when = timestamp(record)
+        if (
+            record.get("type") == record_type
+            and isinstance(payload, dict)
+            and payload.get("type") == payload_type
+            and when is not None
+        ):
+            found.append((when, payload))
+    return found
 
 
 def function_calls(records: list[dict[str, Any]]) -> list[tuple[datetime, dict[str, Any]]]:
@@ -82,28 +126,72 @@ def decoded_arguments(call: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
-def argument_text(call: dict[str, Any]) -> str:
-    arguments = call.get("arguments")
-    if isinstance(arguments, str):
-        return arguments
-    if isinstance(arguments, dict):
-        return json.dumps(arguments, sort_keys=True)
+def call_text(call: dict[str, Any]) -> str:
+    value = call.get("arguments", call.get("input", ""))
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        return json.dumps(value, sort_keys=True)
     return ""
 
 
-def event_times(records: list[dict[str, Any]], event_type: str) -> list[datetime]:
-    times = []
+def content_text(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return ""
+    chunks = []
+    for item in content:
+        if not isinstance(item, dict):
+            continue
+        text = item.get("text")
+        if isinstance(text, str):
+            chunks.append(text)
+    return "\n".join(chunks)
+
+
+def messages(
+    records: list[dict[str, Any]], role: str
+) -> list[tuple[datetime, str]]:
+    found = []
     for record in records:
         payload = record.get("payload")
         when = timestamp(record)
         if (
-            record.get("type") == "event_msg"
+            record.get("type") == "response_item"
             and isinstance(payload, dict)
-            and payload.get("type") == event_type
+            and payload.get("type") == "message"
+            and payload.get("role") == role
             and when is not None
         ):
-            times.append(when)
-    return times
+            found.append((when, content_text(payload.get("content"))))
+    return found
+
+
+def failed_tool_events(
+    records: list[dict[str, Any]],
+) -> list[tuple[datetime, dict[str, Any]]]:
+    markers = (
+        "script failed",
+        "permission denied",
+        "operation not permitted",
+        "read-only file system",
+        "sandbox denied",
+    )
+    found = []
+    for record in records:
+        payload = record.get("payload")
+        when = timestamp(record)
+        if (
+            record.get("type") == "response_item"
+            and isinstance(payload, dict)
+            and payload.get("type") in {"function_call_output", "custom_tool_call_output"}
+            and when is not None
+        ):
+            output = json.dumps(payload.get("output", ""), sort_keys=True).lower()
+            if any(marker in output for marker in markers):
+                found.append((when, payload))
+    return found
 
 
 def nested(data: dict[str, Any], *keys: str) -> Any:
@@ -115,16 +203,130 @@ def nested(data: dict[str, Any], *keys: str) -> Any:
     return value
 
 
-def verify(
+def scope_key(arguments: dict[str, Any]) -> str | None:
+    message = arguments.get("message")
+    if not isinstance(message, str):
+        return None
+    match = re.search(r"(?im)^\s*(?:scope_in|scope)\s*:\s*(.+)$", message)
+    if not match:
+        return None
+    return " ".join(match.group(1).lower().split())
+
+
+def meaningful_call(call: dict[str, Any], marker: str) -> bool:
+    return call.get("name") not in BOOKKEEPING_TOOLS and marker in call_text(call)
+
+
+def patch_call(call: dict[str, Any]) -> bool:
+    if call.get("name") == "apply_patch":
+        return True
+    return call.get("name") == "exec" and "tools.apply_patch" in call_text(call)
+
+
+def scope_matches(path: str, scope: str) -> bool:
+    normalized_path = path.replace("\\", "/")
+    normalized_scope = scope.replace("\\", "/").lstrip("./")
+    return normalized_path == normalized_scope or normalized_path.endswith(
+        f"/{normalized_scope}"
+    )
+
+
+def changed_paths(manifest: dict[str, dict[str, str]]) -> list[str]:
+    before = manifest["before"]
+    after = manifest["after"]
+    return sorted(
+        path for path in before.keys() | after.keys() if before.get(path) != after.get(path)
+    )
+
+
+def policy_order(
+    root_records: list[dict[str, Any]], policy: str | None, spawn_when: datetime | None
+) -> bool:
+    if policy is None:
+        return True
+    assistants = messages(root_records, "assistant")
+    users = messages(root_records, "user")
+    if policy == "auto":
+        announcements = [
+            (when, text)
+            for when, text in assistants
+            if "Dispatch Announcement" in text
+            and "Root Lane" in text
+            and "Work Mode" in text
+        ]
+        return bool(
+            spawn_when
+            and announcements
+            and announcements[-1][0] < spawn_when
+            and "?" not in announcements[-1][1]
+            and "？" not in announcements[-1][1]
+        )
+    recommendations = [
+        (when, text)
+        for when, text in assistants
+        if "Dispatch Recommendation" in text
+    ]
+    approvals = [
+        when for when, text in users if "Dispatch Authorization" in text
+    ]
+    return bool(
+        spawn_when
+        and recommendations
+        and approvals
+        and recommendations[-1][0] < approvals[-1] < spawn_when
+    )
+
+
+def verify_root_only(
+    root_records: list[dict[str, Any]], scenario: str, root_progress_scope: str
+) -> dict[str, Any]:
+    root_calls = function_calls(root_records)
+    spawn_calls = [call for _, call in root_calls if call.get("name") == "spawn_agent"]
+    assistants = messages(root_records, "assistant")
+    users = messages(root_records, "user")
+    if scenario == "ask-refused":
+        recommendations = [when for when, text in assistants if "Dispatch Recommendation" in text]
+        refusals = [when for when, text in users if "Dispatch Refused" in text]
+        boundary = max(refusals) if refusals else None
+        policy_check = bool(recommendations and refusals and recommendations[-1] < refusals[-1])
+    else:
+        boundary = None
+        policy_check = all(
+            "Dispatch Announcement" not in text and "Diverter" not in text
+            for _, text in assistants
+        )
+    root_continues = any(
+        meaningful_call(call, root_progress_scope)
+        and (boundary is None or when > boundary)
+        for when, call in root_calls
+    )
+    checks = {
+        "zero_native_spawn": not spawn_calls,
+        "root_continues": root_continues,
+        "policy_or_inert_boundary": policy_check,
+    }
+    return {"ok": all(checks.values()), "checks": checks, "scenario": scenario}
+
+
+def verify_child(
     root_records: list[dict[str, Any]],
     child_records: list[dict[str, Any]],
     expected_role: str,
+    scenario: str,
+    policy: str | None,
     require_followup: bool,
+    root_progress_scope: str,
+    verification_scope: str,
     root_write_scope: str | None,
     child_write_scope: str | None,
+    manifest: dict[str, dict[str, str]] | None,
+    failure_report_marker: str,
 ) -> dict[str, Any]:
     root_meta = next(iter(payloads(root_records, "session_meta")), {})
     child_meta = next(iter(payloads(child_records, "session_meta")), {})
+    root_context = next(iter(payloads(root_records, "turn_context")), {})
+    child_contexts = payloads(child_records, "turn_context")
+    child_context = next(iter(child_contexts), {})
     child_session_id = child_meta.get("id")
     child_path = nested(child_meta, "source", "subagent", "thread_spawn", "agent_path")
     child_role = nested(child_meta, "source", "subagent", "thread_spawn", "agent_role")
@@ -132,18 +334,20 @@ def verify(
 
     root_calls = function_calls(root_records)
     child_calls = function_calls(child_records)
-    spawn_calls = [(when, call) for when, call in root_calls if call.get("name") == "spawn_agent"]
-    matching_spawns = []
+    spawn_calls = [
+        (when, call, decoded_arguments(call))
+        for when, call in root_calls
+        if call.get("name") == "spawn_agent"
+    ]
     child_task_name = child_path.rsplit("/", 1)[-1] if isinstance(child_path, str) else None
-    for when, call in spawn_calls:
-        arguments = decoded_arguments(call)
-        if child_task_name is None or arguments.get("task_name") == child_task_name:
-            matching_spawns.append((when, call, arguments))
-
-    spawn = matching_spawns[0] if matching_spawns else (None, {}, {})
-    spawn_when, spawn_call, spawn_arguments = spawn
+    matching_spawns = [
+        item for item in spawn_calls if item[2].get("task_name") == child_task_name
+    ]
+    spawn_when, spawn_call, spawn_arguments = (
+        matching_spawns[0] if matching_spawns else (None, {}, {})
+    )
     spawn_call_id = spawn_call.get("call_id")
-    spawn_return_times = []
+    spawn_returns = []
     for record in root_records:
         payload = record.get("payload")
         when = timestamp(record)
@@ -154,55 +358,129 @@ def verify(
             and payload.get("call_id") == spawn_call_id
             and when is not None
         ):
-            spawn_return_times.append(when)
+            spawn_returns.append(when)
 
-    starts = event_times(child_records, "task_started")
-    results = event_times(child_records, "agent_message")
-    completes = event_times(child_records, "task_complete")
-    first_start = min(starts) if starts else None
-    first_complete = min(completes) if completes else None
-    last_complete = max(completes) if completes else None
+    starts = timed_payloads(child_records, "event_msg", "task_started")
+    completes = timed_payloads(child_records, "event_msg", "task_complete")
+    failures = timed_payloads(child_records, "event_msg", "turn_aborted")
+    failures.extend(failed_tool_events(child_records))
+    failures.sort(key=lambda item: item[0])
+    first_start = starts[0][0] if starts else None
+    if scenario == "failure" and failures:
+        later_completions = [event for event in completes if event[0] > failures[0][0]]
+        terminal_events = later_completions or failures
+    else:
+        terminal_events = completes
+    first_terminal = terminal_events[0][0] if terminal_events else None
+    last_terminal = terminal_events[-1][0] if terminal_events else None
 
     root_progress = any(
-        first_start < when < first_complete and call.get("name") not in ORCHESTRATION_TOOLS
+        first_start < when < first_terminal
+        and meaningful_call(call, root_progress_scope)
         for when, call in root_calls
-        if first_start is not None and first_complete is not None
+        if first_start is not None and first_terminal is not None
     )
     integration_verification = any(
-        when > last_complete and call.get("name") not in ORCHESTRATION_TOOLS
+        when > last_terminal and meaningful_call(call, verification_scope)
         for when, call in root_calls
-        if last_complete is not None
+        if last_terminal is not None
     )
+
+    start_by_turn = {
+        payload.get("turn_id"): when
+        for when, payload in starts
+        if isinstance(payload.get("turn_id"), str)
+    }
+    complete_by_turn = {
+        payload.get("turn_id"): (when, payload)
+        for when, payload in completes
+        if isinstance(payload.get("turn_id"), str)
+    }
+    unique_turn_ids = [
+        context.get("turn_id")
+        for context in child_contexts
+        if isinstance(context.get("turn_id"), str)
+    ]
+    complete_lifecycle = bool(start_by_turn) and start_by_turn.keys() == complete_by_turn.keys()
+    complete_lifecycle = complete_lifecycle and all(
+        start_by_turn[turn_id] < complete_by_turn[turn_id][0]
+        for turn_id in start_by_turn
+    )
+    child_results = complete_lifecycle and all(
+        isinstance(payload.get("last_agent_message"), str)
+        and bool(payload["last_agent_message"].strip())
+        for _, payload in complete_by_turn.values()
+    )
+    if scenario == "failure":
+        complete_lifecycle = bool(
+            failures and first_start and first_terminal and first_start < failures[0][0]
+        )
+        child_results = True
 
     followups = [
-        decoded_arguments(call)
-        for _, call in root_calls
+        (when, decoded_arguments(call))
+        for when, call in root_calls
         if call.get("name") == "followup_task"
     ]
-    followup_reuses_child = any(
-        arguments.get("target") == child_path for arguments in followups
-    )
-    turn_count = len(payloads(child_records, "turn_context"))
+    reuse_chain = False
+    if require_followup and len(starts) >= 2 and completes:
+        first_complete = completes[0][0]
+        second_start = starts[1][0]
+        reuse_chain = any(
+            arguments.get("target") == child_path
+            and first_complete < when < second_start
+            for when, arguments in followups
+        )
 
-    root_writes = [call for _, call in root_calls if call.get("name") == "apply_patch"]
-    child_writes = [call for _, call in child_calls if call.get("name") == "apply_patch"]
-    if root_write_scope is None and child_write_scope is None:
-        write_ownership = True
-    else:
-        write_ownership = bool(root_write_scope and child_write_scope)
-        write_ownership = write_ownership and root_write_scope != child_write_scope
-        write_ownership = write_ownership and any(
-            root_write_scope in argument_text(call) for call in root_writes
+    spawn_scope_keys = [scope_key(arguments) for _, _, arguments in spawn_calls]
+    scoped_spawns = [key for key in spawn_scope_keys if key]
+    no_duplicate_scope = bool(spawn_scope_keys) and len(scoped_spawns) == len(spawn_scope_keys)
+    no_duplicate_scope = no_duplicate_scope and all(
+        count == 1 for count in Counter(scoped_spawns).values()
+    )
+
+    write_ownership = root_write_scope is None and child_write_scope is None
+    hashes: dict[str, str | None] = {}
+    if root_write_scope is not None or child_write_scope is not None:
+        write_ownership = bool(root_write_scope and child_write_scope and manifest)
+        if write_ownership:
+            changed = changed_paths(manifest)
+            owned = [root_write_scope, child_write_scope]
+            write_ownership = root_write_scope != child_write_scope
+            write_ownership = write_ownership and all(
+                any(scope_matches(path, scope) for scope in owned) for path in changed
+            )
+            write_ownership = write_ownership and all(
+                any(scope_matches(path, scope) for path in changed) for scope in owned
+            )
+            root_patches = [call for _, call in root_calls if patch_call(call)]
+            child_patches = [call for _, call in child_calls if patch_call(call)]
+            write_ownership = write_ownership and any(
+                root_write_scope in call_text(call) for call in root_patches
+            )
+            write_ownership = write_ownership and any(
+                child_write_scope in call_text(call) for call in child_patches
+            )
+            write_ownership = write_ownership and all(
+                child_write_scope not in call_text(call) for call in root_patches
+            )
+            write_ownership = write_ownership and all(
+                root_write_scope not in call_text(call) for call in child_patches
+            )
+            for scope in owned:
+                path = next((path for path in changed if scope_matches(path, scope)), None)
+                hashes[f"{scope}:before"] = manifest["before"].get(path) if path else None
+                hashes[f"{scope}:after"] = manifest["after"].get(path) if path else None
+
+    failure_reported = True
+    no_substitute_spawn = True
+    if scenario == "failure":
+        failure_reported = any(
+            when > last_terminal and failure_report_marker in text
+            for when, text in messages(root_records, "assistant")
+            if last_terminal is not None
         )
-        write_ownership = write_ownership and any(
-            child_write_scope in argument_text(call) for call in child_writes
-        )
-        write_ownership = write_ownership and all(
-            child_write_scope not in argument_text(call) for call in root_writes
-        )
-        write_ownership = write_ownership and all(
-            root_write_scope not in argument_text(call) for call in child_writes
-        )
+        no_substitute_spawn = len(spawn_calls) == 1
 
     checks = {
         "native_spawn": bool(matching_spawns)
@@ -210,33 +488,43 @@ def verify(
         and spawn_arguments.get("fork_turns") == "none"
         and "model" not in spawn_arguments
         and "reasoning_effort" not in spawn_arguments,
+        "policy_order": policy_order(root_records, policy, spawn_when),
         "native_role_resolution": child_role == expected_role and child_depth == 1,
-        "parent_child_link": (
-            bool(root_meta)
-            and child_meta.get("parent_thread_id") == root_meta.get("id")
-        ),
-        "child_lifecycle_complete": bool(starts)
-        and len(starts) == len(completes)
-        and all(start < complete for start, complete in zip(starts, completes)),
-        "child_result_returned": len(results) >= len(completes) > 0,
-        "spawn_returns_before_child_completion": bool(spawn_return_times)
-        and first_complete is not None
-        and min(spawn_return_times) < first_complete,
+        "parent_child_link": bool(root_meta)
+        and child_meta.get("parent_thread_id")
+        in {root_meta.get("id"), root_meta.get("session_id")},
+        "child_lifecycle_complete": complete_lifecycle,
+        "child_result_returned": child_results,
+        "spawn_returns_before_child_terminal": bool(spawn_returns)
+        and first_terminal is not None
+        and min(spawn_returns) < first_terminal,
         "root_progress_while_child_active": root_progress,
         "root_integration_verification": integration_verification,
         "leaf_child": all(call.get("name") != "spawn_agent" for _, call in child_calls),
-        "no_duplicate_scope_spawn": len(matching_spawns) == 1,
-        "same_child_followup": (
-            not require_followup or (followup_reuses_child and turn_count >= 2)
+        "no_duplicate_scope_spawn": no_duplicate_scope,
+        "same_child_followup": not require_followup
+        or (
+            reuse_chain
+            and len(unique_turn_ids) >= 2
+            and len(unique_turn_ids) == len(set(unique_turn_ids))
+            and len(matching_spawns) == 1
         ),
         "write_ownership": write_ownership,
+        "failure_reported": failure_reported,
+        "no_substitute_spawn": no_substitute_spawn,
     }
     return {
         "ok": all(checks.values()),
         "checks": checks,
+        "scenario": scenario,
         "child_session_id": child_session_id,
         "child_path": child_path,
-        "child_turn_count": turn_count,
+        "child_turn_ids": unique_turn_ids,
+        "root_model": root_context.get("model"),
+        "root_reasoning_effort": root_context.get("effort"),
+        "child_model": child_context.get("model"),
+        "child_reasoning_effort": child_context.get("effort"),
+        "artifact_hashes": hashes,
     }
 
 
@@ -245,26 +533,63 @@ def parse_args() -> argparse.Namespace:
         description="Verify native Root/Child lifecycle evidence from Codex JSONL rollouts."
     )
     parser.add_argument("--root-rollout", type=Path, required=True)
-    parser.add_argument("--child-rollout", type=Path, required=True)
-    parser.add_argument("--expected-role", required=True)
+    parser.add_argument("--child-rollout", type=Path)
+    parser.add_argument("--expected-role")
+    parser.add_argument(
+        "--scenario",
+        choices=("normal", "failure", "ask-refused", "native-absence", "missing-role"),
+        default="normal",
+    )
+    parser.add_argument("--policy", choices=("auto", "ask-approved"))
     parser.add_argument("--require-followup", action="store_true")
+    parser.add_argument("--root-progress-scope", required=True)
+    parser.add_argument("--verification-scope")
     parser.add_argument("--root-write-scope")
     parser.add_argument("--child-write-scope")
+    parser.add_argument("--ownership-manifest", type=Path)
+    parser.add_argument("--failure-report-marker", default="Affected Child Lane")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    try:
-        report = verify(
-            load_jsonl(args.root_rollout),
-            load_jsonl(args.child_rollout),
-            args.expected_role,
-            args.require_followup,
-            args.root_write_scope,
-            args.child_write_scope,
+    child_scenarios = {"normal", "failure"}
+    if args.scenario in child_scenarios and (
+        args.child_rollout is None
+        or not args.expected_role
+        or not args.verification_scope
+    ):
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "error": "child scenarios require --child-rollout, --expected-role, and --verification-scope",
+                }
+            )
         )
-    except (OSError, UnicodeError, ValueError) as error:
+        return 2
+    try:
+        root_records = load_jsonl(args.root_rollout)
+        if args.scenario in child_scenarios:
+            report = verify_child(
+                root_records,
+                load_jsonl(args.child_rollout),
+                args.expected_role,
+                args.scenario,
+                args.policy,
+                args.require_followup,
+                args.root_progress_scope,
+                args.verification_scope,
+                args.root_write_scope,
+                args.child_write_scope,
+                load_manifest(args.ownership_manifest),
+                args.failure_report_marker,
+            )
+        else:
+            report = verify_root_only(
+                root_records, args.scenario, args.root_progress_scope
+            )
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
         print(json.dumps({"ok": False, "error": str(error)}))
         return 2
     print(json.dumps(report, sort_keys=True))

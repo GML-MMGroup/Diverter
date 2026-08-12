@@ -14,58 +14,110 @@ def write_jsonl(path: Path, records: list[dict]) -> None:
     path.write_text("".join(json.dumps(record) + "\n" for record in records))
 
 
+def message(timestamp: str, role: str, text: str) -> dict:
+    return {
+        "timestamp": timestamp,
+        "type": "response_item",
+        "payload": {
+            "type": "message",
+            "role": role,
+            "content": [{"type": "output_text", "text": text}],
+        },
+    }
+
+
+def call(timestamp: str, name: str, arguments: str, call_id: str) -> dict:
+    return {
+        "timestamp": timestamp,
+        "type": "response_item",
+        "payload": {
+            "type": "function_call",
+            "name": name,
+            "arguments": arguments,
+            "call_id": call_id,
+        },
+    }
+
+
+def exec_call(timestamp: str, input_text: str, call_id: str) -> dict:
+    return {
+        "timestamp": timestamp,
+        "type": "response_item",
+        "payload": {
+            "type": "custom_tool_call",
+            "name": "exec",
+            "input": input_text,
+            "call_id": call_id,
+        },
+    }
+
+
+def event(timestamp: str, event_type: str, turn_id: str, **extra: str) -> dict:
+    return {
+        "timestamp": timestamp,
+        "type": "event_msg",
+        "payload": {"type": event_type, "turn_id": turn_id, **extra},
+    }
+
+
 class NativeLifecycleVerifierTest(unittest.TestCase):
     def run_verifier(
-        self, root_records: list[dict], child_records: list[dict]
+        self,
+        root_records: list[dict],
+        child_records: list[dict] | None,
+        *extra_args: str,
+        manifest: dict | None = None,
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as temp_dir:
             root_path = Path(temp_dir) / "root.jsonl"
-            child_path = Path(temp_dir) / "child.jsonl"
             write_jsonl(root_path, root_records)
-            write_jsonl(child_path, child_records)
-            return subprocess.run(
-                [
-                    sys.executable,
-                    VERIFIER,
-                    "--root-rollout",
-                    root_path,
-                    "--child-rollout",
-                    child_path,
-                    "--expected-role",
-                    "docs-researcher",
-                    "--require-followup",
-                    "--root-write-scope",
-                    "root-progress-artifact.md",
-                    "--child-write-scope",
-                    "child-evidence-artifact.md",
-                ],
-                text=True,
-                capture_output=True,
-            )
+            command = [
+                sys.executable,
+                VERIFIER,
+                "--root-rollout",
+                root_path,
+                *extra_args,
+            ]
+            if child_records is not None:
+                child_path = Path(temp_dir) / "child.jsonl"
+                write_jsonl(child_path, child_records)
+                command.extend(["--child-rollout", child_path])
+            if manifest is not None:
+                manifest_path = Path(temp_dir) / "manifest.json"
+                manifest_path.write_text(json.dumps(manifest))
+                command.extend(["--ownership-manifest", manifest_path])
+            return subprocess.run(command, text=True, capture_output=True)
 
-    def test_accepts_native_progress_reuse_integration_and_leaf_trace(self) -> None:
+    def happy_records(self) -> tuple[list[dict], list[dict], dict]:
         root_records = [
             {
                 "timestamp": "2026-08-13T10:00:00Z",
                 "type": "session_meta",
-                "payload": {"id": "root-session"},
+                "payload": {"id": "root-rollout", "session_id": "root-session"},
             },
             {
-                "timestamp": "2026-08-13T10:00:01Z",
-                "type": "response_item",
-                "payload": {
-                    "type": "function_call",
-                    "name": "spawn_agent",
-                    "arguments": json.dumps(
-                        {
-                            "task_name": "docs_lane",
-                            "agent_type": "docs-researcher",
-                            "fork_turns": "none",
-                        }
-                    ),
-                    "call_id": "spawn-1",
-                },
+                "timestamp": "2026-08-13T10:00:00.100000Z",
+                "type": "turn_context",
+                "payload": {"turn_id": "root-turn", "model": "gpt-5.6-terra", "effort": "high"},
             },
+            message(
+                "2026-08-13T10:00:00.500000Z",
+                "assistant",
+                "Dispatch Announcement\nRoot Lane: root-progress-artifact.md\nWork Mode: mixed",
+            ),
+            call(
+                "2026-08-13T10:00:01Z",
+                "spawn_agent",
+                json.dumps(
+                    {
+                        "task_name": "docs_lane",
+                        "agent_type": "docs-researcher",
+                        "fork_turns": "none",
+                        "message": "goal: collect evidence\nscope_in: child-evidence-artifact.md",
+                    }
+                ),
+                "spawn-1",
+            ),
             {
                 "timestamp": "2026-08-13T10:00:02Z",
                 "type": "response_item",
@@ -75,38 +127,22 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
                     "output": '{"task_name":"/root/docs_lane"}',
                 },
             },
-            {
-                "timestamp": "2026-08-13T10:00:04Z",
-                "type": "response_item",
-                "payload": {
-                    "type": "function_call",
-                    "name": "apply_patch",
-                    "arguments": "root-progress-artifact.md",
-                    "call_id": "root-progress",
-                },
-            },
-            {
-                "timestamp": "2026-08-13T10:00:07Z",
-                "type": "response_item",
-                "payload": {
-                    "type": "function_call",
-                    "name": "followup_task",
-                    "arguments": json.dumps(
-                        {"target": "/root/docs_lane", "message": "Verify the related point."}
-                    ),
-                    "call_id": "followup-1",
-                },
-            },
-            {
-                "timestamp": "2026-08-13T10:00:11Z",
-                "type": "response_item",
-                "payload": {
-                    "type": "function_call",
-                    "name": "exec_command",
-                    "arguments": "verify-integrated-artifact",
-                    "call_id": "root-verify",
-                },
-            },
+            exec_call(
+                "2026-08-13T10:00:04Z",
+                'await tools.apply_patch("*** Begin Patch\\n*** Update File: root-progress-artifact.md")',
+                "root-progress",
+            ),
+            call(
+                "2026-08-13T10:00:07Z",
+                "followup_task",
+                json.dumps({"target": "/root/docs_lane", "message": "Verify the related point."}),
+                "followup-1",
+            ),
+            exec_call(
+                "2026-08-13T10:00:11Z",
+                'await tools.exec_command({"cmd":"verify-integrated-artifact"})',
+                "root-verify",
+            ),
         ]
         child_records = [
             {
@@ -129,133 +165,288 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             {
                 "timestamp": "2026-08-13T10:00:03Z",
                 "type": "turn_context",
-                "payload": {"turn_id": "turn-1", "model": "gpt-5.6-luna"},
+                "payload": {"turn_id": "turn-1", "model": "gpt-5.6-luna", "effort": "high"},
             },
-            {
-                "timestamp": "2026-08-13T10:00:03Z",
-                "type": "event_msg",
-                "payload": {"type": "task_started"},
-            },
-            {
-                "timestamp": "2026-08-13T10:00:05Z",
-                "type": "response_item",
-                "payload": {
-                    "type": "function_call",
-                    "name": "apply_patch",
-                    "arguments": "child-evidence-artifact.md",
-                    "call_id": "child-write",
-                },
-            },
-            {
-                "timestamp": "2026-08-13T10:00:05.500000Z",
-                "type": "event_msg",
-                "payload": {
-                    "type": "agent_message",
-                    "message": "Bounded evidence returned to Root.",
-                },
-            },
-            {
-                "timestamp": "2026-08-13T10:00:06Z",
-                "type": "event_msg",
-                "payload": {"type": "task_complete"},
-            },
+            event("2026-08-13T10:00:03Z", "task_started", "turn-1"),
+            exec_call(
+                "2026-08-13T10:00:05Z",
+                'await tools.apply_patch("*** Begin Patch\\n*** Update File: child-evidence-artifact.md")',
+                "child-write",
+            ),
+            event(
+                "2026-08-13T10:00:06Z",
+                "task_complete",
+                "turn-1",
+                last_agent_message="Bounded evidence returned to Root.",
+            ),
             {
                 "timestamp": "2026-08-13T10:00:08Z",
                 "type": "turn_context",
-                "payload": {"turn_id": "turn-2", "model": "gpt-5.6-luna"},
+                "payload": {"turn_id": "turn-2", "model": "gpt-5.6-luna", "effort": "high"},
             },
-            {
-                "timestamp": "2026-08-13T10:00:08Z",
-                "type": "event_msg",
-                "payload": {"type": "task_started"},
-            },
-            {
-                "timestamp": "2026-08-13T10:00:09Z",
-                "type": "event_msg",
-                "payload": {
-                    "type": "agent_message",
-                    "message": "Related follow-up evidence returned to Root.",
-                },
-            },
-            {
-                "timestamp": "2026-08-13T10:00:10Z",
-                "type": "event_msg",
-                "payload": {"type": "task_complete"},
-            },
+            event("2026-08-13T10:00:08Z", "task_started", "turn-2"),
+            event(
+                "2026-08-13T10:00:10Z",
+                "task_complete",
+                "turn-2",
+                last_agent_message="Related follow-up evidence returned to Root.",
+            ),
         ]
+        manifest = {
+            "before": {
+                "root-progress-artifact.md": "root-before",
+                "child-evidence-artifact.md": "child-before",
+            },
+            "after": {
+                "root-progress-artifact.md": "root-after",
+                "child-evidence-artifact.md": "child-after",
+            },
+        }
+        return root_records, child_records, manifest
 
-        result = self.run_verifier(root_records, child_records)
+    def common_args(self) -> tuple[str, ...]:
+        return (
+            "--expected-role",
+            "docs-researcher",
+            "--policy",
+            "auto",
+            "--require-followup",
+            "--root-progress-scope",
+            "root-progress-artifact.md",
+            "--verification-scope",
+            "verify-integrated-artifact",
+            "--root-write-scope",
+            "root-progress-artifact.md",
+            "--child-write-scope",
+            "child-evidence-artifact.md",
+        )
+
+    def test_accepts_real_native_shapes_progress_reuse_and_ownership(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
 
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
-        self.assertTrue(report["ok"])
+        self.assertTrue(report["ok"], report)
         self.assertEqual(report["child_session_id"], "child-session")
-        self.assertEqual(report["child_turn_count"], 2)
+        self.assertEqual(report["child_turn_ids"], ["turn-1", "turn-2"])
+        self.assertEqual(report["child_model"], "gpt-5.6-luna")
         self.assertTrue(all(report["checks"].values()), report)
 
-    def test_rejects_child_descendant_spawn(self) -> None:
-        root_records = [
-            {
-                "timestamp": "2026-08-13T10:00:01Z",
-                "type": "response_item",
-                "payload": {
-                    "type": "function_call",
-                    "name": "spawn_agent",
-                    "arguments": '{"task_name":"docs_lane","agent_type":"docs-researcher","fork_turns":"none"}',
-                    "call_id": "spawn-1",
-                },
-            }
-        ]
-        child_records = [
-            {
-                "timestamp": "2026-08-13T10:00:02Z",
-                "type": "session_meta",
-                "payload": {
-                    "id": "child-session",
-                    "source": {
-                        "subagent": {
-                            "thread_spawn": {
-                                "depth": 1,
-                                "agent_path": "/root/docs_lane",
-                                "agent_role": "docs-researcher",
-                            }
-                        }
-                    },
-                },
-            },
-            {
-                "timestamp": "2026-08-13T10:00:03Z",
-                "type": "turn_context",
-                "payload": {"turn_id": "turn-1"},
-            },
-            {
-                "timestamp": "2026-08-13T10:00:03Z",
-                "type": "event_msg",
-                "payload": {"type": "task_started"},
-            },
-            {
-                "timestamp": "2026-08-13T10:00:04Z",
-                "type": "response_item",
-                "payload": {
-                    "type": "function_call",
-                    "name": "spawn_agent",
-                    "arguments": "{}",
-                    "call_id": "descendant",
-                },
-            },
-            {
-                "timestamp": "2026-08-13T10:00:05Z",
-                "type": "event_msg",
-                "payload": {"type": "task_complete"},
-            },
-        ]
+    def test_accepts_ask_approval_only_before_spawn(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records[2] = message(
+            "2026-08-13T10:00:00.500000Z",
+            "assistant",
+            "Dispatch Recommendation",
+        )
+        root_records.insert(
+            3,
+            message(
+                "2026-08-13T10:00:00.750000Z",
+                "user",
+                "Dispatch Authorization",
+            ),
+        )
+        args = list(self.common_args())
+        args[args.index("auto")] = "ask-approved"
 
-        result = self.run_verifier(root_records, child_records)
+        result = self.run_verifier(
+            root_records, child_records, *args, manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(json.loads(result.stdout)["checks"]["policy_order"])
+
+    def test_rejects_bookkeeping_as_root_progress(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records[5] = call(
+            "2026-08-13T10:00:04Z",
+            "update_plan",
+            '{"explanation":"root-progress-artifact.md"}',
+            "not-progress",
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
 
         self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["root_progress_while_child_active"])
+
+    def test_rejects_child_descendant_spawn(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        child_records.insert(
+            4,
+            call("2026-08-13T10:00:04Z", "spawn_agent", "{}", "descendant"),
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["leaf_child"])
+
+    def test_rejects_duplicate_scope_under_a_different_task_name(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records.insert(
+            4,
+            call(
+                "2026-08-13T10:00:01.500000Z",
+                "spawn_agent",
+                json.dumps(
+                    {
+                        "task_name": "duplicate_lane",
+                        "agent_type": "docs-researcher",
+                        "fork_turns": "none",
+                        "message": "goal: repeat evidence\nscope_in: child-evidence-artifact.md",
+                    }
+                ),
+                "spawn-duplicate",
+            ),
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["no_duplicate_scope_spawn"])
+
+    def test_rejects_completion_without_a_final_child_result(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        del child_records[4]["payload"]["last_agent_message"]
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["child_result_returned"])
+
+    def test_rejects_unauthorized_workspace_change(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        manifest["after"]["unowned.md"] = "unexpected-write"
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["write_ownership"])
+
+    def test_accepts_ask_refusal_with_zero_spawn_and_root_continuation(self) -> None:
+        root_records = [
+            message("2026-08-13T10:00:00Z", "assistant", "Dispatch Recommendation"),
+            message("2026-08-13T10:00:01Z", "user", "Dispatch Refused"),
+            exec_call(
+                "2026-08-13T10:00:02Z",
+                'await tools.exec_command({"cmd":"root-only-artifact"})',
+                "root-only",
+            ),
+        ]
+
+        result = self.run_verifier(
+            root_records,
+            None,
+            "--scenario",
+            "ask-refused",
+            "--root-progress-scope",
+            "root-only-artifact",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(json.loads(result.stdout)["ok"])
+
+    def test_accepts_silent_root_continuation_for_preactivation_bypasses(self) -> None:
+        root_records = [
+            exec_call(
+                "2026-08-13T10:00:02Z",
+                'await tools.exec_command({"cmd":"root-only-artifact"})',
+                "root-only",
+            ),
+            message("2026-08-13T10:00:03Z", "assistant", "Task completed in Root."),
+        ]
+
+        for scenario in ("native-absence", "missing-role"):
+            with self.subTest(scenario=scenario):
+                result = self.run_verifier(
+                    root_records,
+                    None,
+                    "--scenario",
+                    scenario,
+                    "--root-progress-scope",
+                    "root-only-artifact",
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(json.loads(result.stdout)["ok"])
+
+    def test_accepts_post_announcement_failure_and_root_takeover(self) -> None:
+        root_records, child_records, _ = self.happy_records()
+        child_records = child_records[:4]
+        child_records.extend(
+            [
+                {
+                    "timestamp": "2026-08-13T10:00:05Z",
+                    "type": "response_item",
+                    "payload": {
+                        "type": "custom_tool_call_output",
+                        "call_id": "denied-write",
+                        "output": [
+                            {
+                                "type": "input_text",
+                                "text": "Script failed: read-only file system",
+                            }
+                        ],
+                    },
+                },
+                event(
+                    "2026-08-13T10:00:06Z",
+                    "task_complete",
+                    "turn-1",
+                    last_agent_message="The bounded write failed under read-only permissions.",
+                ),
+            ]
+        )
+        root_records = [record for record in root_records if record.get("timestamp") != "2026-08-13T10:00:07Z"]
+        root_records.extend(
+            [
+                message(
+                    "2026-08-13T10:00:07Z",
+                    "assistant",
+                    "Affected Child Lane: docs evidence. Root is taking over.",
+                ),
+                exec_call(
+                    "2026-08-13T10:00:08Z",
+                    'await tools.exec_command({"cmd":"root-takeover-artifact"})',
+                    "takeover",
+                ),
+            ]
+        )
+
+        result = self.run_verifier(
+            root_records,
+            child_records,
+            "--scenario",
+            "failure",
+            "--expected-role",
+            "docs-researcher",
+            "--policy",
+            "auto",
+            "--root-progress-scope",
+            "root-progress-artifact.md",
+            "--verification-scope",
+            "root-takeover-artifact",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
-        self.assertFalse(report["ok"])
-        self.assertFalse(report["checks"]["leaf_child"])
+        self.assertTrue(report["checks"]["failure_reported"], report)
+        self.assertTrue(report["checks"]["root_integration_verification"], report)
 
 
 if __name__ == "__main__":

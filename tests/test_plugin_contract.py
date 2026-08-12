@@ -387,6 +387,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Router Score / 7", results_template)
         self.assertIn("Native Lifecycle Evidence", results_template)
         self.assertIn("verify-native-lifecycle.py", scenarios)
+        self.assertIn("run-native-lifecycle.py", scenarios)
         self.assertIn("three independent fresh sessions", scenarios)
         for metadata in (
             "root_continuation:",
