@@ -18,7 +18,7 @@
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-Diverter helps Codex know when to delegate: complex tasks call in specialists as needed, while simple tasks stay in the main thread.
+Diverter distills Ultra's subagent decomposition and routing into non-Ultra GPT-5.6 Codex sessions: one task becomes a useful Root Lane plus the right native specialist Child Lane.
 
 ## ✨ See Diverter in action
 
@@ -40,7 +40,7 @@ Diverter helps Codex know when to delegate: complex tasks call in specialists as
 
 2. After installation, open `/hooks`, review and trust Diverter's `SessionStart` Hook, then start or reopen a task.
 
-3. New installations start in `ask`. Inspect or change the user-level policy with:
+3. During installation, choose `auto` (recommended) for proactive dispatch or `ask` for approval-first dispatch. Inspect or change the user-level policy with:
 
    ```text
    $diverter-mode status
@@ -86,35 +86,36 @@ Diverter includes ten Bundled Subagents. The installer offers the recommended se
 | `test-automator` | `gpt-5.6-terra` | `xhigh` | Adds bounded regression tests after behavior is clear |
 | `web-performance-auditor` | `gpt-5.6-luna` | `xhigh` | Audits Web performance evidence and Core Web Vitals risks |
 
-Diverter selects capabilities first, then maps them to roles available in your Codex environment. Missing preferred roles are reported rather than silently substituted. Custom role sets can adapt [`role-lineups.md`](skills/diverter/references/role-lineups.md).
+Diverter selects capabilities first, then maps them to the native roles installed in your Codex environment. Custom role sets can adapt [`role-lineups.md`](skills/diverter/references/role-lineups.md).
 
 ## 🔄 Work Modes
 
 | Work Mode | Boundary |
 |---|---|
 | `read-only` | Inspect and report; never write files |
-| `mixed` | Investigate first, then perform bounded writes; writers stay serialized unless paths are explicitly disjoint |
+| `mixed` | Investigate first, then perform bounded writes with explicit artifact ownership |
 | `write-capable` | Edit only within the explicit handoff and sandbox |
 
 Diverter always names one Work Mode before dispatch.
 
 ## 🎯 When Diverter Delegates
 
-At most intelligence levels, subagent delegation must be requested explicitly; Ultra may delegate proactively. Diverter fills the explicit-delegation path and silently steps aside when native proactive delegation owns the session. See OpenAI's [subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+Diverter brings proactive, task-shaped delegation to non-Ultra GPT-5.6 Codex sessions and silently steps aside when native proactive delegation already owns the session. See OpenAI's [subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
 
-| Delegates when | Stays focused when |
-|---|---|
-| Independent work lanes can run in parallel | The task is simple or single-lane |
-| Code and official documentation need separate verification | Writes are tightly coupled, or one fact is needed first |
-| Security, test, performance, or release risk calls for a specialist | The user opts out explicitly, or the request is still ambiguous |
+- A bounded native specialist handles the Child Lane while the Root Session continues a distinct useful deliverable.
+- Focused skills keep their workflow and can receive a non-duplicative Supporting Child.
+- Related follow-ups return to the same native child, preserving the context it already built.
+- Every write-capable lane declares artifact ownership; disjoint work can progress together and overlapping work is serialized.
+- Root integrates and proportionally verifies child evidence before delivering one coherent outcome.
 
 Diverter matches the user's language. Role names and Work Mode tokens remain in English.
 
 ## ⚙️ How It Works
 
 1. The `SessionStart` Hook loads the user-level Delegation Policy and activates the Delegation Gate.
-2. Diverter first yields to native proactive delegation. Otherwise it decides whether to stay in the main thread or select one lineup of up to four roles and one Work Mode.
-3. `ask` waits for approval; `auto` announces and dispatches immediately. The execution backend then runs bounded handoffs through native custom agents or temporary leaf `codex exec` workers.
+2. Diverter identifies a bounded Child Lane, the useful Root Lane that will continue, the Smallest Sufficient Lineup, and one Work Mode.
+3. `ask` waits for approval; `auto` announces and dispatches immediately through native role-specific subagents.
+4. Root keeps progressing while every child remains a leaf, then integrates, verifies, and returns the final result.
 
 Every handoff carries an explicit goal, scope, write policy, and verifiable deliverable. See [`delegation-contract.md`](skills/diverter/references/delegation-contract.md) and [`handoff-schema.md`](skills/diverter/references/handoff-schema.md).
 

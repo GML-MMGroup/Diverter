@@ -2,7 +2,12 @@
 
 ## Unreleased
 
-- No unreleased changes.
+- Distill Ultra-inspired decomposition and routing into non-Ultra GPT-5.6 Codex sessions.
+- Relax implicit eligibility to one bounded Child Lane plus one distinct, useful Root Lane, including Supporting Children for focused skills.
+- Default to the Smallest Sufficient Lineup, keep Root progressing during child work, and reuse the same native child for related follow-ups.
+- Make native role-specific subagents the only execution backend and remove the CLI worker path.
+- Add explicit Write Ownership, leaf-child handoffs, Root integration and verification requirements, paired routing cases, and persisted native lifecycle evidence checks.
+- Ask fresh installations to choose `auto` or `ask`, with `auto` recommended for proactive dispatch.
 
 ## 0.3.2 - 2026-07-28
 

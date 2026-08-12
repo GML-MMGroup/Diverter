@@ -391,28 +391,28 @@ prompts:
     surface: shared
     smoke: true
     category: positive
-    prompt: "Review this branch against origin/main for correctness and maintainability regressions."
+    prompt: "While you map the changed execution path and integrate the final review, use one independent reviewer for correctness and maintainability regressions against origin/main."
     expected_should_suggest: true
     expected_should_dispatch: true
-    expected_roles: [reviewer, code-mapper]
+    expected_roles: [reviewer]
     must_do:
       - announce one lineup and the work mode
       - dispatch without asking a permission question
-    notes: "Canonical automatic read-only dispatch."
+    notes: "Canonical automatic one-child-plus-Root dispatch."
 
   - id: auto-pos-02
     policy: auto
     surface: cli
     smoke: true
     category: positive
-    prompt: "Add targeted regression tests for the falsey-value settings save bug in evals/fixtures/settings-save/settings_save.py, but first map the exact behavior boundary."
+    prompt: "While you map and verify the falsey-value behavior boundary, use one bounded test writer to add targeted regression tests for evals/fixtures/settings-save/settings_save.py."
     expected_should_suggest: true
     expected_should_dispatch: true
-    expected_roles: [test-engineer, test-automator, code-mapper]
+    expected_roles: [test-automator]
     must_do:
       - announce mixed work
       - keep write-capable work bounded and serialized unless paths are disjoint
-    notes: "Automatic policy applies to mixed work."
+    notes: "Automatic policy applies to a bounded Child write plus a distinct Root analysis lane."
 
   - id: auto-neg-01
     policy: auto
@@ -487,7 +487,7 @@ prompts:
     surface: shared
     smoke: true
     category: edge
-    session_context: "The reviewer lane succeeded. The code-mapper worker exited non-zero."
+    session_context: "The reviewer lane succeeded. The code-mapper child failed after Dispatch Announcement."
     prompt: "Continue the automatically delegated branch review."
     expected_should_suggest: false
     expected_should_dispatch: false
@@ -496,8 +496,8 @@ prompts:
       - retain the reviewer result and name the failed code-mapper lane
       - let the root session cover the failed lane when possible
     must_not_do:
-      - remove sandbox or multi-agent safety flags
-      - retry through an unqualified backend
+      - weaken sandbox or leaf-child constraints
+      - retry through a generic substitute role
     notes: "Partial failure stays visible without weakening safety."
 
   - id: auto-idempotency
@@ -616,3 +616,158 @@ prompts:
     must_not_do:
       - expose aliases, cache paths, SKILL.md loading, or retry steps
     notes: "A blocking failure reports the required user action without operational chatter."
+
+  - id: ultra-pos-ui-root-continues
+    policy: auto
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "为侧边栏滚动列表起草 UX acceptance criteria；同时让一个合适的子代理独立定位组件、高度约束和现有键盘交互，最后由你整合设计方案。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [code-mapper]
+    evaluator_metadata:
+      root_continuation: "draft UX acceptance criteria and integration plan"
+      child_scope: "map sidebar component, height constraints, and current keyboard behavior"
+      root_scope: "UX criteria and final design synthesis"
+      benefit_claim: "mapping can complete while Root develops the design criteria"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - name the Root Lane before dispatch
+      - dispatch exactly one child
+    notes: "Paired positive for gate-neg-focused-ui; the useful Root Lane is the only routing difference."
+
+  - id: ultra-pos-focused-skill-support
+    policy: auto
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "$grill-with-docs 继续主导侧边栏设计讨论和决策记录，同时用一个 supporting child 独立核对现有组件约束；不要让它替代你的主流程。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [code-mapper]
+    evaluator_metadata:
+      root_continuation: "focused skill keeps design interview and decision record"
+      child_scope: "inspect existing component constraints"
+      root_scope: "design discussion and accepted decisions"
+      benefit_claim: "the supporting check is independent and non-duplicative"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - preserve focused-skill ownership
+      - describe code-mapper as a Supporting Child
+    notes: "Focused skills may receive support without surrendering the Root Lane."
+
+  - id: ultra-pos-regression-root-continues
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "The falsey-value settings save defect is known. While you trace the fixture and define the behavior boundary, have one test specialist design the smallest Prove-It regression coverage."
+    expected_should_suggest: true
+    expected_roles: [test-engineer]
+    evaluator_metadata:
+      root_continuation: "trace the fixture and define the behavior boundary"
+      child_scope: "design minimal regression coverage"
+      root_scope: "fixture mapping and integration"
+      benefit_claim: "test design is independent of fixture tracing"
+      max_active_children: 1
+      expected_reuse: false
+    notes: "Paired positive for neg-10, which remains unclear and ineligible."
+
+  - id: ultra-pos-disjoint-write
+    policy: auto
+    surface: cli
+    smoke: false
+    category: positive
+    prompt: "While you update the release checklist in docs/release-checklist.md, use one bounded test writer for tests/test_settings_save.py. The two artifacts are disjoint; integrate both outcomes."
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [test-automator]
+    evaluator_metadata:
+      root_continuation: "update docs/release-checklist.md"
+      child_scope: "write tests/test_settings_save.py"
+      root_scope: "write docs/release-checklist.md and integrate results"
+      benefit_claim: "explicitly disjoint mutable artifacts"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - declare disjoint Write Ownership
+      - keep each lane inside its artifact
+    notes: "Positive control for disjoint writes; neg-02 remains the same-file conflict control."
+
+  - id: ultra-pos-doc-check
+    surface: cli
+    smoke: false
+    category: positive
+    prompt: "Draft the migration checklist from the repository constraints while one docs specialist independently verifies the named API contract and version boundary."
+    expected_should_suggest: true
+    expected_roles: [docs-researcher]
+    evaluator_metadata:
+      root_continuation: "draft migration checklist"
+      child_scope: "verify named API contract and version boundary"
+      root_scope: "repository constraints and checklist synthesis"
+      benefit_claim: "official contract verification can run independently"
+      max_active_children: 1
+      expected_reuse: false
+    notes: "Paired positive for neg-04, where one blocking fact leaves no Root Lane."
+
+  - id: ultra-reuse-same-scope
+    policy: auto
+    surface: shared
+    smoke: true
+    category: edge
+    session_context: "A native child at /root/docs_lane already completed the initial API-contract check and remains available for follow-up."
+    prompt: "Ask that same child to verify the related version-specific exception, while you integrate the first result into the migration checklist."
+    expected_should_suggest: false
+    expected_should_dispatch: false
+    expected_roles: []
+    evaluator_metadata:
+      root_continuation: "integrate the first result"
+      child_scope: "related version-specific follow-up"
+      root_scope: "migration checklist integration"
+      benefit_claim: "preserve relevant child context"
+      max_active_children: 1
+      expected_reuse: true
+    must_do:
+      - target the existing child identity
+      - create no equivalent second child
+    notes: "Child Reuse is distinct from compact idempotency."
+
+  - id: ultra-neg-no-root-lane
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "Audit this authentication flow for permission bypasses and report the result."
+    expected_should_suggest: false
+    expected_roles: []
+    evaluator_metadata:
+      root_continuation: "none"
+      child_scope: "entire requested audit"
+      root_scope: "none"
+      benefit_claim: "none; Root would wait"
+      max_active_children: 0
+      expected_reuse: false
+    must_not_do:
+      - invent a Root Lane
+      - delegate the entire task implicitly
+    notes: "A concrete specialist task with no effective Root Lane remains Root-only implicitly."
+
+  - id: ultra-ownership-conflict
+    surface: cli
+    smoke: true
+    category: negative
+    prompt: "Update both helper functions in src/settings.py concurrently so they share one implementation."
+    expected_should_suggest: false
+    expected_roles: []
+    evaluator_metadata:
+      root_continuation: "same mutable file"
+      child_scope: "src/settings.py"
+      root_scope: "src/settings.py"
+      benefit_claim: "none; ownership overlaps"
+      max_active_children: 0
+      expected_reuse: false
+    must_not_do:
+      - assign overlapping concurrent writers
+      - claim disjoint Write Ownership
+    notes: "Same-artifact ownership conflict stays serialized in Root."

@@ -1,62 +1,45 @@
 # Delegation Contract
 
-Every Diverter message uses one shared structure and one Delegation Policy ending.
+Every Diverter message uses one shared structure and one policy ending.
 
 ## Shared Information
 
-Convey these three pieces in order:
+Convey these in order:
 
-1. Why the task benefits from delegation.
-2. Exactly one lineup of 1-4 available roles, with a task-specific assignment for each role.
-3. The Work Mode: exactly one of `read-only`, `mixed`, or `write-capable`.
+1. Why separate Root and Child lanes materially help.
+2. Exactly one Smallest Sufficient Lineup of 1-4 available roles, with a bounded Child Lane for each.
+3. The distinct useful Root Lane that will continue while children run.
+4. Exactly one Work Mode: `read-only`, `mixed`, or `write-capable`.
 
-Keep the message conversational, under roughly 4-6 short sentences, and in the user's language when natural. Keep role names and Work Mode labels exact.
-
-Shared hard rules:
-
-- Never list several equal-weight lineups.
-- Never invent a role or exceed four roles.
-- Mention an important dropped capability when its role is unavailable.
-- Add specialists only for concrete independent signals.
-- Do not describe results that do not exist.
-- Do not imply dispatch happened before the message.
+Keep the message conversational and concise. Never list alternatives, invent roles, describe results that do not exist, or imply a child started before the message.
 
 ## `ask` Ending
 
-End with a direct permission question matched to the Work Mode, then stop.
+End with a direct permission question matched to the Work Mode, then stop before task work and spawning.
 
-- `read-only`: invite evidence gathering before the user decides.
-- `mixed`: offer to start with read-only exploration and pause before writes.
-- `write-capable`: flag write risk and allow a read-only alternative.
+> This splits cleanly: `docs-researcher` can verify the API contract as a bounded Child Lane, while I trace the implementation and prepare the decision criteria in the Root Lane. Work Mode is `read-only`. Should I dispatch that supporting check?
 
-Do not inspect, run, search, summarize, spawn, or implement before approval.
-
-Example:
-
-> This splits cleanly. `code-mapper` can trace where the retry logic runs, while `docs-researcher` verifies the API's idempotency guarantee. Work Mode is `read-only`. Should I have them gather the evidence first?
+Refusal means zero spawn and ordinary Root continuation.
 
 ## `auto` Ending
 
-End with a declarative Dispatch Announcement, then dispatch in the same turn regardless of Work Mode.
+End with a declarative Dispatch Announcement, then spawn in the same turn without asking a question.
 
-- State that the selected roles are starting now.
-- State that the Root Session will collect and synthesize their results.
-- Do not ask a question or pause for approval.
-- Do not weaken sandbox or permission controls.
+> This splits cleanly: `docs-researcher` will verify the API contract as the Child Lane, while I trace the implementation and prepare the decision criteria in the Root Lane. Work Mode is `read-only`. I'm dispatching that check now and will integrate the evidence here.
 
-Example:
+## Focused Skills
 
-> This splits cleanly. `code-mapper` will trace where the retry logic runs, while `docs-researcher` verifies the API's idempotency guarantee. Work Mode is `read-only`. I'm dispatching them now and will synthesize their findings here.
+Name the explicitly selected skill's retained Root Lane and describe the delegated role as a Supporting Child. Do not imply that Diverter replaces the skill.
 
 ## Failure Cases
 
 Avoid:
 
-- unnamed "agents" instead of exact roles
-- more than four roles
-- alternative lineup menus
-- an `ask` message without a permission question
-- an `auto` message that asks a question or stops
-- task work before Dispatch Authorization
-- redispatching a lineup already announced or executed for the current task
-- suggesting another lineup for a delegated-subagent handoff
+- no declared Root Lane;
+- Root work that duplicates the Child Lane;
+- more roles than independent deliverables;
+- an `ask` message without a permission question;
+- an `auto` message that asks a question or pauses;
+- redispatching an equivalent scope instead of Child Reuse;
+- mentioning pre-activation native absence; or
+- exposing internal loading, cache, alias, or retry details.

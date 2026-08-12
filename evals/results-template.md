@@ -29,12 +29,21 @@
 | Sanitized failure-reporting violations |  |  |
 | `>4` role violations |  |  |
 | Fallback correctness rate |  |  |
+| Root Lane quality rate |  |  |
 
 ## Prompt-by-Prompt Results
 
-| ID | Suite | Policy | Score / 6 | Delegated? | Roles used | Policy-appropriate ending? | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  |
+| ID | Suite | Policy | Router Score / 7 | Delegated? | Roles used | Root Lane valid? | Policy-appropriate ending? | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |  |
+
+## Native Lifecycle Evidence
+
+| Run | Model | Family | Native spawn | Root progress before child completion | Same-child reuse | Leaf child | Write Ownership | Integration verification | Pass? |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |  |  |
+
+Record persisted rollout paths and the sanitized JSON report from `scripts/verify-native-lifecycle.py`. Final-response wording is not lifecycle evidence.
 
 Add one row for every evaluated entry in `prompts.yaml`, including the focused `auto-*` cases.
 

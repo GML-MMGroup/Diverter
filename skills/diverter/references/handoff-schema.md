@@ -1,67 +1,59 @@
 # Handoff Schema
 
-Every delegated task should use the same minimum payload shape.
+Every child receives a self-contained, leaf-only handoff.
 
-| Field | Required content | Why it exists | Good example |
-| --- | --- | --- | --- |
-| `delegation_context` | the explicit delegated-subagent bypass | prevents recursive Delegation Gates | `delegated-subagent; parent Dispatch Authorization already granted; do not invoke diverter or request another Dispatch Authorization; execute this handoff only` |
-| `goal` | the exact sub-problem the agent owns | prevents scope drift | `Map the auth failure path for the save-settings flow.` |
-| `success_criteria` | what counts as done | keeps the result verifiable | `Return the real call path, owning files, and likely failure boundary.` |
-| `scope_in` | what is in scope | defines ownership | `settings modal save path, client mutation, API handler` |
-| `scope_out` | what is explicitly out of scope | prevents adjacent work | `do not edit code, do not review unrelated forms` |
-| `relevant_paths` | files, folders, symbols, or entrypoints to inspect | speeds up grounding | `src/settings/, app/api/settings/, useSettingsForm` |
-| `constraints` | process or safety constraints | preserves parent intent | `read-only only; cite concrete files and symbols` |
-| `deliverable` | exact output expected from the subagent | makes integration easier | `3-5 bullet summary with file references` |
-| `verification` | how the parent will check the result | improves quality | `must include at least one concrete code path and one likely failure point` |
-| `write_policy` | read-only, mixed, or write-capable policy | avoids unsafe delegation | `read-only` |
-| `open_questions` | unresolved unknowns the agent should keep visible | prevents silent guessing | `whether the API uses optimistic updates before the save completes` |
+| Field | Required content |
+| --- | --- |
+| `delegation_context` | delegated-subagent bypass plus Leaf Child prohibition |
+| `goal` | exact Child Lane outcome |
+| `success_criteria` | observable definition of done |
+| `scope_in` | owned evidence, artifact, or boundary |
+| `scope_out` | excluded adjacent work and the Root Lane |
+| `relevant_context` | files, URLs, IDs, facts, or entrypoints needed from a fresh start |
+| `constraints` | task, safety, and process limits |
+| `deliverable` | integration-ready result expected by Root |
+| `verification` | evidence Root can independently check |
+| `write_policy` | `read-only`, `mixed`, or `write-capable` |
+| `write_ownership` | exclusive mutable artifact or bounded scope; `none` for read-only |
+| `open_questions` | unresolved unknowns to keep visible |
 
-Recommended Markdown template:
+Recommended template:
 
 ```md
-delegation_context: delegated-subagent; parent Dispatch Authorization already granted; do not invoke diverter or request another Dispatch Authorization; execute this handoff only
-goal: Map the affected code path for the settings save failure.
-success_criteria: Identify the real execution path, likely failure boundary, and the files that own the behavior.
-scope_in: settings modal, client mutation, API route, response handling
-scope_out: unrelated settings pages, styling, copy updates
-relevant_paths: src/settings/, app/api/settings/, useSettingsForm
-constraints: read-only; no code edits; cite concrete files and symbols
-deliverable: concise summary with file references and one likely root cause candidate
-verification: parent can trace the same path from your references
+delegation_context: delegated-subagent; parent Dispatch Authorization already granted; leaf child; do not invoke diverter, delegate, spawn descendants, or request another Dispatch Authorization; execute this handoff only
+goal: Verify the documented contract used by the settings-save flow.
+success_criteria: Return the applicable guarantee, version boundary, and authoritative evidence.
+scope_in: official API contract for the save operation
+scope_out: implementation tracing, final recommendation, code edits
+relevant_context: framework version, API symbol, official documentation URL
+constraints: read-only; distinguish documented fact from inference
+deliverable: concise evidence summary with direct citations
+verification: Root can open each cited source and match it to the installed version
 write_policy: read-only
-open_questions: whether retries or optimistic state updates affect the failure mode
+write_ownership: none
+open_questions: whether the repository pins a version older than the documented guarantee
 ```
 
-Delegation context is the recursion guard. A child agent should bypass diverter only when the current task message explicitly says this is a delegated subagent task or includes `delegation_context: delegated-subagent`; then it should execute the assigned handoff directly instead of suggesting another subagent lineup.
+## Native Spawn Policy
 
-## Spawn Context Policy
-
-Write each handoff as if the child agent starts fresh, with no useful chat history. The parent thread should put task-critical context directly in the handoff: goal, scope, file paths, URLs, IDs, constraints, deliverable, and verification method.
-
-Default spawn shape:
+Default role-specific spawn shape:
 
 ```text
 agent_type: docs-researcher
 fork_turns: "none"
-prompt: <structured handoff with delegation_context>
+prompt: <structured leaf handoff>
 ```
 
-Avoid combining role-specific spawning with full-history fork:
+Do not pass temporary model or reasoning overrides. Do not combine a role-specific spawn with full-history forking. The installed role definition owns model, reasoning, sandbox, and role instructions.
 
-```text
-bad: agent_type: docs-researcher + fork_turns: "all"
-good: agent_type: docs-researcher + fork_turns: "none" + delegation_context + structured handoff
-```
+## Reuse Policy
 
-Use `fork_turns: "all"` only when exact conversation history matters more than role specialization. In that case, do not specify `agent_type`; the child inherits the parent agent type.
+For a related follow-up, target the same canonical native child. A new child is reserved for a materially different scope or an explicit user request. Never create an equivalent second child for the same normalized scope.
 
-Write-policy meanings:
+## Write Policy
 
-| Value | Meaning |
-| --- | --- |
-| `read-only` | the agent must not edit files |
-| `mixed` | the parent expects read-first work before any writes |
-| `write-capable` | the agent may edit, but only within the stated scope |
+- `read-only`: no mutable artifact ownership.
+- `mixed`: establish scope read-first, then write only within declared ownership.
+- `write-capable`: edit only the declared artifact or bounded scope.
 
-v1 rule:
-- if a handoff would be weak without several open questions answered first, do not delegate yet
+Parallel writes require disjoint `write_ownership`; overlapping ownership must be serialized.

@@ -1,4 +1,4 @@
 interface:
   display_name: "Diverter"
-  short_description: "Route complex work to one specialist subagent lineup."
-  default_prompt: "Route this task to a specialist subagent lineup when useful."
+  short_description: "Distill Ultra-style native delegation for GPT-5.6 Codex."
+  default_prompt: "Split this task into a useful Root Lane and bounded native Child Lanes when beneficial."
