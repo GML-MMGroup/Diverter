@@ -113,7 +113,12 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("one bounded independent Child Lane", gate)
         self.assertIn("one distinct useful Root Lane", gate)
         self.assertIn("No effective Root Lane", gate)
-        self.assertIn("explicit request to use subagents", gate)
+        self.assertIn("affirmative delegation intent", gate)
+        self.assertIn(
+            "`$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role",
+            gate,
+        )
+        self.assertIn("Scheduling words alone do not qualify", gate)
         self.assertIn("explicitly selected focused skill", gate)
         self.assertIn("Supporting Child", gate)
         self.assertIn("native subagent dispatch is unavailable", gate)
@@ -225,13 +230,38 @@ class PluginContractTest(unittest.TestCase):
         for phrase in (
             "one bounded independent Child Lane",
             "one distinct useful Root Lane",
-            "explicit request to use subagents",
+            "recognized by the SessionStart Delegation Gate",
             "explicitly selected focused skill",
             "Sanitized Failure Reporting",
             "internal failure recovers successfully",
             "ask whether to continue in the Root Session",
         ):
             self.assertIn(phrase, skill)
+
+        for phrase in (
+            "same implementation decision",
+            "Root requires the Child result before safely progressing",
+            "Reclassifying an invented supporting task as read-only",
+        ):
+            self.assertIn(phrase, skill)
+
+        capability_table = skill.split("## Capability Selection", 1)[1].split(
+            "Smallest Sufficient Lineup rules:", 1
+        )[0]
+        self.assertIn("Role write capability", capability_table)
+        self.assertNotIn("Default mode", capability_table)
+
+        self.assertIn("complete Root-and-Child workflow", skill)
+        self.assertIn("no active lane may write", skill)
+        self.assertIn("only some active lanes may write", skill)
+        self.assertIn("every active lane may write", skill)
+
+        child_reuse = skill.split("## Child Reuse", 1)[1].split(
+            "## Write Ownership", 1
+        )[0]
+        self.assertIn("integrate and verify a received child result immediately", child_reuse)
+        self.assertIn("terminal or idle", child_reuse)
+        self.assertIn("before sending a related follow-up", child_reuse)
 
         self.assertIn("Explicit delegation request", rules)
         self.assertIn("Focused skill ownership", rules)
@@ -348,6 +378,10 @@ class PluginContractTest(unittest.TestCase):
             "auto-idempotency",
             "gate-neg-focused-ui",
             "gate-pos-ui-audit",
+            "gate-pos-named-role",
+            "gate-neg-scheduling-only",
+            "gate-neg-quoted-delegation",
+            "gate-neg-explanatory-delegation",
             "gate-neg-vague-web-performance",
             "gate-neg-vague-regression",
             "gate-neg-vague-release",
@@ -359,9 +393,11 @@ class PluginContractTest(unittest.TestCase):
             "ultra-pos-focused-skill-support",
             "ultra-pos-regression-root-continues",
             "ultra-pos-disjoint-write",
+            "ultra-pos-same-file-readonly",
             "ultra-pos-doc-check",
             "ultra-reuse-same-scope",
             "ultra-neg-no-root-lane",
+            "ultra-neg-readonly-laundering",
             "ultra-ownership-conflict",
         ):
             self.assertIn(f"id: {case_id}", prompts)
@@ -389,6 +425,15 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("verify-native-lifecycle.py", scenarios)
         self.assertIn("run-native-lifecycle.py", scenarios)
         self.assertIn("three independent fresh sessions", scenarios)
+        self.assertIn("deterministic nonzero operation", scenarios)
+        self.assertIn("`test-automator`", scenarios)
+        self.assertIn("does not rely on role-level sandbox isolation", scenarios)
+        for mode_expectation in (
+            "announce read-only work",
+            "announce mixed work",
+            "announce write-capable work",
+        ):
+            self.assertIn(mode_expectation, prompts)
         for metadata in (
             "root_continuation:",
             "child_scope:",

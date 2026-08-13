@@ -398,7 +398,7 @@ prompts:
     expected_should_dispatch: true
     expected_roles: [reviewer]
     must_do:
-      - announce one lineup and the work mode
+      - announce read-only work
       - dispatch without asking a permission question
     notes: "Canonical automatic one-child-plus-Root dispatch."
 
@@ -562,6 +562,54 @@ prompts:
       - reject the request only because it has one implicit work lane
     notes: "An explicit delegation request bypasses the implicit lane threshold."
 
+  - id: gate-pos-named-role
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "Have the installed `docs-researcher` verify the named API contract and return the result."
+    expected_should_suggest: true
+    expected_roles: [docs-researcher]
+    must_do:
+      - treat the named installed role as the requested executor
+    must_not_do:
+      - reject the request only because no separate implicit Root Lane was stated
+    notes: "Affirmatively naming an installed agent role is an Explicit Delegation Request."
+
+  - id: gate-neg-scheduling-only
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "At the same time, explain this one function and summarize that same explanation in one paragraph."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - treat scheduling language as an Explicit Delegation Request
+      - invent a duplicate Child Lane
+    notes: "Scheduling language alone does not express delegation intent."
+
+  - id: gate-neg-quoted-delegation
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "In one paragraph, explain the quoted term ‘subagent’ as it appears in this documentation."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - activate from a quoted delegation term
+    notes: "Quotation is not affirmative delegation intent."
+
+  - id: gate-neg-explanatory-delegation
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "Explain what the phrase ‘delegate this task’ means; do not carry out the example."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - activate from explanatory mention
+      - override the explicit instruction not to perform the example
+    notes: "Explanation and negation are not affirmative delegation intent."
+
   - id: failure-recovered-silent
     surface: shared
     smoke: true
@@ -696,7 +744,27 @@ prompts:
     must_do:
       - declare disjoint Write Ownership
       - keep each lane inside its artifact
+      - announce write-capable work
     notes: "Positive control for disjoint writes; neg-02 remains the same-file conflict control."
+
+  - id: ultra-pos-same-file-readonly
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "While you map the data flow through src/settings.py, have one reviewer independently audit error handling in that same file; integrate the two read-only findings."
+    expected_should_suggest: true
+    expected_roles: [reviewer]
+    evaluator_metadata:
+      root_continuation: "map data flow through src/settings.py"
+      child_scope: "audit error handling in src/settings.py"
+      root_scope: "data-flow map and integration"
+      benefit_claim: "distinct read-only decisions can progress independently"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - keep the Root and Child deliverables distinct
+      - announce read-only work
+    notes: "A shared filename alone is not an ownership conflict when both lanes are read-only and semantically independent."
 
   - id: ultra-pos-doc-check
     surface: cli
@@ -754,6 +822,25 @@ prompts:
       - invent a Root Lane
       - delegate the entire task implicitly
     notes: "A concrete specialist task with no effective Root Lane remains Root-only implicitly."
+
+  - id: ultra-neg-readonly-laundering
+    surface: cli
+    smoke: true
+    category: negative
+    prompt: "Refactor both helper functions in src/settings.py so they share one implementation. First understand their callers, then make one coupled implementation decision."
+    expected_should_suggest: false
+    expected_roles: []
+    evaluator_metadata:
+      root_continuation: "one coupled implementation decision"
+      child_scope: "invented read-only mapping or review"
+      root_scope: "understand and implement the same decision"
+      benefit_claim: "none; the proposed read-only lane is only a prerequisite"
+      max_active_children: 0
+      expected_reuse: false
+    must_not_do:
+      - reclassify prerequisite mapping or review as an independent Child Lane
+      - split one implementation decision across Root and Child
+    notes: "A read-only label cannot repair a tightly coupled task shape."
 
   - id: ultra-ownership-conflict
     surface: cli

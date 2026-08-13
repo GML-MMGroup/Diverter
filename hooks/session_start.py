@@ -30,7 +30,9 @@ If the current task message explicitly says this is a delegated subagent task, o
 
 If higher-priority session instructions state that proactive multi-agent delegation is active, stop evaluating this gate. Do not invoke or mention Diverter. Continue under the native policy.
 
-An explicit `$diverter` invocation or explicit request to use subagents is eligible regardless of the implicit benefit threshold, subject to the bypasses above.
+Only affirmative delegation intent with at least one recognized signal is an Explicit Delegation Request: `$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role. Mere mention, quotation, explanation, or negation does not qualify. Scheduling words alone do not qualify, including concurrent, parallel, or at the same time.
+
+An Explicit Delegation Request is eligible regardless of the implicit benefit threshold, subject to the bypasses above.
 
 Otherwise, invoke `$diverter` only when the task has one bounded independent Child Lane and one distinct useful Root Lane that can make substantive progress while the child runs. The lanes must be non-duplicative, materially beneficial, and safe under the task's read/write ownership.
 

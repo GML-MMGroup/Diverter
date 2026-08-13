@@ -29,6 +29,7 @@ BOOKKEEPING_TOOLS = ORCHESTRATION_TOOLS | {
     "wait",
     "write_stdin",
 }
+FINAL_ANSWER_MESSAGE = "Message Type: FINAL_ANSWER"
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -168,8 +169,28 @@ def messages(
     return found
 
 
+def final_child_outputs(
+    records: list[dict[str, Any]], child_path: str | None
+) -> list[tuple[datetime, str]]:
+    found = []
+    for record in records:
+        payload = record.get("payload")
+        when = timestamp(record)
+        if (
+            record.get("type") == "response_item"
+            and isinstance(payload, dict)
+            and payload.get("type") == "agent_message"
+            and payload.get("author") == child_path
+            and when is not None
+        ):
+            text = content_text(payload.get("content"))
+            if FINAL_ANSWER_MESSAGE in text:
+                found.append((when, text))
+    return found
+
+
 def failed_tool_events(
-    records: list[dict[str, Any]],
+    records: list[dict[str, Any]], *, allow_text_markers: bool = True
 ) -> list[tuple[datetime, dict[str, Any]]]:
     markers = (
         "script failed",
@@ -193,9 +214,30 @@ def failed_tool_events(
             and when is not None
         ):
             output = json.dumps(payload.get("output", ""), sort_keys=True).lower()
-            if any(marker in output for marker in markers):
+            exit_codes = re.findall(
+                r'\\?"(?:exit_code|returncode)\\?"\s*:\s*(-?\d+)', output
+            )
+            marker_failure = allow_text_markers and any(
+                marker in output for marker in markers
+            )
+            if marker_failure or any(int(code) != 0 for code in exit_codes):
                 found.append((when, payload))
     return found
+
+
+def has_failure_report(
+    records: list[dict[str, Any]],
+    after: datetime | None,
+    report_marker: str,
+    lane_markers: tuple[Any, ...],
+) -> bool:
+    return any(
+        when > after
+        and report_marker in text
+        and any(marker in text for marker in lane_markers if isinstance(marker, str))
+        for when, text in messages(records, "assistant")
+        if after is not None
+    )
 
 
 def nested(data: dict[str, Any], *keys: str) -> Any:
@@ -217,11 +259,15 @@ def scope_key(arguments: dict[str, Any]) -> str | None:
     return " ".join(match.group(1).lower().split())
 
 
-def meaningful_call(call: dict[str, Any], marker: str) -> bool:
+def substantive_call(call: dict[str, Any]) -> bool:
     if call.get("name") in BOOKKEEPING_TOOLS:
         return False
     nested_tools = re.findall(r"tools\.([A-Za-z0-9_]+)\s*\(", call_text(call))
-    return not any(tool in BOOKKEEPING_TOOLS for tool in nested_tools) and marker in call_text(call)
+    return not any(tool in BOOKKEEPING_TOOLS for tool in nested_tools)
+
+
+def meaningful_call(call: dict[str, Any], marker: str) -> bool:
+    return substantive_call(call) and marker in call_text(call)
 
 
 def patch_call(call: dict[str, Any]) -> bool:
@@ -365,6 +411,7 @@ def verify_spawn_failure(
         if call.get("name") == "spawn_agent"
     ]
     spawn_when, spawn_call, spawn_arguments = spawns[0] if spawns else (None, {}, {})
+    lane_markers = (spawn_arguments.get("task_name"), expected_role)
     spawn_call_id = spawn_call.get("call_id")
     failed_outputs = [
         (when, payload)
@@ -372,10 +419,8 @@ def verify_spawn_failure(
         if payload.get("call_id") == spawn_call_id
     ]
     failure_when = failed_outputs[0][0] if failed_outputs else None
-    report_after_failure = any(
-        when > failure_when and failure_report_marker in text
-        for when, text in messages(root_records, "assistant")
-        if failure_when is not None
+    report_after_failure = has_failure_report(
+        root_records, failure_when, failure_report_marker, lane_markers
     )
     root_takeover = any(
         when > failure_when and meaningful_call(call, verification_scope)
@@ -473,7 +518,19 @@ def verify_child(
     starts = timed_payloads(child_records, "event_msg", "task_started")
     completes = timed_payloads(child_records, "event_msg", "task_complete")
     failures = timed_payloads(child_records, "event_msg", "turn_aborted")
-    failures.extend(failed_tool_events(child_records))
+    child_call_times = {
+        call["call_id"]: when
+        for when, call in child_calls
+        if call.get("call_id") is not None and substantive_call(call)
+    }
+    failures.extend(
+        (when, payload)
+        for when, payload in failed_tool_events(
+            child_records, allow_text_markers=False
+        )
+        if payload.get("call_id") in child_call_times
+        and child_call_times[payload["call_id"]] < when
+    )
     failures.sort(key=lambda item: item[0])
     first_start = starts[0][0] if starts else None
     if scenario == "failure" and failures:
@@ -490,10 +547,14 @@ def verify_child(
         for when, call in root_calls
         if first_start is not None and first_terminal is not None
     )
+    received_results = final_child_outputs(root_records, child_path)
+    integration_boundary = last_terminal
+    if scenario != "failure" and len(received_results) >= len(completes):
+        integration_boundary = received_results[-1][0]
     integration_verification = any(
-        when > last_terminal and meaningful_call(call, verification_scope)
+        when > integration_boundary and meaningful_call(call, verification_scope)
         for when, call in root_calls
-        if last_terminal is not None
+        if integration_boundary is not None
     )
 
     start_by_turn = {
@@ -594,13 +655,21 @@ def verify_child(
 
     failure_reported = True
     no_substitute_spawn = True
+    successful_work_preserved = True
     if scenario == "failure":
-        failure_reported = any(
-            when > last_terminal and failure_report_marker in text
-            for when, text in messages(root_records, "assistant")
-            if last_terminal is not None
+        lane_markers = (child_task_name, expected_role)
+        failure_reported = has_failure_report(
+            root_records, last_terminal, failure_report_marker, lane_markers
         )
         no_substitute_spawn = len(spawn_calls) == 1
+        failure_when = failures[0][0] if failures else None
+        successful_work_preserved = any(
+            when > failure_when
+            and meaningful_call(call, verification_scope)
+            and root_progress_scope in call_text(call)
+            for when, call in root_calls
+            if failure_when is not None
+        )
 
     root_model_frozen = not expected_root_model or (
         bool(root_contexts)
@@ -641,6 +710,7 @@ def verify_child(
         ),
         "write_ownership": write_ownership,
         "failure_reported": failure_reported,
+        "successful_work_preserved": successful_work_preserved,
         "no_substitute_spawn": no_substitute_spawn,
         "root_model_frozen": root_model_frozen,
         "root_effort_frozen": root_effort_frozen,

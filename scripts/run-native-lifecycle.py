@@ -24,6 +24,45 @@ def require_empty(path: Path, label: str) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
+def load_prepared_run(
+    metadata_path: Path, expected: dict[str, Any]
+) -> tuple[dict[str, Any], Path]:
+    if not metadata_path.is_file():
+        raise ValueError(f"prepared metadata not found: {metadata_path}")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if not isinstance(metadata, dict):
+        raise ValueError("prepared metadata must be a JSON object")
+    for key, value in expected.items():
+        if metadata.get(key) != value:
+            raise ValueError(f"prepared metadata mismatch: {key}")
+    installed_path_value = metadata.get("installed_path")
+    if not isinstance(installed_path_value, str):
+        raise ValueError("prepared metadata omitted installed_path")
+    installed_path = Path(installed_path_value)
+    if not installed_path.is_dir():
+        raise ValueError("prepared installed plugin path is missing")
+    return metadata, installed_path
+
+
+def require_prepared_freshness(codex_home: Path, evidence: Path) -> None:
+    if any((codex_home / "sessions").glob("**/*.jsonl")):
+        raise ValueError("prepared Codex home already contains lifecycle sessions")
+    setup_files = {
+        "01-marketplace.json",
+        "02-plugin-install.json",
+        "03-role-install.json",
+        "04-policy.json",
+        "run-metadata.json",
+    }
+    unexpected = [
+        path
+        for path in evidence.rglob("*")
+        if path.is_file() and path.name not in setup_files
+    ]
+    if unexpected:
+        raise ValueError("prepared evidence directory contains prior execution output")
+
+
 def snapshot(workspace: Path) -> dict[str, str]:
     hashes = {}
     for path in sorted(workspace.rglob("*")):
@@ -32,6 +71,40 @@ def snapshot(workspace: Path) -> dict[str, str]:
         relative = path.relative_to(workspace).as_posix()
         hashes[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
     return hashes
+
+
+def stable_hash(value: Any) -> str:
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def runtime_hash(codex_home: Path, installed_path: Path) -> str:
+    files: dict[str, str] = {}
+    for label, root in (("plugin", installed_path), ("agents", codex_home / "agents")):
+        for path in sorted(root.rglob("*")):
+            if path.is_file():
+                files[f"{label}/{path.relative_to(root).as_posix()}"] = hashlib.sha256(
+                    path.read_bytes()
+                ).hexdigest()
+    for label, path in (
+        ("policy", codex_home / "diverter" / "config.json"),
+        (
+            "marketplace",
+            codex_home
+            / "local-marketplace"
+            / ".agents"
+            / "plugins"
+            / "marketplace.json",
+        ),
+    ):
+        if not path.is_file():
+            raise ValueError(f"prepared runtime file is missing: {path}")
+        files[label] = hashlib.sha256(path.read_bytes()).hexdigest()
+    files["plugin-config"] = hashlib.sha256(
+        (codex_home / "config.toml").read_bytes()
+    ).hexdigest()
+    return stable_hash(files)
 
 
 def run_logged(
@@ -53,6 +126,16 @@ def run_logged(
     if result.returncode:
         raise RuntimeError(f"command failed; see {log_path}")
     return result
+
+
+def read_codex_version(env: dict[str, str]) -> str:
+    return subprocess.run(
+        ["codex", "--version"],
+        env=env,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout.strip()
 
 
 def json_stdout(result: subprocess.CompletedProcess[str], label: str) -> dict[str, Any]:
@@ -169,7 +252,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--root-write-scope")
     parser.add_argument("--child-write-scope")
     parser.add_argument("--failure-report-marker", default="Affected Child Lane")
-    parser.add_argument("--prepare-only", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--prepare-only", action="store_true")
+    mode.add_argument("--run-prepared", action="store_true")
     return parser.parse_args()
 
 
@@ -184,11 +269,14 @@ def main() -> int:
             raise ValueError("workspace must be a non-empty directory")
         if codex_home.is_relative_to(workspace) or evidence.is_relative_to(workspace):
             raise ValueError("codex home and evidence directory must be outside the workspace")
-        require_empty(codex_home, "Codex home")
-        require_empty(evidence, "evidence directory")
         prompt = args.prompt_file.read_text(encoding="utf-8").strip()
         if not prompt:
             raise ValueError("prompt file must not be empty")
+        resume_prompt = None
+        if args.resume_prompt_file:
+            resume_prompt = args.resume_prompt_file.read_text(encoding="utf-8").strip()
+            if not resume_prompt:
+                raise ValueError("resume prompt file must not be empty")
         if not args.expected_role:
             raise ValueError("--expected-role is required for the controlled role matrix")
 
@@ -201,67 +289,110 @@ def main() -> int:
             capture_output=True,
             check=True,
         ).stdout.strip()
-        codex_version = subprocess.run(
-            ["codex", "--version"],
-            env=env,
-            text=True,
-            capture_output=True,
-            check=True,
-        ).stdout.strip()
-        marketplace = write_local_marketplace(codex_home, revision)
-        add_marketplace = run_logged(
-            ["codex", "plugin", "marketplace", "add", str(marketplace), "--json"],
-            env,
-            evidence / "01-marketplace.json",
+        fixture_hash = hashlib.sha256(
+            json.dumps(initial_snapshot, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+        contract_hash = stable_hash(
+            {
+                "prompt": prompt,
+                "resume_prompt": resume_prompt,
+                "expected_role": args.expected_role,
+                "policy": args.policy,
+                "model": args.model,
+                "reasoning_effort": args.reasoning_effort,
+                "scenario": args.scenario,
+                "require_followup": args.require_followup,
+                "root_progress_scope": args.root_progress_scope,
+                "verification_scope": args.verification_scope,
+                "root_write_scope": args.root_write_scope,
+                "child_write_scope": args.child_write_scope,
+                "failure_report_marker": args.failure_report_marker,
+            }
         )
-        marketplace_data = json_stdout(add_marketplace, "marketplace add")
-        marketplace_name = marketplace_data.get("marketplaceName")
-        if not isinstance(marketplace_name, str):
-            raise ValueError("marketplace add omitted marketplaceName")
-        add_plugin = run_logged(
-            ["codex", "plugin", "add", f"diverter@{marketplace_name}", "--json"],
-            env,
-            evidence / "02-plugin-install.json",
-        )
-        plugin_data = json_stdout(add_plugin, "plugin add")
-        installed_path_value = plugin_data.get("installedPath")
-        if not isinstance(installed_path_value, str):
-            raise ValueError("plugin add omitted installedPath")
-        installed_path = Path(installed_path_value)
-
-        if args.scenario != "missing-role":
+        if args.run_prepared:
+            current_codex_version = read_codex_version(env)
+            require_prepared_freshness(codex_home, evidence)
+            metadata, installed_path = load_prepared_run(
+                evidence / "run-metadata.json",
+                {
+                    "plugin_revision": revision,
+                    "policy": args.policy,
+                    "scenario": args.scenario,
+                    "root_model": args.model,
+                    "root_reasoning_effort": args.reasoning_effort,
+                    "workspace_fixture_hash": fixture_hash,
+                    "run_contract_hash": contract_hash,
+                    "codex_version": current_codex_version,
+                    "installed_roles": sorted(
+                        path.stem for path in (codex_home / "agents").glob("*.toml")
+                    ),
+                },
+            )
+            if not installed_path.resolve().is_relative_to(codex_home):
+                raise ValueError("prepared installed plugin path is outside Codex home")
+            if metadata.get("runtime_hash") != runtime_hash(codex_home, installed_path):
+                raise ValueError("prepared runtime hash mismatch")
+            codex_version = current_codex_version
+        else:
+            require_empty(codex_home, "Codex home")
+            require_empty(evidence, "evidence directory")
+            current_codex_version = read_codex_version(env)
+            codex_version = current_codex_version
+            marketplace = write_local_marketplace(codex_home, revision)
+            add_marketplace = run_logged(
+                ["codex", "plugin", "marketplace", "add", str(marketplace), "--json"],
+                env,
+                evidence / "01-marketplace.json",
+            )
+            marketplace_data = json_stdout(add_marketplace, "marketplace add")
+            marketplace_name = marketplace_data.get("marketplaceName")
+            if not isinstance(marketplace_name, str):
+                raise ValueError("marketplace add omitted marketplaceName")
+            add_plugin = run_logged(
+                ["codex", "plugin", "add", f"diverter@{marketplace_name}", "--json"],
+                env,
+                evidence / "02-plugin-install.json",
+            )
+            plugin_data = json_stdout(add_plugin, "plugin add")
+            installed_path_value = plugin_data.get("installedPath")
+            if not isinstance(installed_path_value, str):
+                raise ValueError("plugin add omitted installedPath")
+            installed_path = Path(installed_path_value)
+            if args.scenario != "missing-role":
+                run_logged(
+                    [
+                        sys.executable,
+                        str(installed_path / "scripts" / "install-agent-roles.py"),
+                        "--overwrite",
+                        "--role",
+                        args.expected_role,
+                    ],
+                    env,
+                    evidence / "03-role-install.json",
+                )
             run_logged(
                 [
                     sys.executable,
-                    str(installed_path / "scripts" / "install-agent-roles.py"),
-                    "--overwrite",
-                    "--role",
-                    args.expected_role,
+                    str(installed_path / "scripts" / "diverter-mode.py"),
+                    args.policy,
                 ],
                 env,
-                evidence / "03-role-install.json",
+                evidence / "04-policy.json",
             )
-        run_logged(
-            [
-                sys.executable,
-                str(installed_path / "scripts" / "diverter-mode.py"),
-                args.policy,
-            ],
-            env,
-            evidence / "04-policy.json",
-        )
         metadata = {
             "plugin_revision": revision,
             "codex_version": codex_version,
             "installed_path": str(installed_path),
-            "installed_roles": sorted(path.stem for path in (codex_home / "agents").glob("*.toml")),
+            "installed_roles": sorted(
+                path.stem for path in (codex_home / "agents").glob("*.toml")
+            ),
             "policy": args.policy,
             "scenario": args.scenario,
             "root_model": args.model,
             "root_reasoning_effort": args.reasoning_effort,
-            "workspace_fixture_hash": hashlib.sha256(
-                json.dumps(initial_snapshot, sort_keys=True).encode("utf-8")
-            ).hexdigest(),
+            "workspace_fixture_hash": fixture_hash,
+            "run_contract_hash": contract_hash,
+            "runtime_hash": runtime_hash(codex_home, installed_path),
         }
         if args.prepare_only:
             (evidence / "run-metadata.json").write_text(
@@ -294,10 +425,7 @@ def main() -> int:
         root_path, child_path, root_meta, child_meta = discover_rollouts(
             codex_home, args.expected_role
         )
-        if args.resume_prompt_file:
-            resume_prompt = args.resume_prompt_file.read_text(encoding="utf-8").strip()
-            if not resume_prompt:
-                raise ValueError("resume prompt file must not be empty")
+        if resume_prompt is not None:
             session_id = root_meta.get("session_id", root_meta.get("id"))
             if not isinstance(session_id, str):
                 raise ValueError("Root rollout omitted session identity")

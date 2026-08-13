@@ -270,6 +270,57 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(json.loads(result.stdout)["checks"]["policy_order"])
 
+    def test_accepts_integration_after_child_result_before_terminal(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records = root_records[:6]
+        root_records.extend(
+            [
+                {
+                    "timestamp": "2026-08-13T10:00:05.500000Z",
+                    "type": "response_item",
+                    "payload": {
+                        "type": "agent_message",
+                        "author": "/root/docs_lane",
+                        "recipient": "/root",
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "Message Type: FINAL_ANSWER\nBounded evidence returned to Root.",
+                            }
+                        ],
+                    },
+                },
+                exec_call(
+                    "2026-08-13T10:00:05.750000Z",
+                    'await tools.exec_command({"cmd":"verify-integrated-artifact"})',
+                    "root-verify",
+                ),
+            ]
+        )
+        child_records = child_records[:5]
+        args = list(self.common_args())
+        args.remove("--require-followup")
+
+        result = self.run_verifier(
+            root_records, child_records, *args, manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertTrue(
+            json.loads(result.stdout)["checks"]["root_integration_verification"]
+        )
+
+    def test_rejects_same_child_followup_before_terminal(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records[7]["timestamp"] = "2026-08-13T10:00:05.500000Z"
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["same_child_followup"])
+
     def test_rejects_bookkeeping_as_root_progress(self) -> None:
         root_records, child_records, manifest = self.happy_records()
         root_records[5] = call(
@@ -513,21 +564,45 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(json.loads(result.stdout)["ok"])
 
-    def test_accepts_post_announcement_failure_and_root_takeover(self) -> None:
+    def controlled_failure_records(self) -> tuple[list[dict], list[dict]]:
         root_records, child_records, _ = self.happy_records()
         child_records = child_records[:4]
+        root_records[3] = call(
+            "2026-08-13T10:00:01Z",
+            "spawn_agent",
+            json.dumps(
+                {
+                    "task_name": "failure_lane",
+                    "agent_type": "test-automator",
+                    "fork_turns": "none",
+                    "message": "goal: run controlled failure\nscope_in: nonzero child operation",
+                }
+            ),
+            "spawn-1",
+        )
+        child_records[0]["payload"]["source"]["subagent"]["thread_spawn"].update(
+            {
+                "agent_path": "/root/failure_lane",
+                "agent_role": "test-automator",
+            }
+        )
+        child_records[3] = exec_call(
+            "2026-08-13T10:00:05Z",
+            'await tools.exec_command({"cmd":"controlled-failure --exit 23"})',
+            "controlled-nonzero",
+        )
         child_records.extend(
             [
                 {
-                    "timestamp": "2026-08-13T10:00:05Z",
+                    "timestamp": "2026-08-13T10:00:05.500000Z",
                     "type": "response_item",
                     "payload": {
                         "type": "custom_tool_call_output",
-                        "call_id": "denied-write",
+                        "call_id": "controlled-nonzero",
                         "output": [
                             {
                                 "type": "input_text",
-                                "text": "Script failed: read-only file system",
+                                "text": '{"exit_code":23,"output":"CONTROLLED_FAILURE_23"}',
                             }
                         ],
                     },
@@ -536,33 +611,41 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
                     "2026-08-13T10:00:06Z",
                     "task_complete",
                     "turn-1",
-                    last_agent_message="The bounded write failed under read-only permissions.",
+                    last_agent_message="The controlled child operation returned exit code 23.",
                 ),
             ]
         )
-        root_records = [record for record in root_records if record.get("timestamp") != "2026-08-13T10:00:07Z"]
+        root_records = [
+            record
+            for record in root_records
+            if record.get("timestamp") != "2026-08-13T10:00:07Z"
+        ]
         root_records.extend(
             [
                 message(
                     "2026-08-13T10:00:07Z",
                     "assistant",
-                    "Affected Child Lane: docs evidence. Root is taking over.",
+                    "Affected Child Lane: failure_lane (test-automator). Root is taking over.",
                 ),
                 exec_call(
                     "2026-08-13T10:00:08Z",
-                    'await tools.exec_command({"cmd":"root-takeover-artifact"})',
+                    'await tools.exec_command({"cmd":"verify root-progress-artifact.md root-takeover-artifact"})',
                     "takeover",
                 ),
             ]
         )
+        return root_records, child_records
 
-        result = self.run_verifier(
+    def run_controlled_failure(
+        self, root_records: list[dict], child_records: list[dict]
+    ) -> subprocess.CompletedProcess[str]:
+        return self.run_verifier(
             root_records,
             child_records,
             "--scenario",
             "failure",
             "--expected-role",
-            "docs-researcher",
+            "test-automator",
             "--policy",
             "auto",
             "--root-progress-scope",
@@ -571,10 +654,75 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             "root-takeover-artifact",
         )
 
+    def test_accepts_post_announcement_failure_and_root_takeover(self) -> None:
+        root_records, child_records = self.controlled_failure_records()
+
+        result = self.run_controlled_failure(root_records, child_records)
+
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
         self.assertTrue(report["checks"]["failure_reported"], report)
         self.assertTrue(report["checks"]["root_integration_verification"], report)
+
+    def test_rejects_nonzero_output_without_a_matching_child_call(self) -> None:
+        root_records, child_records = self.controlled_failure_records()
+        child_records[4]["payload"]["call_id"] = "unrelated-call"
+
+        result = self.run_controlled_failure(root_records, child_records)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["child_lifecycle_complete"])
+
+    def test_rejects_nonzero_output_from_a_bookkeeping_call(self) -> None:
+        root_records, child_records = self.controlled_failure_records()
+        child_records[3]["payload"]["name"] = "send_message"
+
+        result = self.run_controlled_failure(root_records, child_records)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["child_lifecycle_complete"])
+
+    def test_rejects_nonzero_output_before_its_child_call(self) -> None:
+        root_records, child_records = self.controlled_failure_records()
+        child_records[4]["timestamp"] = "2026-08-13T10:00:04.500000Z"
+
+        result = self.run_controlled_failure(root_records, child_records)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["child_lifecycle_complete"])
+
+    def test_rejects_successful_child_output_with_failure_words(self) -> None:
+        root_records, child_records = self.controlled_failure_records()
+        child_records[4]["payload"]["output"][0]["text"] = (
+            '{"exit_code":0,"output":"dependency not available"}'
+        )
+
+        result = self.run_controlled_failure(root_records, child_records)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["child_lifecycle_complete"])
+
+    def test_rejects_failure_report_that_does_not_identify_the_lane(self) -> None:
+        root_records, child_records = self.controlled_failure_records()
+        root_records[-2]["payload"]["content"][0]["text"] = (
+            "Affected Child Lane: another lane. Root is taking over."
+        )
+
+        result = self.run_controlled_failure(root_records, child_records)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["failure_reported"])
+
+    def test_rejects_takeover_that_does_not_verify_preserved_root_work(self) -> None:
+        root_records, child_records = self.controlled_failure_records()
+        root_records[-1]["payload"]["input"] = (
+            'await tools.exec_command({"cmd":"root-takeover-artifact"})'
+        )
+
+        result = self.run_controlled_failure(root_records, child_records)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["successful_work_preserved"])
 
     def test_accepts_spawn_failure_without_a_child_rollout(self) -> None:
         root_records = [
@@ -613,7 +761,7 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             message(
                 "2026-08-13T10:00:03Z",
                 "assistant",
-                "Affected Child Lane: docs evidence. Root is taking over.",
+                "Affected Child Lane: docs_lane (docs-researcher). Root is taking over.",
             ),
             exec_call(
                 "2026-08-13T10:00:04Z",

@@ -30,7 +30,7 @@ If the task is ineligible or native dispatch is unavailable, continue silently i
 
 ## Eligibility
 
-The SessionStart Delegation Gate is a coarse checkpoint. This skill is the detailed authority for eligibility, lineup selection, policy, ownership, dispatch, reuse, and integration.
+The SessionStart Delegation Gate is the sole authority for explicit-trigger vocabulary and coarse activation. This skill is the detailed authority for eligibility, lineup selection, policy, ownership, dispatch, reuse, and integration.
 
 Implicit delegation requires all of the following:
 
@@ -42,7 +42,9 @@ Implicit delegation requires all of the following:
 
 No effective Root Lane means no implicit delegation. Waiting, supervising, promising to synthesize later, or repeating the Child Lane is not a Root Lane. A second child is never required merely to meet the threshold.
 
-An explicit `$diverter` invocation or explicit request to use subagents bypasses the implicit benefit threshold. It does not bypass task clarity, explicit opt-out, Native Proactive Delegation ownership, Codex permissions, sandboxing, leaf-child rules, or Write Ownership.
+Decide lane independence semantically before role selection or Work Mode. If Root and Child concern the same implementation decision, or Root requires the Child result before safely progressing, keep the task in Root. Reclassifying an invented supporting task as read-only does not create an independent Child Lane. Sharing a filename alone is allowed when the decisions, deliverables, and progress are genuinely independent.
+
+An Explicit Delegation Request recognized by the SessionStart Delegation Gate bypasses the implicit benefit threshold. It does not bypass task clarity, explicit opt-out, Native Proactive Delegation ownership, Codex permissions, sandboxing, leaf-child rules, or Write Ownership.
 
 An explicitly selected focused skill may keep its core workflow and Root Lane while Diverter supplies a Supporting Child for a separate, non-duplicative deliverable. Respect higher-priority and focused-skill constraints. Do not replace or duplicate the focused skill.
 
@@ -66,12 +68,13 @@ Follow this sequence:
 2. Execute `$diverter-mode` directly when explicitly invoked; never delegate Mode Control.
 3. Honor explicit opt-out and clarify an unclear objective.
 4. Resolve the Delegation Policy.
-5. Identify the Child Lane, Root Lane, expected benefit, and Work Mode.
+5. Identify the candidate Child Lane, Root Lane, expected benefit, and ownership, then decide eligibility.
 6. Perform the Native Capability Check before mentioning Diverter or proposing a lineup.
 7. Select the Smallest Sufficient Lineup from available roles.
-8. Produce the policy-specific Delegation Contract.
-9. Dispatch only after Dispatch Authorization.
-10. Continue the Root Lane, collect child results, resolve conflicts, verify proportionally, and integrate the final outcome.
+8. Classify the complete workflow's Work Mode.
+9. Produce the policy-specific Delegation Contract.
+10. Dispatch only after Dispatch Authorization.
+11. Continue the Root Lane, collect child results, resolve conflicts, verify proportionally, and integrate the final outcome.
 
 ## Delegation Policy
 
@@ -90,6 +93,8 @@ Valid values are `delegation_policy: ask` and `delegation_policy: auto`.
 
 Task Policy Overrides apply only to the current task. Work Mode describes write risk; it never creates a hidden third policy.
 
+Work Mode classifies the complete Root-and-Child workflow: `read-only` when no active lane may write, `mixed` when only some active lanes may write, and `write-capable` when every active lane may write. Per-role capability and child handoff write policy remain separate.
+
 ## Native Capability Check
 
 Diverter uses the Native Subagent Backend exclusively. Before activation, confirm that the current host exposes native role-specific spawning with a target `agent_type`, supports isolated `fork_turns: "none"`, and exposes the requested installed role.
@@ -103,7 +108,7 @@ Diverter uses the Native Subagent Backend exclusively. Before activation, confir
 
 Select capabilities first, then map only to roles available in the current Codex environment.
 
-| Capability | Preferred role | Default mode |
+| Capability | Preferred role | Role write capability |
 | --- | --- | --- |
 | code mapping | `code-mapper` | read-only |
 | code review | `reviewer` | read-only |
@@ -185,6 +190,8 @@ Root must:
 ## Child Reuse
 
 For a related follow-up, prefer the same native child identity and send a follow-up to that child instead of spawning an equivalent replacement. A materially different scope may justify a new bounded child. Never redispatch the same normalized scope merely because a prior turn completed or the Root Session compacted.
+
+Root may integrate and verify a received child result immediately. Confirm that the current child turn is terminal or idle only before sending a related follow-up intended to create a new turn; mailbox output alone is not terminal-status proof.
 
 If a prior child cannot continue, Root retains ordinary accountability and completes or reassigns the outcome without a special recovery protocol.
 

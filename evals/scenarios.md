@@ -96,9 +96,9 @@ If a scenario intentionally overlaps ownership, it must serialize rather than ru
 
 ### Family 4: post-announcement failure
 
-Create a deterministic native child failure after Dispatch Announcement without weakening permissions. Require a concise affected-lane report, preservation of successful work, Root takeover of the unfinished outcome, and no generic substitute child.
+After Dispatch Announcement, assign `test-automator` one deterministic nonzero operation, such as `/opt/anaconda3/bin/python3 -c 'raise SystemExit(23)'`, and retain structured tool output containing the nonzero exit code. Run it inside the ordinary writable workspace so the failure does not rely on role-level sandbox isolation or weakened permissions. Require a concise affected-lane report, preservation of successful work, Root takeover of the unfinished outcome, and no generic substitute child.
 
-Prompt-injected failure prose is only a Router Contract probe and cannot pass this family.
+Prompt-injected failure prose, empty wrapper output, and child self-report are not failure evidence. The persisted nonzero operation must precede the affected-lane report and Root takeover.
 
 ## Lifecycle Verifier
 
@@ -118,7 +118,7 @@ python3 scripts/run-native-lifecycle.py \
   --verification-scope verify-integrated-brief
 ```
 
-For `ask`, put the exact second-turn marker `Dispatch Authorization` or `Dispatch Refused` in `--resume-prompt-file`. For `native-absence`, the driver disables the native multi-agent features. For `missing-role`, it physically omits the requested role installation. Never copy authentication into the clean home; if the supported host cannot access its existing account identity there, record the run as blocked.
+For `ask`, put the exact second-turn marker `Dispatch Authorization` or `Dispatch Refused` in `--resume-prompt-file`. For `native-absence`, the driver disables the native multi-agent features. For `missing-role`, it physically omits the requested role installation. Never copy authentication into the clean home; if the supported host cannot access its existing account identity there, record the run as blocked. For interactive authentication, first run the driver with `--prepare-only`, log in to that exact `CODEX_HOME`, then rerun the identical command with `--run-prepared` in place of `--prepare-only`.
 
 The parser can also verify retained rollout evidence directly:
 
@@ -154,7 +154,7 @@ python3 scripts/verify-native-lifecycle.py \
   --ownership-manifest /absolute/path/to/ownership-manifest.json
 ```
 
-The verifier accepts real `custom_tool_call` / `exec` patch records, requires scoped Root progress and verification evidence, pairs child completion results by turn ID, checks normalized handoff scopes for duplicates, enforces exactly one child for the standard families, validates same-child follow-up ordering, freezes every Root turn's model and effort, and rejects hash changes or cross-lane mutations outside declared Write Ownership. Its root-only modes cover `ask-refused`, `native-absence`, and `missing-role`; `failure` accepts either a failed spawn with no Child rollout or a child-side abort/tool failure, then requires a marked affected-lane report, Root takeover evidence, and no substitute spawn.
+The verifier accepts real `custom_tool_call` / `exec` patch records, requires scoped Root progress and verification evidence, pairs child completion results by turn ID, checks normalized handoff scopes for duplicates, enforces exactly one child for the standard families, validates same-child follow-up ordering, freezes every Root turn's model and effort, and rejects hash changes or cross-lane mutations outside declared Write Ownership. Its root-only modes cover `ask-refused`, `native-absence`, and `missing-role`; `failure` accepts either a failed spawn with no Child rollout or a child-side abort/tool failure. Child tool failure evidence must match a preceding non-bookkeeping call, the report must identify the actual child task or role, post-failure verification must cover both prior Root work and takeover scope, and no substitute spawn is allowed.
 
 An absent mandatory event is a failure, not an inferred pass.
 
