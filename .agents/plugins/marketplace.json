@@ -1,0 +1,21 @@
+{
+  "name": "diverter",
+  "interface": {
+    "displayName": "Diverter"
+  },
+  "plugins": [
+    {
+      "name": "diverter",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/GML-MMGroup/Diverter.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

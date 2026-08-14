@@ -4,6 +4,10 @@
 
 - No unreleased changes.
 
+## 0.4.1 - 2026-08-14
+
+- Restore the tracked Codex marketplace manifest so fresh installations can add the Diverter marketplace.
+
 ## 0.4.0 - 2026-08-14
 
 - Distill Ultra-inspired decomposition and routing into non-Ultra Codex sessions.
