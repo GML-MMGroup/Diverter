@@ -18,9 +18,13 @@
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-⚡ **Diverter distills Ultra's delegation strategy into non-Ultra Codex sessions: when a task benefits from specialist help, the main thread keeps moving while the right native subagent handles the independent work.**
+<p align="center">
+  <strong>You turn on Ultra for a complex task—then research, testing, and other independent work start consuming the same premium capacity. Does every step really need Ultra?</strong>
+</p>
 
 ## 💡 Why Diverter
+
+⚡ **Diverter distills Ultra's delegation strategy into non-Ultra Codex sessions: call the right specialist when work can split, keep the main thread moving, and let simple tasks stay simple.**
 
 - **Ultra-inspired delegation without Ultra.** Bring task splitting, specialist routing, and result integration to non-Ultra Codex sessions.
 - **No manual agent choreography.** Diverter decides when specialist help is useful and which role fits.

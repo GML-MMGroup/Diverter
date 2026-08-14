@@ -18,9 +18,13 @@
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-⚡ **Diverter 把 Ultra 的委派策略蒸馏到非 Ultra 的 Codex 会话中：当任务适合分工时，主线程持续推进，恰到好处的原生专家子代理同步处理独立工作。**
+<p align="center">
+  <strong>你为复杂任务开启 Ultra，结果连查资料、跑测试这些独立工作，也在消耗宝贵额度。真的每一步，都需要 Ultra 亲自上吗？</strong>
+</p>
 
 ## 💡 为什么选择 Diverter
+
+⚡ **Diverter 把 Ultra 的委派策略蒸馏到非 Ultra 的 Codex 会话中：该分工时叫专家，主线程继续推进；简单任务，依然保持简单。**
 
 - **不开 Ultra，也能用上从 Ultra 蒸馏出的委派策略。** 把任务拆分、专家路由和结果整合带到非 Ultra 的 Codex 会话。
 - **不用手动编排 Agent。** Diverter 判断什么时候值得分工，并找到合适的专家。
