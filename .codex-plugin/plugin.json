@@ -1,7 +1,7 @@
 {
   "name": "diverter",
-  "version": "0.3.2",
-  "description": "Route complex Codex work to one specialist subagent lineup under an ask or auto delegation policy.",
+  "version": "0.4.0",
+  "description": "Distill Ultra-style native delegation into non-Ultra Codex sessions.",
   "author": {
     "name": "917Dhj",
     "url": "https://github.com/917Dhj"
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Diverter",
-    "shortDescription": "Route complex work to one specialist lineup",
-    "longDescription": "Selects a specialist subagent lineup for suitable Codex tasks, then asks for approval or dispatches automatically under the user's delegation policy.",
+    "shortDescription": "Ultra-style delegation for non-Ultra Codex",
+    "longDescription": "Splits suitable tasks into a bounded child lane and a useful Root lane, routes native specialist subagents, and integrates their results under the user's delegation policy.",
     "developerName": "GML-MMGroup",
     "category": "Productivity",
     "capabilities": [
@@ -29,7 +29,7 @@
     ],
     "websiteURL": "https://github.com/GML-MMGroup/Diverter",
     "defaultPrompt": [
-      "Route this task to a specialist subagent lineup when useful."
+      "Split this task into a useful Root Lane and bounded native Child Lanes when beneficial."
     ],
     "composerIcon": "./assets/diverter-icon.png",
     "logo": "./assets/diverter-icon.png"

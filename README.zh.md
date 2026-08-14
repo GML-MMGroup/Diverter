@@ -18,7 +18,13 @@
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-Diverter 让 Codex 更懂得何时分工：复杂任务按需召集专家，简单任务留在主线程。
+Diverter 把 Ultra 的委派策略蒸馏到非 Ultra 的 Codex 会话中：当任务适合分工时，主线程持续推进，恰到好处的原生专家子代理同步处理独立工作。
+
+## 为什么选择 Diverter
+
+- **不开 Ultra，也能用上从 Ultra 蒸馏出的委派策略。** 把任务拆分、专家路由和结果整合带到非 Ultra 的 Codex 会话。
+- **不用手动编排 Agent。** Diverter 判断什么时候值得分工，并找到合适的专家。
+- **主线程继续推进。** 专家处理可独立完成的工作，简单任务依然保持简单。
 
 ## ✨ 看 Diverter 如何分工
 
@@ -30,7 +36,7 @@ Diverter 让 Codex 更懂得何时分工：复杂任务按需召集专家，简�
 
 ## 🚀 快速开始
 
-**建议使用 Codex CLI `0.145.0+`，以获得 Diverter 完整的原生子代理体验。**
+**Diverter 的原生子代理能力最低需要 Codex CLI `0.145.0`。**
 
 1. 告诉 Codex：
 
@@ -40,13 +46,27 @@ Diverter 让 Codex 更懂得何时分工：复杂任务按需召集专家，简�
 
 2. 安装完成后打开 `/hooks`，检查并信任 Diverter 的 `SessionStart` Hook，然后新建或重新打开任务。
 
-3. 新安装默认使用 `ask`。通过以下命令查看或修改用户级策略：
+3. 安装时选择 `auto`（推荐，用于主动分派）或 `ask`（批准后分派）。通过以下命令查看或修改用户级策略：
 
    ```text
    $diverter-mode status
    $diverter-mode auto
    $diverter-mode ask
    ```
+
+## 🎯 Diverter 如何帮你
+
+Diverter 会识别哪些工作值得交给专家，并让主任务在专家处理独立交付物的同时继续推进。
+
+- 你选择的 skill 继续掌控主流程，只在确实有帮助时获得聚焦支持。
+- 清晰的写入边界让独立修改同步推进，并把重叠修改改为串行处理。
+- 主线程检查并整合专家结果，最终交付一个一致的答案。
+
+当 Codex 已经拥有原生主动委派的编排权时，Diverter 会静默让路。参见 OpenAI 的[子代理文档](https://learn.chatgpt.com/docs/agent-configuration/subagents)。
+
+已经过 60+ 项自动化测试和真实原生子代理生命周期运行验证。
+
+## 🧭 选择委派策略
 
 <table align="center">
   <thead>
@@ -86,37 +106,30 @@ Diverter 内置十个专业子代理。安装器支持推荐组合（`code-mappe
 | `test-automator` | `gpt-5.6-terra` | `xhigh` | 在行为明确后添加有边界的回归测试 |
 | `web-performance-auditor` | `gpt-5.6-luna` | `xhigh` | 审计 Web 性能证据和 Core Web Vitals 风险 |
 
-Diverter 先选择能力，再映射到 Codex 环境中实际可用的角色。首选角色缺失时会明确说明，不会静默替换。自定义角色集可以调整 [`role-lineups.md`](skills/diverter/references/role-lineups.md)。
+Diverter 先选择能力，再映射到 Codex 环境中已安装的原生角色。自定义角色集可以调整 [`role-lineups.md`](skills/diverter/references/role-lineups.md)。
 
 ## 🔄 工作模式
 
 | 工作模式 | 边界 |
 |---|---|
 | `read-only` | 只检查和报告，不写入文件 |
-| `mixed` | 先调查，再进行有边界的写入；除非路径明确互不重叠，可写代理保持串行 |
+| `mixed` | 先调查，再按明确的产物归属进行有边界的写入 |
 | `write-capable` | 只在显式 handoff 和 sandbox 范围内编辑 |
 
 Diverter 在分派前始终明确标注一种工作模式。
 
-## 🎯 Diverter 何时分派
-
-在大多数 intelligence 档位下，子代理委派需要显式提出；Ultra 可以主动分派。Diverter 填补显式委派路径，并在原生主动委派拥有会话编排权时静默让路。参见 OpenAI 的[子代理文档](https://learn.chatgpt.com/docs/agent-configuration/subagents)。
-
-| 会分派 | 留在主线程 |
-|---|---|
-| 多条独立工作线可以并行推进 | 任务简单或只有单一工作线 |
-| 代码和官方文档需要分别核验 | 写入高度耦合，或必须先查清一个事实 |
-| 安全、测试、性能或发布风险需要专业角色 | 用户明确退出，或请求仍然含糊 |
-
-Diverter 会匹配用户的语言；角色名称和工作模式标记保持英文。
-
 ## ⚙️ 工作原理
 
 1. `SessionStart` Hook 加载用户级委派策略并激活委派门控。
-2. Diverter 先为原生主动委派让路；否则判断任务应留在主线程，还是选择一个不超过四个角色的阵容和一种工作模式。
-3. `ask` 等待批准；`auto` 告知后立即分派。执行后端随后通过原生自定义 Agent 或临时叶子 `codex exec` worker 运行有边界的 handoff。
+2. Diverter 识别有边界的 Child Lane、会继续推进的有效 Root Lane、最小充分阵容和一种工作模式。
+3. `ask` 等待批准；`auto` 告知后立即通过原生角色子代理分派。
+4. Root 在所有子代理保持叶子节点的同时持续推进，随后完成整合、验证和最终交付。
+
+相关追问会回到同一个原生子代理，延续它已经建立的上下文。
 
 每个 handoff 都包含显式目标、范围、写入策略和可验证交付物。详见 [`delegation-contract.md`](skills/diverter/references/delegation-contract.md) 和 [`handoff-schema.md`](skills/diverter/references/handoff-schema.md)。
+
+Diverter 会匹配用户的语言；角色名称和工作模式标记保持英文。
 
 ## 🙏 致谢
 

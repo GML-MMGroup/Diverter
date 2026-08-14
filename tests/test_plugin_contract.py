@@ -99,7 +99,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertLess(native_stop, trigger)
         self.assertIn("Do not invoke or mention Diverter", result.stdout)
 
-    def test_session_start_exposes_coarse_eligibility_and_sanitized_failures(
+    def test_session_start_exposes_root_child_eligibility_and_native_absence(
         self,
     ) -> None:
         result = subprocess.run(
@@ -110,14 +110,23 @@ class PluginContractTest(unittest.TestCase):
         )
 
         gate = result.stdout
-        self.assertIn("at least two separable work or evidence lanes", gate)
-        self.assertIn("one concrete high-risk specialist boundary", gate)
-        self.assertIn("explicit request to use subagents", gate)
+        self.assertIn("one bounded independent Child Lane", gate)
+        self.assertIn("one distinct useful Root Lane", gate)
+        self.assertIn("No effective Root Lane", gate)
+        self.assertIn("affirmative delegation intent", gate)
+        self.assertIn(
+            "`$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role",
+            gate,
+        )
+        self.assertIn("Scheduling words alone do not qualify", gate)
         self.assertIn("explicitly selected focused skill", gate)
+        self.assertIn("Supporting Child", gate)
+        self.assertIn("native subagent dispatch is unavailable", gate)
+        self.assertIn("continue silently in the Root Session", gate)
         self.assertIn("Sanitized Failure Reporting", gate)
         self.assertIn("internal failure recovers successfully", gate)
-        self.assertIn("continuing in the main thread", gate)
-        self.assertIn("ask whether to continue in the main thread", gate)
+        self.assertIn("continuing in the Root Session", gate)
+        self.assertIn("ask whether to continue in the Root Session", gate)
         for internal_detail in (
             "skill aliases",
             "plugin cache paths",
@@ -134,7 +143,7 @@ class PluginContractTest(unittest.TestCase):
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())
 
         self.assertEqual(manifest["name"], "diverter")
-        self.assertEqual(manifest["version"], "0.3.2")
+        self.assertEqual(manifest["version"], "0.4.0")
         self.assertEqual(manifest["interface"]["displayName"], "Diverter")
         self.assertEqual(manifest["skills"], "./skills/")
         self.assertNotIn("hooks", manifest)
@@ -174,7 +183,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("delegation_context: delegated-subagent", result.stdout)
         self.assertIn("invoke `$diverter` first", result.stdout)
 
-    def test_core_skill_selects_policy_and_backend(self) -> None:
+    def test_core_skill_selects_policy_and_native_lifecycle(self) -> None:
         skill_path = ROOT / "skills" / "diverter" / "SKILL.md"
         skill = skill_path.read_text()
 
@@ -199,18 +208,17 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("delegation_policy: ask", skill)
         self.assertIn("delegation_policy: auto", skill)
         self.assertIn("regardless of Work Mode", skill)
-        self.assertIn("Backend Capability Check", skill)
+        self.assertIn("Native Capability Check", skill)
         self.assertIn("Native Subagent Backend", skill)
-        self.assertIn("CLI Worker Backend", skill)
         self.assertIn("agent_type", skill)
-        self.assertIn("model", skill)
-        self.assertIn("reasoning_effort", skill)
-        self.assertIn("scripts/run-cli-agent.py", skill)
-        self.assertIn("command-level approval", skill)
-        self.assertIn("command-level runtime approval is governed below", skill)
-        self.assertIn("attempt to write a readonly database", skill)
-        self.assertIn("retry the same runner command once", skill)
-        self.assertIn("do not switch the CLI Worker to full access", skill)
+        self.assertIn("Root Lane", skill)
+        self.assertIn("Child Lane", skill)
+        self.assertIn("Supporting Child", skill)
+        self.assertIn("Smallest Sufficient Lineup", skill)
+        self.assertIn("Child Reuse", skill)
+        self.assertIn("Write Ownership", skill)
+        self.assertNotIn("CLI Worker Backend", skill)
+        self.assertNotIn("scripts/run-cli-agent.py", skill)
         self.assertIn("delegation_context: delegated-subagent", skill)
 
     def test_core_skill_refines_eligibility_and_sanitizes_failures(self) -> None:
@@ -220,15 +228,40 @@ class PluginContractTest(unittest.TestCase):
         ).read_text()
 
         for phrase in (
-            "at least two separable work or evidence lanes",
-            "one concrete high-risk specialist boundary",
-            "explicit request to use subagents",
+            "one bounded independent Child Lane",
+            "one distinct useful Root Lane",
+            "recognized by the SessionStart Delegation Gate",
             "explicitly selected focused skill",
             "Sanitized Failure Reporting",
             "internal failure recovers successfully",
             "ask whether to continue in the Root Session",
         ):
             self.assertIn(phrase, skill)
+
+        for phrase in (
+            "same implementation decision",
+            "Root requires the Child result before safely progressing",
+            "Reclassifying an invented supporting task as read-only",
+        ):
+            self.assertIn(phrase, skill)
+
+        capability_table = skill.split("## Capability Selection", 1)[1].split(
+            "Smallest Sufficient Lineup rules:", 1
+        )[0]
+        self.assertIn("Role write capability", capability_table)
+        self.assertNotIn("Default mode", capability_table)
+
+        self.assertIn("complete Root-and-Child workflow", skill)
+        self.assertIn("no active lane may write", skill)
+        self.assertIn("only some active lanes may write", skill)
+        self.assertIn("every active lane may write", skill)
+
+        child_reuse = skill.split("## Child Reuse", 1)[1].split(
+            "## Write Ownership", 1
+        )[0]
+        self.assertIn("integrate and verify a received child result immediately", child_reuse)
+        self.assertIn("terminal or idle", child_reuse)
+        self.assertIn("before sending a related follow-up", child_reuse)
 
         self.assertIn("Explicit delegation request", rules)
         self.assertIn("Focused skill ownership", rules)
@@ -267,15 +300,23 @@ class PluginContractTest(unittest.TestCase):
         self.assertNotIn("gpt-5.6-sol", stop)
         self.assertNotIn("Ultra", stop)
 
-    def test_bundled_skill_resolves_cli_runner_from_its_file_path(self) -> None:
-        skill_path = ROOT / "skills" / "diverter" / "SKILL.md"
-        skill = skill_path.read_text()
-        plugin_root = skill_path.parents[2]
+    def test_active_product_contract_has_no_cli_worker_backend(self) -> None:
+        active_paths = [
+            ROOT / "skills" / "diverter" / "SKILL.md",
+            *sorted((ROOT / "skills" / "diverter" / "references").glob("*.md")),
+            ROOT / ".codex" / "INSTALL.md",
+            ROOT / "README.md",
+            ROOT / "README.zh.md",
+            ROOT / "evals" / "scenarios.md",
+        ]
 
-        self.assertTrue((plugin_root / ".codex-plugin" / "plugin.json").is_file())
-        self.assertTrue((plugin_root / "scripts" / "run-cli-agent.py").is_file())
-        self.assertIn("plugin_root = Path(skill_file).parents[2]", skill)
-        self.assertIn("${plugin_root}/scripts/run-cli-agent.py", skill)
+        self.assertFalse((ROOT / "scripts" / "run-cli-agent.py").exists())
+        self.assertFalse((ROOT / "tests" / "test_cli_runner.py").exists())
+        for path in active_paths:
+            text = path.read_text()
+            self.assertNotIn("CLI Worker Backend", text, path)
+            self.assertNotIn("run-cli-agent.py", text, path)
+            self.assertNotIn("ephemeral CLI", text, path)
 
     def test_install_guide_has_one_plugin_only_flow(self) -> None:
         guide = (ROOT / ".codex" / "INSTALL.md").read_text()
@@ -285,11 +326,14 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("DIVERTER_PLUGIN", guide)
         self.assertIn("/hooks", guide)
         self.assertIn("install-agent-roles.py", guide)
-        self.assertIn("scripts/diverter-mode.py\" init", guide)
+        self.assertIn("Recommended: `auto`", guide)
+        self.assertIn("Ask the user to choose", guide)
+        self.assertIn("scripts/diverter-mode.py\" auto", guide)
+        self.assertIn("scripts/diverter-mode.py\" ask", guide)
         self.assertIn("$diverter-mode auto", guide)
         self.assertIn("$diverter-mode ask", guide)
         self.assertIn("$diverter-mode status", guide)
-        self.assertIn("Diverter is installed in `<policy>` mode.", guide)
+        self.assertIn("Diverter is installed in the selected `<policy>` mode.", guide)
         self.assertIn("Python 3.11", guide)
         self.assertIn("$MARKETPLACE_NAME/$PLUGIN_NAME/$VERSION", guide)
         self.assertIn("repeated directory names are valid", guide)
@@ -301,7 +345,7 @@ class PluginContractTest(unittest.TestCase):
             "### 2. Install the plugin",
             "### 3. Choose the global Bundled Subagents",
             "### 4. Run the Role Installer for the user",
-            "### 5. Initialize the Delegation Policy",
+            "### 5. Choose the Delegation Policy",
             "### 6. Trust the SessionStart Hook",
             "### 7. Verify and finish",
         )
@@ -316,6 +360,7 @@ class PluginContractTest(unittest.TestCase):
             self.assertNotIn("npx skills", readme, readme_name)
             self.assertNotIn("install-agents-gate.py", readme, readme_name)
             self.assertNotIn("AGENTS.md gate", readme, readme_name)
+            self.assertNotIn("temporary leaf `codex exec`", readme, readme_name)
 
         self.assertFalse((ROOT / "scripts" / "install-agents-gate.py").exists())
 
@@ -333,6 +378,10 @@ class PluginContractTest(unittest.TestCase):
             "auto-idempotency",
             "gate-neg-focused-ui",
             "gate-pos-ui-audit",
+            "gate-pos-named-role",
+            "gate-neg-scheduling-only",
+            "gate-neg-quoted-delegation",
+            "gate-neg-explanatory-delegation",
             "gate-neg-vague-web-performance",
             "gate-neg-vague-regression",
             "gate-neg-vague-release",
@@ -340,6 +389,16 @@ class PluginContractTest(unittest.TestCase):
             "failure-implicit-fallback",
             "failure-explicit-choice",
             "failure-user-action",
+            "ultra-pos-ui-root-continues",
+            "ultra-pos-focused-skill-support",
+            "ultra-pos-regression-root-continues",
+            "ultra-pos-disjoint-write",
+            "ultra-pos-same-file-readonly",
+            "ultra-pos-doc-check",
+            "ultra-reuse-same-scope",
+            "ultra-neg-no-root-lane",
+            "ultra-neg-readonly-laundering",
+            "ultra-ownership-conflict",
         ):
             self.assertIn(f"id: {case_id}", prompts)
 
@@ -347,20 +406,43 @@ class PluginContractTest(unittest.TestCase):
         rubric = (ROOT / "evals" / "rubric.md").read_text()
         results_template = (ROOT / "evals" / "results-template.md").read_text()
         self.assertIn("hooks/session_start.py", scenarios)
-        self.assertIn("DIVERTER_PLUGIN_ROOT", scenarios)
         self.assertIn(
-            'prompt: "Review this branch against origin/main for correctness and maintainability regressions."',
+            'prompt: "While you map the changed execution path and integrate the final review, use one independent reviewer for correctness and maintainability regressions against origin/main."',
             prompts,
         )
-        self.assertIn("AUTO_WRITE_WORKSPACE", scenarios)
-        self.assertIn("-s workspace-write", scenarios)
-        self.assertIn("--add-dir /tmp/codex-subagent-eval/skill", scenarios)
+        self.assertIn("newly created temporary `CODEX_HOME`", scenarios)
+        self.assertIn("real non-empty workspace", scenarios)
+        self.assertIn("Physically omit or remove the requested role", scenarios)
         self.assertIn("evals/fixtures/settings-save/settings_save.py", prompts)
         self.assertTrue(
             (ROOT / "evals" / "fixtures" / "settings-save" / "settings_save.py").is_file()
         )
         self.assertIn("sanitized_failure_reporting", rubric)
-        self.assertIn("Score / 6", results_template)
+        self.assertIn("root_lane_quality", rubric)
+        self.assertIn("lifecycle_evidence", rubric)
+        self.assertIn("Router Score / 7", results_template)
+        self.assertIn("Native Lifecycle Evidence", results_template)
+        self.assertIn("verify-native-lifecycle.py", scenarios)
+        self.assertIn("run-native-lifecycle.py", scenarios)
+        self.assertIn("three independent fresh sessions", scenarios)
+        self.assertIn("deterministic nonzero operation", scenarios)
+        self.assertIn("`test-automator`", scenarios)
+        self.assertIn("does not rely on role-level sandbox isolation", scenarios)
+        for mode_expectation in (
+            "announce read-only work",
+            "announce mixed work",
+            "announce write-capable work",
+        ):
+            self.assertIn(mode_expectation, prompts)
+        for metadata in (
+            "root_continuation:",
+            "child_scope:",
+            "root_scope:",
+            "benefit_claim:",
+            "max_active_children:",
+            "expected_reuse:",
+        ):
+            self.assertIn(metadata, prompts)
 
     def test_readmes_explain_native_proactive_delegation_boundary(self) -> None:
         english = (ROOT / "README.md").read_text()

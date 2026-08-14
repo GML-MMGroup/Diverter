@@ -3,74 +3,74 @@ prompts:
     surface: shared
     smoke: true
     category: positive
-    prompt: "Review this branch against main for bugs, security issues, missing tests, and maintainability risks."
+    prompt: "Review this branch against main. While you map the changed modules and ownership boundaries, have one independent reviewer inspect the diff for bugs, security issues, missing tests, and maintainability risks; then integrate the evidence."
     expected_should_suggest: true
-    expected_roles: [reviewer, code-mapper]
+    expected_roles: [reviewer]
     must_not_do:
       - auto-spawn subagents
       - recommend more than 4 roles
       - omit a direct permission question
-    notes: "Canonical general PR review case; should not inflate to every specialist role."
+    notes: "Root maps the change surface while one reviewer owns the independent review lane."
 
   - id: pos-02
     surface: cli
     smoke: true
     category: positive
-    prompt: "Trace the code path for the save failure and verify the framework docs that the patch relies on before proposing a fix."
+    prompt: "Trace the code path for the save failure while one docs specialist independently verifies the framework contract that the patch relies on; integrate both before proposing a fix."
     expected_should_suggest: true
-    expected_roles: [docs-researcher, code-mapper]
+    expected_roles: [docs-researcher]
     must_not_do:
       - jump straight to implementation
       - omit the work mode
-    notes: "Pure docs plus codepath verification."
+    notes: "Root traces the code path; one child verifies the independent documentation contract."
 
   - id: pos-03
     surface: cli
     smoke: true
     category: positive
-    prompt: "Research three retry strategies for background jobs and summarize the tradeoffs before we choose one."
+    prompt: "Define the decision criteria and comparison frame for background-job retries while one researcher gathers evidence on three viable strategies; then integrate the tradeoffs before we choose one."
     expected_should_suggest: true
-    expected_roles: [search-specialist, knowledge-synthesizer]
+    expected_roles: [search-specialist]
     must_not_do:
       - recommend implementation roles
       - produce multiple equal-weight lineups
-    notes: "Parallelizable research with synthesis."
+    notes: "Root owns decision criteria and synthesis; one child owns external evidence gathering."
 
   - id: pos-04
     surface: shared
     smoke: false
     category: positive
-    prompt: "Break this broad migration into independent planning subtasks and ground the plan in the real codebase first."
+    prompt: "Map the migration's concrete codebase constraints while one planning specialist independently breaks the goal into bounded work packages; then reconcile both into the plan."
     expected_should_suggest: true
-    expected_roles: [task-distributor, code-mapper]
+    expected_roles: [task-distributor]
     must_not_do:
       - skip the recommendation rationale
       - exceed 4 roles
-    notes: "Independent planning subtasks."
+    notes: "Root grounds constraints; one child owns bounded work-package decomposition."
 
   - id: pos-05
     surface: cli
     smoke: false
     category: positive
-    prompt: "Map the relevant modules, entrypoints, and ownership boundaries for this feature before we touch any code."
+    prompt: "Draft the feature's integration questions and acceptance boundaries while one code-mapping specialist independently maps the relevant modules, entrypoints, and ownership boundaries before we touch code."
     expected_should_suggest: true
-    expected_roles: [code-mapper, search-specialist]
+    expected_roles: [code-mapper]
     must_not_do:
       - recommend write-capable work
       - act as if delegation already started
-    notes: "Read-heavy codebase exploration."
+    notes: "Root drafts the decision frame; one child owns codebase mapping."
 
   - id: pos-06
     surface: shared
     smoke: false
     category: positive
-    prompt: "First gather evidence about the affected code paths, then assess likely regression risks and summarize what looks dangerous."
+    prompt: "Build a regression-risk checklist from the reported behavior while one code-mapping specialist independently gathers evidence about the affected paths; then integrate what looks dangerous."
     expected_should_suggest: true
-    expected_roles: [reviewer, code-mapper, search-specialist]
+    expected_roles: [code-mapper]
     must_not_do:
       - recommend several alternative lineups
       - omit permission gating
-    notes: "Mixed evidence-gathering review."
+    notes: "Root owns the risk checklist and synthesis; one child owns path evidence."
 
   - id: neg-01
     surface: shared
@@ -161,33 +161,35 @@ prompts:
     surface: cli
     smoke: false
     category: edge
-    prompt: "Investigate the failure mode first, then apply the smallest fix only after the cause is clear."
+    prompt: "Inspect the reproduction and define the smallest acceptable fix while one code-mapping specialist independently traces the failure path; only then apply the fix with non-overlapping ownership."
     expected_should_suggest: true
-    expected_roles: [code-mapper, reviewer]
+    expected_roles: [code-mapper]
     must_not_do:
       - start with implementation
       - label the work as read-only
-    notes: "Mixed read/write task should start with read-only mapping and review; no generic implementation role."
+    notes: "Root owns reproduction and the eventual fix; one child maps the failure path read-only."
 
   - id: edge-02
     surface: cli
     smoke: true
     category: edge
-    prompt: "Assume docs-researcher is unavailable in this environment. Map the code path and verify the documented assumptions before any fix."
+    prompt: "While you verify the documented assumptions, have one specialist map the affected code path before any fix."
     expected_should_suggest: true
     expected_roles: [code-mapper]
+    evaluator_metadata:
+      physically_absent_roles: [docs-researcher]
     must_not_do:
       - invent a missing role
       - ignore the explicit unavailability
-    notes: "Preferred role unavailable; do not invent a missing fallback role."
+    notes: "The evaluator physically removes docs-researcher; Root covers docs without a substitute role."
 
   - id: edge-03
     surface: shared
     smoke: false
     category: edge
-    prompt: "Review this branch for correctness and regression risks with subagents, but suggest the lineup first and wait for my approval."
+    prompt: "With subagents, review this branch while you map the change surface; assign one reviewer the independent correctness and regression-risk lane, but suggest the lineup first and wait for my approval."
     expected_should_suggest: true
-    expected_roles: [code-mapper, reviewer]
+    expected_roles: [reviewer]
     must_not_do:
       - auto-spawn subagents
       - skip the permission question
@@ -197,9 +199,9 @@ prompts:
     surface: shared
     smoke: false
     category: edge
-    prompt: "Use subagents to diagnose this settings save failure before making a minimal fix. Suggest them first and keep any approved implementation tightly scoped."
+    prompt: "Use a subagent to trace the settings save path while you reproduce the failure and bound the smallest fix. Suggest the lineup first and keep any approved implementation tightly scoped."
     expected_should_suggest: true
-    expected_roles: [code-mapper, reviewer]
+    expected_roles: [code-mapper]
     must_not_do:
       - recommend a broad write-capable lineup
       - exceed 4 roles
@@ -209,9 +211,9 @@ prompts:
     surface: cli
     smoke: false
     category: edge
-    prompt: "Review this branch for bugs, security, tests, docs assumptions, maintainability, and rollout risk, but keep the recommendation compact."
+    prompt: "While you map and integrate the branch risks, assign one reviewer an independent pass over bugs, security, tests, docs assumptions, maintainability, and rollout risk; keep the recommendation compact."
     expected_should_suggest: true
-    expected_roles: [reviewer, code-mapper, docs-researcher]
+    expected_roles: [reviewer]
     must_not_do:
       - recommend more than 4 roles
       - dump several alternative lineups
@@ -221,9 +223,9 @@ prompts:
     surface: shared
     smoke: true
     category: edge
-    prompt: "先帮我 map the code path，再 verify 文档里的 API 行为，最后看有没有明显 regression risk。"
+    prompt: "你先 map the code path 并整理 regression checklist，同时让一个 docs specialist 独立 verify 文档里的 API 行为，最后整合风险。"
     expected_should_suggest: true
-    expected_roles: [code-mapper, docs-researcher, reviewer]
+    expected_roles: [docs-researcher]
     must_not_do:
       - fail because the prompt is mixed-language
       - skip the permission gate
@@ -233,9 +235,9 @@ prompts:
     surface: shared
     smoke: true
     category: positive
-    prompt: "Review this auth refactor for permission bypasses, token handling issues, and missing server-side checks."
+    prompt: "Map this auth refactor's changed trust boundaries while one security specialist independently reviews permission bypasses, token handling, and missing server-side checks; then integrate the findings."
     expected_should_suggest: true
-    expected_roles: [security-auditor, code-mapper, reviewer]
+    expected_roles: [security-auditor]
     must_not_do:
       - rely only on generic reviewer for central security risk
       - recommend more than 4 roles
@@ -246,9 +248,9 @@ prompts:
     surface: shared
     smoke: false
     category: positive
-    prompt: "Check whether this agent tool integration can leak secrets or let a subagent perform destructive actions without approval."
+    prompt: "Map the agent tool integration and its intended permission flow while one security specialist independently checks for secret leaks and destructive actions without approval."
     expected_should_suggest: true
-    expected_roles: [security-auditor, code-mapper, docs-researcher]
+    expected_roles: [security-auditor]
     must_not_do:
       - ignore LLM/tool permission safety
       - start auditing before approval
@@ -258,9 +260,9 @@ prompts:
     surface: cli
     smoke: true
     category: positive
-    prompt: "Look at the checkout flow and tell me what tests are missing before we change anything."
+    prompt: "Map the checkout behavior and fixtures while one test specialist independently identifies the missing coverage before we change anything."
     expected_should_suggest: true
-    expected_roles: [test-engineer, code-mapper]
+    expected_roles: [test-engineer]
     must_not_do:
       - suggest write-capable test automation first
       - skip behavior mapping
@@ -270,9 +272,9 @@ prompts:
     surface: cli
     smoke: false
     category: positive
-    prompt: "Add regression tests for the settings save bug, but first identify the exact behavior boundary."
+    prompt: "Identify the exact settings-save behavior boundary and fixture risk while one test automation specialist adds the bounded regression test in a disjoint test scope; then verify it."
     expected_should_suggest: true
-    expected_roles: [test-engineer, test-automator, code-mapper]
+    expected_roles: [test-automator]
     must_not_do:
       - start writing tests before read-only scoping
       - label the work read-only
@@ -282,9 +284,9 @@ prompts:
     surface: shared
     smoke: true
     category: positive
-    prompt: "Audit the Next.js landing page for LCP, INP, CLS, image loading, and unnecessary client-side rendering."
+    prompt: "Map the Next.js landing page's render and asset path while one Web performance specialist independently audits LCP, INP, CLS, image loading, and unnecessary client-side rendering."
     expected_should_suggest: true
-    expected_roles: [web-performance-auditor, code-mapper]
+    expected_roles: [web-performance-auditor]
     must_not_do:
       - fabricate performance metrics
       - recommend non-Web performance roles only
@@ -294,9 +296,9 @@ prompts:
     surface: shared
     smoke: false
     category: positive
-    prompt: "Before we ship this branch, check code quality, security risk, and missing tests."
+    prompt: "Before we ship, map the changed surface and own final integration while independent reviewer, security, and test specialists check code quality, security risk, and missing tests."
     expected_should_suggest: true
-    expected_roles: [reviewer, security-auditor, test-engineer, code-mapper]
+    expected_roles: [reviewer, security-auditor, test-engineer]
     must_not_do:
       - exceed 4 roles
       - suggest write-capable fixes before approval
@@ -391,28 +393,28 @@ prompts:
     surface: shared
     smoke: true
     category: positive
-    prompt: "Review this branch against origin/main for correctness and maintainability regressions."
+    prompt: "While you map the changed execution path and integrate the final review, use one independent reviewer for correctness and maintainability regressions against origin/main."
     expected_should_suggest: true
     expected_should_dispatch: true
-    expected_roles: [reviewer, code-mapper]
+    expected_roles: [reviewer]
     must_do:
-      - announce one lineup and the work mode
+      - announce read-only work
       - dispatch without asking a permission question
-    notes: "Canonical automatic read-only dispatch."
+    notes: "Canonical automatic one-child-plus-Root dispatch."
 
   - id: auto-pos-02
     policy: auto
     surface: cli
     smoke: true
     category: positive
-    prompt: "Add targeted regression tests for the falsey-value settings save bug in evals/fixtures/settings-save/settings_save.py, but first map the exact behavior boundary."
+    prompt: "While you map and verify the falsey-value behavior boundary, use one bounded test writer to add targeted regression tests for evals/fixtures/settings-save/settings_save.py."
     expected_should_suggest: true
     expected_should_dispatch: true
-    expected_roles: [test-engineer, test-automator, code-mapper]
+    expected_roles: [test-automator]
     must_do:
       - announce mixed work
       - keep write-capable work bounded and serialized unless paths are disjoint
-    notes: "Automatic policy applies to mixed work."
+    notes: "Automatic policy applies to a bounded Child write plus a distinct Root analysis lane."
 
   - id: auto-neg-01
     policy: auto
@@ -459,10 +461,10 @@ prompts:
     surface: shared
     smoke: true
     category: edge
-    prompt: "Review this branch with subagents, but show me the lineup first and do not start until I approve."
+    prompt: "Review this branch with a subagent: you map the changed surface while one reviewer handles the independent risk pass, but show me the lineup first and do not start until I approve."
     expected_should_suggest: true
     expected_should_dispatch: false
-    expected_roles: [reviewer, code-mapper]
+    expected_roles: [reviewer]
     must_do:
       - end with a direct permission question
       - stop before dispatch
@@ -487,7 +489,7 @@ prompts:
     surface: shared
     smoke: true
     category: edge
-    session_context: "The reviewer lane succeeded. The code-mapper worker exited non-zero."
+    session_context: "The reviewer lane succeeded. The code-mapper child failed after Dispatch Announcement."
     prompt: "Continue the automatically delegated branch review."
     expected_should_suggest: false
     expected_should_dispatch: false
@@ -496,8 +498,8 @@ prompts:
       - retain the reviewer result and name the failed code-mapper lane
       - let the root session cover the failed lane when possible
     must_not_do:
-      - remove sandbox or multi-agent safety flags
-      - retry through an unqualified backend
+      - weaken sandbox or leaf-child constraints
+      - retry through a generic substitute role
     notes: "Partial failure stays visible without weakening safety."
 
   - id: auto-idempotency
@@ -530,9 +532,9 @@ prompts:
     surface: shared
     smoke: true
     category: positive
-    prompt: "检查这个侧边栏样本列表：先定位组件和高度约束，再审计键盘与屏幕阅读器可访问性，并测量 LCP、INP 和 CLS 风险。给出证据和回归风险，但先不要修改代码。"
+    prompt: "检查这个侧边栏样本列表：你负责定位组件、高度约束和键盘/屏幕阅读器可访问性，同时让一个 Web performance specialist 独立测量 LCP、INP 和 CLS 风险。整合证据和回归风险，但先不要修改代码。"
     expected_should_suggest: true
-    expected_roles: [code-mapper, web-performance-auditor]
+    expected_roles: [web-performance-auditor]
     must_not_do:
       - fabricate performance measurements
       - omit the accessibility lane from the handoff or Root Session follow-up
@@ -559,6 +561,54 @@ prompts:
     must_not_do:
       - reject the request only because it has one implicit work lane
     notes: "An explicit delegation request bypasses the implicit lane threshold."
+
+  - id: gate-pos-named-role
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "Have the installed `docs-researcher` verify the named API contract and return the result."
+    expected_should_suggest: true
+    expected_roles: [docs-researcher]
+    must_do:
+      - treat the named installed role as the requested executor
+    must_not_do:
+      - reject the request only because no separate implicit Root Lane was stated
+    notes: "Affirmatively naming an installed agent role is an Explicit Delegation Request."
+
+  - id: gate-neg-scheduling-only
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "At the same time, explain this one function and summarize that same explanation in one paragraph."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - treat scheduling language as an Explicit Delegation Request
+      - invent a duplicate Child Lane
+    notes: "Scheduling language alone does not express delegation intent."
+
+  - id: gate-neg-quoted-delegation
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "In one paragraph, explain the quoted term ‘subagent’ as it appears in this documentation."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - activate from a quoted delegation term
+    notes: "Quotation is not affirmative delegation intent."
+
+  - id: gate-neg-explanatory-delegation
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "Explain what the phrase ‘delegate this task’ means; do not carry out the example."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - activate from explanatory mention
+      - override the explicit instruction not to perform the example
+    notes: "Explanation and negation are not affirmative delegation intent."
 
   - id: failure-recovered-silent
     surface: shared
@@ -616,3 +666,197 @@ prompts:
     must_not_do:
       - expose aliases, cache paths, SKILL.md loading, or retry steps
     notes: "A blocking failure reports the required user action without operational chatter."
+
+  - id: ultra-pos-ui-root-continues
+    policy: auto
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "为侧边栏滚动列表起草 UX acceptance criteria；同时让一个合适的子代理独立定位组件、高度约束和现有键盘交互，最后由你整合设计方案。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [code-mapper]
+    evaluator_metadata:
+      root_continuation: "draft UX acceptance criteria and integration plan"
+      child_scope: "map sidebar component, height constraints, and current keyboard behavior"
+      root_scope: "UX criteria and final design synthesis"
+      benefit_claim: "mapping can complete while Root develops the design criteria"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - name the Root Lane before dispatch
+      - dispatch exactly one child
+    notes: "Paired positive for gate-neg-focused-ui; the useful Root Lane is the only routing difference."
+
+  - id: ultra-pos-focused-skill-support
+    policy: auto
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "$grill-with-docs 继续主导侧边栏设计讨论和决策记录，同时用一个 supporting child 独立核对现有组件约束；不要让它替代你的主流程。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [code-mapper]
+    evaluator_metadata:
+      root_continuation: "focused skill keeps design interview and decision record"
+      child_scope: "inspect existing component constraints"
+      root_scope: "design discussion and accepted decisions"
+      benefit_claim: "the supporting check is independent and non-duplicative"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - preserve focused-skill ownership
+      - describe code-mapper as a Supporting Child
+    notes: "Focused skills may receive support without surrendering the Root Lane."
+
+  - id: ultra-pos-regression-root-continues
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "The falsey-value settings save defect is known. While you trace the fixture and define the behavior boundary, have one test specialist design the smallest Prove-It regression coverage."
+    expected_should_suggest: true
+    expected_roles: [test-engineer]
+    evaluator_metadata:
+      root_continuation: "trace the fixture and define the behavior boundary"
+      child_scope: "design minimal regression coverage"
+      root_scope: "fixture mapping and integration"
+      benefit_claim: "test design is independent of fixture tracing"
+      max_active_children: 1
+      expected_reuse: false
+    notes: "Paired positive for neg-10, which remains unclear and ineligible."
+
+  - id: ultra-pos-disjoint-write
+    policy: auto
+    surface: cli
+    smoke: false
+    category: positive
+    prompt: "While you update the release checklist in docs/release-checklist.md, use one bounded test writer for tests/test_settings_save.py. The two artifacts are disjoint; integrate both outcomes."
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [test-automator]
+    evaluator_metadata:
+      root_continuation: "update docs/release-checklist.md"
+      child_scope: "write tests/test_settings_save.py"
+      root_scope: "write docs/release-checklist.md and integrate results"
+      benefit_claim: "explicitly disjoint mutable artifacts"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - declare disjoint Write Ownership
+      - keep each lane inside its artifact
+      - announce write-capable work
+    notes: "Positive control for disjoint writes; neg-02 remains the same-file conflict control."
+
+  - id: ultra-pos-same-file-readonly
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "While you map the data flow through src/settings.py, have one reviewer independently audit error handling in that same file; integrate the two read-only findings."
+    expected_should_suggest: true
+    expected_roles: [reviewer]
+    evaluator_metadata:
+      root_continuation: "map data flow through src/settings.py"
+      child_scope: "audit error handling in src/settings.py"
+      root_scope: "data-flow map and integration"
+      benefit_claim: "distinct read-only decisions can progress independently"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - keep the Root and Child deliverables distinct
+      - announce read-only work
+    notes: "A shared filename alone is not an ownership conflict when both lanes are read-only and semantically independent."
+
+  - id: ultra-pos-doc-check
+    surface: cli
+    smoke: false
+    category: positive
+    prompt: "Draft the migration checklist from the repository constraints while one docs specialist independently verifies the named API contract and version boundary."
+    expected_should_suggest: true
+    expected_roles: [docs-researcher]
+    evaluator_metadata:
+      root_continuation: "draft migration checklist"
+      child_scope: "verify named API contract and version boundary"
+      root_scope: "repository constraints and checklist synthesis"
+      benefit_claim: "official contract verification can run independently"
+      max_active_children: 1
+      expected_reuse: false
+    notes: "Paired positive for neg-04, where one blocking fact leaves no Root Lane."
+
+  - id: ultra-reuse-same-scope
+    policy: auto
+    surface: shared
+    smoke: true
+    category: edge
+    session_context: "A native child at /root/docs_lane already completed the initial API-contract check and remains available for follow-up."
+    prompt: "Ask that same child to verify the related version-specific exception, while you integrate the first result into the migration checklist."
+    expected_should_suggest: false
+    expected_should_dispatch: false
+    expected_roles: []
+    evaluator_metadata:
+      root_continuation: "integrate the first result"
+      child_scope: "related version-specific follow-up"
+      root_scope: "migration checklist integration"
+      benefit_claim: "preserve relevant child context"
+      max_active_children: 1
+      expected_reuse: true
+    must_do:
+      - target the existing child identity
+      - create no equivalent second child
+    notes: "Child Reuse is distinct from compact idempotency."
+
+  - id: ultra-neg-no-root-lane
+    surface: shared
+    smoke: true
+    category: negative
+    prompt: "Audit this authentication flow for permission bypasses and report the result."
+    expected_should_suggest: false
+    expected_roles: []
+    evaluator_metadata:
+      root_continuation: "none"
+      child_scope: "entire requested audit"
+      root_scope: "none"
+      benefit_claim: "none; Root would wait"
+      max_active_children: 0
+      expected_reuse: false
+    must_not_do:
+      - invent a Root Lane
+      - delegate the entire task implicitly
+    notes: "A concrete specialist task with no effective Root Lane remains Root-only implicitly."
+
+  - id: ultra-neg-readonly-laundering
+    surface: cli
+    smoke: true
+    category: negative
+    prompt: "Refactor both helper functions in src/settings.py so they share one implementation. First understand their callers, then make one coupled implementation decision."
+    expected_should_suggest: false
+    expected_roles: []
+    evaluator_metadata:
+      root_continuation: "one coupled implementation decision"
+      child_scope: "invented read-only mapping or review"
+      root_scope: "understand and implement the same decision"
+      benefit_claim: "none; the proposed read-only lane is only a prerequisite"
+      max_active_children: 0
+      expected_reuse: false
+    must_not_do:
+      - reclassify prerequisite mapping or review as an independent Child Lane
+      - split one implementation decision across Root and Child
+    notes: "A read-only label cannot repair a tightly coupled task shape."
+
+  - id: ultra-ownership-conflict
+    surface: cli
+    smoke: true
+    category: negative
+    prompt: "Update both helper functions in src/settings.py concurrently so they share one implementation."
+    expected_should_suggest: false
+    expected_roles: []
+    evaluator_metadata:
+      root_continuation: "same mutable file"
+      child_scope: "src/settings.py"
+      root_scope: "src/settings.py"
+      benefit_claim: "none; ownership overlaps"
+      max_active_children: 0
+      expected_reuse: false
+    must_not_do:
+      - assign overlapping concurrent writers
+      - claim disjoint Write Ownership
+    notes: "Same-artifact ownership conflict stays serialized in Root."

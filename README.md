@@ -18,7 +18,13 @@
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-Diverter helps Codex know when to delegate: complex tasks call in specialists as needed, while simple tasks stay in the main thread.
+Diverter distills Ultra's delegation strategy into non-Ultra Codex sessions: when a task benefits from specialist help, the main thread keeps moving while the right native subagent handles the independent work.
+
+## Why Diverter
+
+- **Ultra-inspired delegation without Ultra.** Bring task splitting, specialist routing, and result integration to non-Ultra Codex sessions.
+- **No manual agent choreography.** Diverter decides when specialist help is useful and which role fits.
+- **Keep the main thread moving.** Specialists handle independent work while simple tasks stay simple.
 
 ## ✨ See Diverter in action
 
@@ -30,7 +36,7 @@ Diverter helps Codex know when to delegate: complex tasks call in specialists as
 
 ## 🚀 Quick Start
 
-**Codex CLI `0.145.0+` is recommended for the full native subagent experience.**
+**Diverter requires Codex CLI `0.145.0` or later for native subagent support.**
 
 1. Tell Codex:
 
@@ -40,13 +46,27 @@ Diverter helps Codex know when to delegate: complex tasks call in specialists as
 
 2. After installation, open `/hooks`, review and trust Diverter's `SessionStart` Hook, then start or reopen a task.
 
-3. New installations start in `ask`. Inspect or change the user-level policy with:
+3. During installation, choose `auto` (recommended) for proactive dispatch or `ask` for approval-first dispatch. Inspect or change the user-level policy with:
 
    ```text
    $diverter-mode status
    $diverter-mode auto
    $diverter-mode ask
    ```
+
+## 🎯 How Diverter helps
+
+Diverter looks for work that benefits from a specialist, then keeps the main task moving while that specialist handles an independent deliverable.
+
+- Your selected skill keeps control of its workflow and gets focused help only when it adds value.
+- Clear write boundaries keep independent changes moving and serialize overlapping work.
+- The main thread checks and integrates specialist results into one coherent answer.
+
+When Codex already owns native proactive delegation, Diverter silently steps aside. See OpenAI's [subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+
+Verified with 60+ automated tests and real native subagent lifecycle runs.
+
+## 🧭 Choose your delegation policy
 
 <table align="center">
   <thead>
@@ -86,37 +106,30 @@ Diverter includes ten Bundled Subagents. The installer offers the recommended se
 | `test-automator` | `gpt-5.6-terra` | `xhigh` | Adds bounded regression tests after behavior is clear |
 | `web-performance-auditor` | `gpt-5.6-luna` | `xhigh` | Audits Web performance evidence and Core Web Vitals risks |
 
-Diverter selects capabilities first, then maps them to roles available in your Codex environment. Missing preferred roles are reported rather than silently substituted. Custom role sets can adapt [`role-lineups.md`](skills/diverter/references/role-lineups.md).
+Diverter selects capabilities first, then maps them to the native roles installed in your Codex environment. Custom role sets can adapt [`role-lineups.md`](skills/diverter/references/role-lineups.md).
 
 ## 🔄 Work Modes
 
 | Work Mode | Boundary |
 |---|---|
 | `read-only` | Inspect and report; never write files |
-| `mixed` | Investigate first, then perform bounded writes; writers stay serialized unless paths are explicitly disjoint |
+| `mixed` | Investigate first, then perform bounded writes with explicit artifact ownership |
 | `write-capable` | Edit only within the explicit handoff and sandbox |
 
 Diverter always names one Work Mode before dispatch.
 
-## 🎯 When Diverter Delegates
-
-At most intelligence levels, subagent delegation must be requested explicitly; Ultra may delegate proactively. Diverter fills the explicit-delegation path and silently steps aside when native proactive delegation owns the session. See OpenAI's [subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
-
-| Delegates when | Stays focused when |
-|---|---|
-| Independent work lanes can run in parallel | The task is simple or single-lane |
-| Code and official documentation need separate verification | Writes are tightly coupled, or one fact is needed first |
-| Security, test, performance, or release risk calls for a specialist | The user opts out explicitly, or the request is still ambiguous |
-
-Diverter matches the user's language. Role names and Work Mode tokens remain in English.
-
 ## ⚙️ How It Works
 
 1. The `SessionStart` Hook loads the user-level Delegation Policy and activates the Delegation Gate.
-2. Diverter first yields to native proactive delegation. Otherwise it decides whether to stay in the main thread or select one lineup of up to four roles and one Work Mode.
-3. `ask` waits for approval; `auto` announces and dispatches immediately. The execution backend then runs bounded handoffs through native custom agents or temporary leaf `codex exec` workers.
+2. Diverter identifies a bounded Child Lane, the useful Root Lane that will continue, the Smallest Sufficient Lineup, and one Work Mode.
+3. `ask` waits for approval; `auto` announces and dispatches immediately through native role-specific subagents.
+4. Root keeps progressing while every child remains a leaf, then integrates, verifies, and returns the final result.
+
+Related follow-ups return to the same native child, preserving the context it already built.
 
 Every handoff carries an explicit goal, scope, write policy, and verifiable deliverable. See [`delegation-contract.md`](skills/diverter/references/delegation-contract.md) and [`handoff-schema.md`](skills/diverter/references/handoff-schema.md).
+
+Diverter matches the user's language. Role names and Work Mode tokens remain in English.
 
 ## 🙏 Acknowledgments
 

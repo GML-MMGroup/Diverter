@@ -54,7 +54,6 @@ temp/
 
 # Local evaluation outputs
 evals/results/
-docs/
 /marketing/
 /.agents/
 /CONTEXT.md

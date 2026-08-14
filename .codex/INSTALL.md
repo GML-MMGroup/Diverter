@@ -1,6 +1,6 @@
 # Installing Diverter for Codex
 
-Diverter is a Codex plugin that routes suitable complex work to one specialist lineup under a user-level `ask` or `auto` Delegation Policy while preserving bundled role settings across native and CLI execution backends.
+Diverter distills Ultra-style task decomposition and role routing into non-Ultra Codex sessions through native role-specific subagents and a user-level `ask` or `auto` Delegation Policy.
 
 This file is the only supported installation entry. Follow it as one agent-led flow; do not ask the user to run the role installer manually.
 
@@ -73,15 +73,19 @@ python3 "$DIVERTER_PLUGIN/scripts/install-agent-roles.py" --overwrite \
 
 The installer writes only to the global Agent directory under the effective Codex home.
 
-### 5. Initialize the Delegation Policy
+### 5. Choose the Delegation Policy
 
-Initialize Diverter's user-level configuration:
+Ask the user to choose one policy. **Recommended: `auto`** for proactive dispatch; `ask` remains available for approval-first use. Do not silently select a fresh-install policy.
+
+If `request_user_input` is available, ask one structured question with `auto (Recommended)` and `ask`. Otherwise ask the same choice plainly. Then run exactly the selected operation:
 
 ```bash
-python3 "$DIVERTER_PLUGIN/scripts/diverter-mode.py" init
+python3 "$DIVERTER_PLUGIN/scripts/diverter-mode.py" auto
+# or
+python3 "$DIVERTER_PLUGIN/scripts/diverter-mode.py" ask
 ```
 
-On a fresh installation this creates the `ask` policy. On update or reinstall it preserves an existing valid `ask` or `auto` policy. Keep the returned `delegation_policy` for the final response. If it reports `invalid_config`, stop and tell the user that the existing configuration was not overwritten.
+Keep the returned `delegation_policy` for the final response. Missing or invalid configuration still resolves safely to `ask` at SessionStart until the user selects a valid policy.
 
 ### 6. Trust the SessionStart Hook
 
@@ -101,7 +105,7 @@ test -f "${CODEX_HOME:-$HOME/.codex}/diverter/config.json"
 End with the following fixed structure, translated into the user's language when needed. Keep commands and policy names exact:
 
 ```text
-Diverter is installed in `<policy>` mode.
+Diverter is installed in the selected `<policy>` mode.
 
 Before using it, open `/hooks`, review Diverter's `SessionStart` Hook,
 and trust it. Then start or reopen a task.
@@ -117,7 +121,7 @@ Change the mode with:
 Mode changes apply at the next `SessionStart`.
 ```
 
-Replace `<policy>` with the exact `delegation_policy` returned by `init`. It is `ask` for a fresh installation and may be `auto` for a reinstall.
+Replace `<policy>` with the exact selected `delegation_policy` returned by the command.
 
 ## Updating
 
@@ -128,4 +132,4 @@ codex plugin marketplace upgrade diverter
 codex plugin add diverter@diverter --json
 ```
 
-Use the newly returned `installedPath`. Repeat the role selection and run the current release's Role Installer so selected global roles receive the new definitions. Run the Delegation Policy `init` command; it preserves an existing valid policy. If Codex marks the changed Hook for review, ask the user to repeat `/hooks` trust before starting a new task. Report the policy returned by `init` rather than assuming it is `ask`.
+Use the newly returned `installedPath`. Repeat the role selection and run the current release's Role Installer so selected global roles receive the new definitions. Run `python3 "$DIVERTER_PLUGIN/scripts/diverter-mode.py" init`; updates preserve an existing valid policy and safely initialize missing configuration to `ask`. If Codex marks the changed Hook for review, ask the user to repeat `/hooks` trust before starting a new task. Report the policy returned by `init`.

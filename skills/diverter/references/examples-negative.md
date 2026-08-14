@@ -21,16 +21,19 @@ These are examples that should usually not trigger delegation.
 12. `Review this small README typo fix.`
 13. `Add some tests here, not sure what exactly.`
 14. `Make this secure.`
+15. `Have a security specialist audit this flow while you wait for the result.`
+16. `$grill-with-docs Design this one component; have another agent produce the same design.`
 
 Why these are negative examples:
 
 - the task is too small or too direct
-- there is no meaningful parallel lane
+- there is no bounded Child Lane plus distinct useful Root Lane
 - the request is blocked on one immediate answer
 - the user has explicitly opted out
 - delegated subagent handoffs already have Dispatch Authorization and should execute, not select another lineup
+- waiting, supervision, or duplicate focused-skill work is not a Root Lane
 - Web performance specialists should not be used for non-Web performance tasks, write-capable testing should not start from unclear behavior, and vague security wording should be clarified before suggesting a security lineup
 
 Borderline note:
 
-If a request starts small but grows into review, exploration, or research across several lanes, it may become a positive example later in the conversation.
+If a request grows to include a bounded Child Lane and a distinct useful Root deliverable, it may become positive later in the conversation.

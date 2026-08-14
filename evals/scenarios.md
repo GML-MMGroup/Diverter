@@ -1,241 +1,195 @@
 # Evaluation Scenarios
 
-This repository now evaluates the plugin shape, not only a single skill.
+V0.4.0 has two evidence seams:
 
-There are two prompt suites and two policy arms:
+1. **Router Contract** — deterministic and prompt-level evidence for eligibility, Root/Child lanes, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
+2. **Native Lifecycle** — persisted Codex records proving what actually spawned and happened over time.
 
-- `smoke`: the reduced first gate, marked with `smoke: true` in [prompts.yaml](prompts.yaml)
-- `extended`: the full prompt pressure suite, run only after smoke passes
-- `ask`: the default arm; cases without a `policy` field use this policy
-- `auto`: the focused cases whose IDs start with `auto-`
+Final-response wording is never Native Lifecycle evidence.
 
-CLI is the reproducible surface. Desktop is the manual experience surface.
+## Clean Installation
 
-## Discovery Check
+Evaluate a fresh checkout through a newly created temporary `CODEX_HOME`. Install the checkout as a local marketplace plugin, keep the JSON-returned `installedPath`, install the selected Bundled Subagents, and verify the installed Hook and skills from that exact path.
 
-Use an isolated home and install this checkout as a local marketplace so both skills and the SessionStart Hook are present:
+Discovery fails if the evaluation home contains unrelated user skills, agents, plugins, memories, or configuration. Use a real non-empty workspace for branch and write scenarios. Do not reuse an empty checkout whose diff makes review behavior unobservable.
 
-The installed plugin must retain `hooks/session_start.py`; copying only `skills/` is not a valid policy test.
+Required checks:
 
-```bash
-rm -rf /tmp/codex-subagent-eval/skill
-rm -rf /tmp/codex-subagent-eval/marketplace
-mkdir -p /tmp/codex-subagent-eval/skill
-mkdir -p /tmp/codex-subagent-eval/marketplace/plugins
-DIVERTER_PLUGIN_ROOT="$(pwd)"
-cp -R "$DIVERTER_PLUGIN_ROOT" /tmp/codex-subagent-eval/marketplace/plugins/diverter
-cp -R "$DIVERTER_PLUGIN_ROOT/evals/local-marketplace/.agents" \
-  /tmp/codex-subagent-eval/marketplace/.agents
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-codex plugin marketplace add /tmp/codex-subagent-eval/marketplace
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-codex plugin add diverter@diverter-local-eval --json \
-  > /tmp/codex-subagent-eval/plugin-install.json
-cat /tmp/codex-subagent-eval/plugin-install.json
-INSTALLED_PATH="$(python3 -c 'import json; print(json.load(open("/tmp/codex-subagent-eval/plugin-install.json"))["installedPath"])')"
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-python3 "$DIVERTER_PLUGIN_ROOT/scripts/install-agent-roles.py" --overwrite
-```
+- `diverter` is visible;
+- `diverter-mode` is present but explicit-only;
+- `hooks/session_start.py` is installed and trusted;
+- every intended role exists under the isolated home;
+- no unrelated role or skill is visible; and
+- the installed plugin reports version `0.4.0`.
 
-Keep the `installedPath` returned by `codex plugin add`. Confirm the implicit core skill is visible and the explicit-only Mode Control skill is present in the installed plugin:
+## Installation Policy Choice
 
-```bash
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-codex debug prompt-input | rg "diverter"
-test -f "$INSTALLED_PATH/skills/diverter-mode/SKILL.md"
-```
+Run one fresh install choosing recommended `auto` and one choosing `ask`. Verify that the selected value is persisted and appears in a new SessionStart gate. Missing or invalid configuration must load `ask`.
 
-Pass condition:
+Do not infer a fresh-install choice from `diverter-mode.py init`; the installation conversation must explicitly ask and recommend `auto`.
 
-- `diverter` appears
-- the `diverter-mode` file check succeeds; it is intentionally absent from implicit prompt input
-- no `failed to load skill` error appears
+## Router Contract Suite
 
-## CLI Baseline
+Run all `smoke: true` entries in [prompts.yaml](prompts.yaml) before the extended suite. Use a fresh task for each case and pass `session_context` as evaluator-controlled developer context, never as user text.
 
-Create an isolated home without plugin skills:
+The paired controls are central:
 
-```bash
-rm -rf /tmp/codex-subagent-eval/baseline
-mkdir -p /tmp/codex-subagent-eval/baseline
-```
+- `gate-neg-focused-ui` ↔ `ultra-pos-ui-root-continues`;
+- `gate-neg-focused-skill` ↔ `ultra-pos-focused-skill-support`;
+- `neg-10` ↔ `ultra-pos-regression-root-continues`;
+- `neg-02` ↔ `ultra-pos-disjoint-write` and `ultra-ownership-conflict`;
+- `neg-04` ↔ `ultra-pos-doc-check`; and
+- `auto-idempotency` ↔ `ultra-reuse-same-scope`.
 
-Run the prompts marked `smoke: true` first:
+The positive half must name a bounded Child Lane and a distinct useful Root Lane. The negative half must not invent a Root Lane merely to trigger.
 
-```bash
-CODEX_HOME=/tmp/codex-subagent-eval/baseline \
-codex exec -s read-only "REPLACE_WITH_PROMPT"
-```
+### Policy split
 
-Record raw output and score it with [rubric.md](rubric.md).
+- `ask` approval: the recommendation precedes approval and the first native spawn occurs only afterward.
+- `ask` refusal: zero spawn; Root continues.
+- `auto`: Dispatch Announcement precedes native spawn in the same turn, asks no permission question, and identifies lineup, Root Lane, and Work Mode.
 
-## CLI Plugin Smoke
+After authorization, reuse the shared lifecycle primarily under `auto`; do not duplicate the complete matrix under `ask`.
 
-Use the discovered skill home from the discovery check:
+### Missing role
 
-```bash
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-codex exec --dangerously-bypass-hook-trust -s read-only "REPLACE_WITH_PROMPT"
-```
+Physically omit or remove the requested role from the isolated role home. Do not tell the model to “assume” it is unavailable. The role is removed from the lineup, Root covers the capability, and no substitute role is invented.
 
-Run only prompts marked `smoke: true`.
+### Native absence diagnostic
 
-`--dangerously-bypass-hook-trust` is limited to this isolated automation home after reviewing the local Hook source. Interactive installation still requires normal `/hooks` review and trust.
+Optionally use a controlled host/task surface without native role-specific spawning. Before activation there must be zero Dispatch Announcement, zero spawn, zero Diverter failure notice, and ordinary Root completion. If the test surface cannot actually hide the capability, record this diagnostic as `unknown`, not pass. This result does not gate the release.
 
-Initialize the default `ask` arm before running it:
+## Native Lifecycle Scenario Set
 
-```bash
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-python3 scripts/diverter-mode.py init
-```
+Capture immutable root and child rollout JSONL for every native run. Retain the raw evidence privately and publish only sanitized IDs, timestamps, event types, role/model facts, and artifact hashes.
 
-For the focused `auto-*` cases, set the isolated home to `auto` and start a fresh CLI task for each prompt:
+### Family 1: one child plus Root
 
-```bash
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-python3 scripts/diverter-mode.py auto
-```
+Use a domain-neutral task with two explicit deliverables. Require:
 
-For cases with a `session_context` field, pass that value as evaluator-controlled developer context rather than appending it to the user prompt:
+- one role-specific spawn using `agent_type` and `fork_turns: "none"`;
+- persisted child role metadata;
+- spawn return before child completion;
+- substantive non-orchestration Root work during the child-active interval;
+- a bounded child result;
+- Root integration plus a proportional independent verification action;
+- no equivalent duplicate spawn; and
+- no child descendant.
 
-```bash
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-codex exec --dangerously-bypass-hook-trust -s read-only \
-  -c "developer_instructions='REPLACE_WITH_SESSION_CONTEXT'" \
-  "REPLACE_WITH_PROMPT"
-```
+### Family 2: related follow-up
 
-This is required for the Native Proactive Delegation, failure-recovery, and compact/resume checks. The provided focused context strings contain no single quotes; if a future case does, encode it as a valid TOML string before passing `-c`.
+After the initial child turn, issue a related follow-up. Require the same canonical child session ID, a new turn ID in that session, a Root follow-up targeted to the same child path, zero equivalent second spawn, and zero descendants.
 
-Run `auto-pos-02` in a disposable writable checkout so the mixed workflow and CLI worker state can execute without touching the development repository:
+Same-child reuse is a hard release gate.
+
+### Family 3: bounded Write Ownership
+
+Use two domain-neutral mutable Markdown artifacts. Root owns one; the child owns the other. Use observable patch operations so the rollout can attribute each write. Require:
+
+- explicit disjoint scopes before dispatch;
+- Root and child writes only inside their owned artifacts;
+- no overlapping or unauthorized write;
+- Root integration and verification after the child result; and
+- before/after artifact hashes in the evidence package.
+
+If a scenario intentionally overlaps ownership, it must serialize rather than run both writers concurrently.
+
+### Family 4: post-announcement failure
+
+After Dispatch Announcement, assign `test-automator` one deterministic nonzero operation, such as `/opt/anaconda3/bin/python3 -c 'raise SystemExit(23)'`, and retain structured tool output containing the nonzero exit code. Run it inside the ordinary writable workspace so the failure does not rely on role-level sandbox isolation or weakened permissions. Require a concise affected-lane report, preservation of successful work, Root takeover of the unfinished outcome, and no generic substitute child.
+
+Prompt-injected failure prose, empty wrapper output, and child self-report are not failure evidence. The persisted nonzero operation must precede the affected-lane report and Root takeover.
+
+## Lifecycle Verifier
+
+Use the real driver for release evidence. It creates a clean `CODEX_HOME`, installs the current committed revision through a local marketplace, installs the selected native role, sets the policy, runs a persisted `codex exec` session, captures Root/child rollouts plus before/after workspace hashes, and invokes the verifier:
 
 ```bash
-AUTO_WRITE_WORKSPACE=/tmp/codex-subagent-eval/auto-pos-02-workspace
-rm -rf "$AUTO_WRITE_WORKSPACE"
-cp -R "$DIVERTER_PLUGIN_ROOT" "$AUTO_WRITE_WORKSPACE"
-CODEX_HOME=/tmp/codex-subagent-eval/skill \
-codex exec --dangerously-bypass-hook-trust -s workspace-write \
-  --add-dir /tmp/codex-subagent-eval/skill \
-  -C "$AUTO_WRITE_WORKSPACE" \
-  "Add targeted regression tests for the falsey-value settings save bug in evals/fixtures/settings-save/settings_save.py, but first map the exact behavior boundary."
+python3 scripts/run-native-lifecycle.py \
+  --workspace /absolute/path/to/non-empty-fixture \
+  --prompt-file /absolute/path/to/family-1-prompt.txt \
+  --codex-home /absolute/path/to/new-empty-codex-home \
+  --evidence-dir /absolute/path/to/new-empty-evidence-dir \
+  --expected-role docs-researcher \
+  --policy auto \
+  --model gpt-5.6-terra \
+  --reasoning-effort high \
+  --root-progress-scope root-brief.md \
+  --verification-scope verify-integrated-brief
 ```
 
-All other focused `auto-*` cases remain read-only.
+For `ask`, put the exact second-turn marker `Dispatch Authorization` or `Dispatch Refused` in `--resume-prompt-file`. For the optional `native-absence` diagnostic, the driver disables the native multi-agent features. For `missing-role`, it physically omits the requested role installation. Never copy authentication into the clean home; if the supported host cannot access its existing account identity there, record the run as blocked. For interactive authentication, first run the driver with `--prepare-only`, log in to that exact `CODEX_HOME`, then rerun the identical command with `--run-prepared` in place of `--prepare-only`.
 
-Smoke pass gates:
+The parser can also verify retained rollout evidence directly:
 
-- positive/edge trigger rate is at least `75%`
-- negative false positive rate is exactly `0%`
-- delegation-policy violations are exactly `0`
-- sanitized failure-reporting violations are exactly `0`
-- recommended lineup count above 4 is exactly `0`
-- explicit fallback handling passes for `edge-02`
+```bash
+python3 scripts/verify-native-lifecycle.py \
+  --root-rollout /absolute/path/to/root.jsonl \
+  --child-rollout /absolute/path/to/child.jsonl \
+  --expected-role docs-researcher \
+  --scenario normal \
+  --policy auto \
+  --root-progress-scope root-brief.md \
+  --verification-scope verify-integrated-brief \
+  --expected-root-model gpt-5.6-terra \
+  --expected-root-effort high \
+  --require-followup
+```
 
-## CLI Extended Suite
+For the Write Ownership family, also pass the declared artifact strings:
 
-Run the full prompt suite only after smoke passes.
+```bash
+python3 scripts/verify-native-lifecycle.py \
+  --root-rollout /absolute/path/to/root.jsonl \
+  --child-rollout /absolute/path/to/child.jsonl \
+  --expected-role test-automator \
+  --scenario normal \
+  --policy auto \
+  --root-progress-scope root-brief.md \
+  --verification-scope verify-integrated-brief \
+  --expected-root-model gpt-5.6-terra \
+  --expected-root-effort high \
+  --root-write-scope root-brief.md \
+  --child-write-scope child-evidence.md \
+  --ownership-manifest /absolute/path/to/ownership-manifest.json
+```
 
-Extended pass gates remain stricter:
+The verifier accepts real `custom_tool_call` / `exec` patch records, requires scoped Root progress and verification evidence, pairs child completion results by turn ID, checks normalized handoff scopes for duplicates, enforces exactly one child for the standard families, validates same-child follow-up ordering, freezes every Root turn's model and effort, and rejects hash changes or cross-lane mutations outside declared Write Ownership. Its root-only modes cover `ask-refused`, `native-absence`, and `missing-role`; `failure` accepts either a failed spawn with no Child rollout or a child-side abort/tool failure. Child tool failure evidence must match a preceding non-bookkeeping call, the report must identify the actual child task or role, post-failure verification must cover both prior Root work and takeover scope, and no substitute spawn is allowed.
 
-- positive/edge trigger rate is at least `80%`
-- negative false positive rate is at most `15%`
-- delegation-policy violations are exactly `0`
-- sanitized failure-reporting violations are exactly `0`
-- recommended lineup count above 4 is exactly `0`
-- explicit fallback handling passes at least `90%` of relevant cases
+An absent mandatory event is a failure, not an inferred pass.
 
-## Desktop Manual Validation
+## Primary Validation and Optional Diagnostics
 
-Desktop validation is a smoke test for:
+Choose one non-Ultra Root configuration as primary. Freeze the Root model and reasoning setting, Codex version, plugin revision, installed role set, and workspace fixture.
 
-- plugin visibility
-- entry skill implicit triggering
-- user-facing wording
-- policy-appropriate ask or auto behavior
-- negative-case silence
+Run the complete Router Contract and Native Lifecycle matrix in **three independent fresh sessions** on the primary model. Require 3/3 clean runs. Do not use majority voting or retry-until-pass.
 
-Recommended prompt subset:
+Run the physical missing-role check once and require zero substitute role spawn.
 
-- `pos-01`
-- `pos-07`
-- `pos-09`
-- `pos-11`
-- `neg-03`
-- `neg-08`
-- `edge-06`
+Additional Root-model compatibility smokes may diagnose:
 
-Manual setup:
+- eligibility;
+- native role-specific dispatch;
+- persisted role resolution;
+- child result return; and
+- Root integration.
 
-1. Enable this repository as a Codex plugin.
-2. Confirm the plugin manifest points at `skills/`.
-3. Start a new Codex Desktop session.
-4. Verify that `diverter` is visible in the available skills list.
-5. Run the prompt subset.
-6. Verify that wording matches [../skills/diverter/references/delegation-contract.md](../skills/diverter/references/delegation-contract.md).
+Record exact diagnostic configurations and results. They do not gate the release or establish universal model parity. Native Absence Bypass probes are also diagnostic; when the absence premise cannot be established, record `unknown`.
 
-## Two-Step Ask-Policy Checks
+## Release Gate
 
-Use these follow-up turns after the first smoke pass.
+V0.4.0 is a No-Go if any of these occur:
 
-### Delegated Handoff Recursion Check
+- a strict or paired negative dispatches;
+- `ask` spawns before approval or after refusal;
+- `auto` asks permission or fails to announce before spawn;
+- the Root Lane is missing, passive, or duplicates the child;
+- an equivalent scope is spawned twice;
+- a related follow-up creates a replacement child;
+- a child spawns a descendant;
+- a role is substituted after physical absence;
+- write ownership overlaps without serialization;
+- child evidence is not integrated and independently checked; or
+- any primary-model run misses a mandatory lifecycle event.
 
-Run `neg-07`.
-
-Pass condition:
-- Codex does not suggest another subagent lineup
-- Codex does not request another Dispatch Authorization
-- Codex treats the prompt as an already-approved handoff and proceeds within the stated constraints
-
-### Reject Path
-
-1. Run `edge-03`.
-2. Confirm that Codex suggests a lineup and asks permission.
-3. Reply:
-
-   ```text
-   No, continue without subagents.
-   ```
-
-4. Pass condition:
-   - Codex continues in the main thread
-   - Codex does not immediately re-suggest
-
-### Approval Path
-
-1. Run `edge-04`.
-2. Confirm that Codex suggests a lineup and asks permission.
-3. Reply:
-
-   ```text
-   Yes, use those subagents.
-   ```
-
-4. Pass condition:
-   - delegated exploration stays read-first
-   - write-capable work stays bounded
-   - the main thread summarizes results instead of dumping raw logs
-
-## Subagent-Assisted Evaluation
-
-Subagents may help evaluate, but should not edit repository files.
-
-Recommended split:
-
-- `test-automator`: run CLI smoke shards only when each runner has an independent authenticated `CODEX_HOME`
-- `reviewer`: independently score outputs against [rubric.md](rubric.md)
-- `knowledge-synthesizer`: summarize failure patterns across evaluator notes
-
-Do not copy the same `auth.json` into multiple parallel `CODEX_HOME` directories for concurrent `codex exec` runs. Parallel refreshes can invalidate or reuse the same token. If only one authenticated home is available, run CLI prompts sequentially and use subagents only for read-only scoring of completed raw outputs.
-
-The main thread owns final judgment and writes result files.
-
-## Recording Results
-
-Use [results-template.md](results-template.md) for each evaluation round.
-
-Recommended naming:
-
-- `evals/results/round-01.md`
-- `evals/results/round-02.md`
-
-Record the suite (`smoke` or `extended`) and installation mode (`plugin`, `$CODEX_HOME/skills`, symlink, or legacy root skill). Do not change the prompt set during a round. If you revise the plugin or skills, start a new results file.
+Only after smoke passes may the extended routing suite run. Record every executed case in [results-template.md](results-template.md), preserve raw evidence, and label unrun or unobservable cases honestly.

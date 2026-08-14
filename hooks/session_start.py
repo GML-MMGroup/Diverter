@@ -30,15 +30,21 @@ If the current task message explicitly says this is a delegated subagent task, o
 
 If higher-priority session instructions state that proactive multi-agent delegation is active, stop evaluating this gate. Do not invoke or mention Diverter. Continue under the native policy.
 
-An explicit `$diverter` invocation or explicit request to use subagents is eligible regardless of the implicit threshold, subject to the bypasses above.
+Only affirmative delegation intent with at least one recognized signal is an Explicit Delegation Request: `$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role. Mere mention, quotation, explanation, or negation does not qualify. Scheduling words alone do not qualify, including concurrent, parallel, or at the same time.
 
-Otherwise, invoke `$diverter` only when the task has at least two separable work or evidence lanes, or one concrete high-risk specialist boundary: security, authentication, authorization, secrets, or tool permissions; regression proof or critical test coverage for a known defect; explicit Web performance metrics; or a release-readiness quality gate.
+An Explicit Delegation Request is eligible regardless of the implicit benefit threshold, subject to the bypasses above.
 
-For implicit activation, do not invoke `$diverter` for vague risk language, focused single-domain or single-component work, one-path explanations or fact lookups, tightly coupled work, or work already owned by an explicitly selected focused skill. An explicit user request for subagents or a delegation request from the focused skill still qualifies.
+Otherwise, invoke `$diverter` only when the task has one bounded independent Child Lane and one distinct useful Root Lane that can make substantive progress while the child runs. The lanes must be non-duplicative, materially beneficial, and safe under the task's read/write ownership.
 
-If eligible, invoke `$diverter` first and apply the loaded Delegation Policy. An explicit user instruction may override that policy for the current task without changing persistent configuration. If ineligible, continue silently in the main thread.
+No effective Root Lane means no implicit delegation. Waiting, supervision, or repeating the Child Lane does not count. Do not invoke `$diverter` for vague risk language, trivial or strongly sequential work, one-path fact lookups, duplicate investigation, tightly coupled writes, or overlapping write ownership.
 
-Use Sanitized Failure Reporting if loading or using Diverter fails. If an internal failure recovers successfully, continue silently. If an implicit Diverter load fails, say that Diverter could not be loaded and the task is continuing in the main thread. If an explicitly requested Diverter load fails, report that briefly and ask whether to continue in the main thread. If user action is required, explain the problem and the required action. Never expose skill aliases, plugin cache paths, `SKILL.md` loading, or retry steps.
+An explicitly selected focused skill may retain its core workflow and Root Lane while Diverter supplies a Supporting Child for a separate, non-duplicative deliverable, when higher-priority and skill-specific constraints allow it.
+
+Before mentioning Diverter, confirm that native role-specific subagent dispatch is available for the requested installed role. If native subagent dispatch is unavailable, or no useful selected role is available, continue silently in the Root Session. Do not announce a backend failure or ask the user how to proceed.
+
+If eligible, invoke `$diverter` first and apply the loaded Delegation Policy. An explicit user instruction may override that policy for the current task without changing persistent configuration. If ineligible, continue silently in the Root Session.
+
+Use Sanitized Failure Reporting if loading or using Diverter fails. If an internal failure recovers successfully, continue silently. If an implicit Diverter load fails, say that Diverter could not be loaded and the task is continuing in the Root Session. If an explicitly requested Diverter load fails, report that briefly and ask whether to continue in the Root Session. If user action is required, explain the problem and the required action. Never expose skill aliases, plugin cache paths, `SKILL.md` loading, or retry steps.
 """
 
 

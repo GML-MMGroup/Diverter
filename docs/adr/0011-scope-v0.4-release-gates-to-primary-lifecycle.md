@@ -1,0 +1,3 @@
+# Scope v0.4.0 release gates to the primary native lifecycle
+
+Diverter v0.4.0 release decisions use repository tests, the Router Contract, the physical missing-role check, and three clean runs of the primary native lifecycle as required gates. Compatibility smokes for additional Root models and Native Absence Bypass probes remain optional diagnostics: Root Session eligibility is not restricted by a model allowlist, and an absence probe is not product evidence when the host still exposes native spawn. Public support is therefore described as non-Ultra Codex sessions without claiming universal model parity; diagnostic results remain recorded honestly but do not block release.
