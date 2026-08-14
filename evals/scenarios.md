@@ -20,7 +20,7 @@ Required checks:
 - `hooks/session_start.py` is installed and trusted;
 - every intended role exists under the isolated home;
 - no unrelated role or skill is visible; and
-- the installed plugin reports version `0.4.0`.
+- the installed plugin reports version `0.4.1`.
 
 ## Installation Policy Choice
 
