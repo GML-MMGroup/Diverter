@@ -1,6 +1,6 @@
 # Installing Diverter for Codex
 
-Diverter distills Ultra-style task decomposition and role routing into ordinary GPT-5.6 Codex sessions through native role-specific subagents and a user-level `ask` or `auto` Delegation Policy.
+Diverter distills Ultra-style task decomposition and role routing into non-Ultra Codex sessions through native role-specific subagents and a user-level `ask` or `auto` Delegation Policy.
 
 This file is the only supported installation entry. Follow it as one agent-led flow; do not ask the user to run the role installer manually.
 

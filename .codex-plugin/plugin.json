@@ -1,7 +1,7 @@
 {
   "name": "diverter",
   "version": "0.4.0",
-  "description": "Distill Ultra-style native delegation into ordinary GPT-5.6 Codex sessions.",
+  "description": "Distill Ultra-style native delegation into non-Ultra Codex sessions.",
   "author": {
     "name": "917Dhj",
     "url": "https://github.com/917Dhj"
@@ -18,7 +18,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Diverter",
-    "shortDescription": "Ultra-style delegation for GPT-5.6 Codex",
+    "shortDescription": "Ultra-style delegation for non-Ultra Codex",
     "longDescription": "Splits suitable tasks into a bounded child lane and a useful Root lane, routes native specialist subagents, and integrates their results under the user's delegation policy.",
     "developerName": "GML-MMGroup",
     "category": "Productivity",

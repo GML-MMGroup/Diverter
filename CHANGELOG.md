@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- Distill Ultra-inspired decomposition and routing into non-Ultra GPT-5.6 Codex sessions.
+- No unreleased changes.
+
+## 0.4.0 - 2026-08-14
+
+- Distill Ultra-inspired decomposition and routing into non-Ultra Codex sessions.
 - Relax implicit eligibility to one bounded Child Lane plus one distinct, useful Root Lane, including Supporting Children for focused skills.
 - Default to the Smallest Sufficient Lineup, keep Root progressing during child work, and reuse the same native child for related follow-ups.
 - Make native role-specific subagents the only execution backend and remove the CLI worker path.

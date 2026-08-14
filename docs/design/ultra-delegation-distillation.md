@@ -14,20 +14,20 @@ Suggested short positioning:
 
 Suggested user-facing expansion:
 
-> Without enabling Ultra, Diverter helps supported GPT-5.6 Codex sessions decide when to delegate, which specialist to use, what the Root Session should continue doing, and how delegated results should be verified and integrated.
+> Without enabling Ultra, Diverter helps non-Ultra Codex sessions decide when to delegate, which specialist to use, what the Root Session should continue doing, and how delegated results should be verified and integrated.
 
 Here, **distillation** means extracting and encoding orchestration rules and workflow discipline. It does not mean model-weight distillation, copying Ultra's private scheduler, or making a lower-effort model reason identically to Ultra.
 
 ## Model scope
 
-The target is not unrestricted model portability. It is the GPT-5.6 model family available in Codex without requiring the specific `gpt-5.6-sol` plus Ultra configuration.
+Diverter does not prescribe or allowlist the Root Session model. Eligibility depends on native orchestration ownership, the role-spawn interface, the installed role, and the Delegation Policy rather than a Root-model identifier.
 
-- Diverter does not prescribe the Root Session model.
-- A supported GPT-5.6 Root Session may use Diverter under a non-Ultra reasoning setting.
-- Bundled Subagents may retain their curated Static Model Mapping unless a separate decision changes it.
+- A non-Ultra Codex session may use Diverter when the required native interface is available.
+- Bundled Subagents retain their curated Static Model Mapping unless a separate decision changes it.
 - Native Proactive Delegation remains the Orchestration Owner when Codex explicitly enables it; Diverter continues to step aside rather than competing with it.
+- Additional Root-model compatibility runs may be recorded as diagnostics without becoming release gates or claims of universal parity.
 
-This scope is consistent with the existing decision to manage bundled subagent models without prescribing the Root Session model.
+This scope keeps Root eligibility separate from the bundled child-role model mapping.
 
 ## Settled decisions
 
@@ -103,9 +103,9 @@ README, release notes, and other user-facing promotion should state the verified
 
 Because `auto` supports bounded write-capable delegation, the v0.4.0 release gate includes at least one domain-neutral mutable-artifact lifecycle case. The evidence must show explicit ownership and either disjoint parallel writes or serialized overlapping writes without turning the product prompt into a coding-specific checklist.
 
-### D5c — Validate the GPT-5.6 Root model family proportionally
+### D5c — Gate on one frozen primary Root configuration
 
-Run the complete native lifecycle gate on at least one available non-Ultra, non-Sol GPT-5.6 Root model. For every other GPT-5.6 Root model available in the release environment, run a smaller compatibility smoke covering eligibility, native dispatch, role resolution, and result return; record the exact validated matrix without multiplying the complete lifecycle suite across every model.
+Run the complete native lifecycle gate on one frozen non-Ultra Root configuration. Additional Root-model compatibility smokes may cover eligibility, native dispatch, role resolution, and result return, but they are diagnostic evidence rather than release requirements.
 
 ### D5d — Use the minimum complete native lifecycle set
 
@@ -116,13 +116,13 @@ The v0.4.0 release gate contains four real native lifecycle families:
 3. a domain-neutral mutable-artifact task proving bounded Write Ownership and final integration; and
 4. a failure after Dispatch Announcement proving concise reporting and Root takeover of the affected outcome.
 
-A separate pre-activation matrix proves Native Absence Bypass and missing-role removal without treating either branch as a full lifecycle run. Focused-skill support, eligibility neighbors, and other routing classifications remain contract and routing-evaluation cases rather than separate runtime families.
+Physical missing-role removal remains a required contract check. A separate pre-activation run may probe Native Absence Bypass as a diagnostic without treating it as a full lifecycle family or a release gate. Focused-skill support, eligibility neighbors, and other routing classifications remain contract and routing-evaluation cases rather than separate runtime families.
 
 ### D5e — Require three clean primary lifecycle runs
 
-Run the complete lifecycle matrix in three independent fresh sessions on the primary non-Ultra, non-Sol GPT-5.6 Root model and require 3/3 clean passes. A 2/3 majority does not pass: any missing mandatory event, duplicate dispatch, descendant spawn, or unauthorized write is a release No-Go until the affected behavior is corrected and revalidated.
+Run the complete lifecycle matrix in three independent fresh sessions on the frozen primary Root configuration and require 3/3 clean passes. A 2/3 majority does not pass: any missing mandatory event, duplicate dispatch, descendant spawn, or unauthorized write is a release No-Go until the affected behavior is corrected and revalidated.
 
-Each other available GPT-5.6 Root model requires one passing compatibility smoke, each controlled pre-activation branch requires one passing run, and all static contract tests must pass.
+All static contract tests and required missing-role checks must pass. Additional Root-model smokes and Native Absence Bypass probes are recorded as diagnostics and do not gate the release.
 
 ### D5f — Split policy evidence at Dispatch Authorization
 
@@ -301,7 +301,7 @@ Diverter can encode the discipline of Ultra-style delegation, but it cannot guar
 
 - implementing the changes before the design interview is complete;
 - changing the bundled Static Model Mapping;
-- claiming compatibility outside supported GPT-5.6 Codex models;
+- claiming universal model parity from a single primary Root configuration;
 - reproducing Ultra's internal scheduler or model reasoning;
 - retaining or replacing the removed CLI Worker Backend with another compatibility executor;
 - defining an exhaustive catalog of acceptable Root progress or verification actions;

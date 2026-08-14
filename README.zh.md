@@ -18,7 +18,13 @@
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-Diverter 把 Ultra 的子代理拆分与路由能力蒸馏到非 Ultra 的 GPT-5.6 Codex 会话中：一个任务被拆成持续推进的 Root Lane 和恰到好处的原生专家 Child Lane。
+Diverter 把 Ultra 的委派策略蒸馏到非 Ultra 的 Codex 会话中：当任务适合分工时，主线程持续推进，恰到好处的原生专家子代理同步处理独立工作。
+
+## 为什么选择 Diverter
+
+- **不开 Ultra，也能用上从 Ultra 蒸馏出的委派策略。** 把任务拆分、专家路由和结果整合带到非 Ultra 的 Codex 会话。
+- **不用手动编排 Agent。** Diverter 判断什么时候值得分工，并找到合适的专家。
+- **主线程继续推进。** 专家处理可独立完成的工作，简单任务依然保持简单。
 
 ## ✨ 看 Diverter 如何分工
 
@@ -30,7 +36,7 @@ Diverter 把 Ultra 的子代理拆分与路由能力蒸馏到非 Ultra 的 GPT-5
 
 ## 🚀 快速开始
 
-**建议使用 Codex CLI `0.145.0+`，以获得 Diverter 完整的原生子代理体验。**
+**Diverter 的原生子代理能力最低需要 Codex CLI `0.145.0`。**
 
 1. 告诉 Codex：
 
@@ -47,6 +53,20 @@ Diverter 把 Ultra 的子代理拆分与路由能力蒸馏到非 Ultra 的 GPT-5
    $diverter-mode auto
    $diverter-mode ask
    ```
+
+## 🎯 Diverter 如何帮你
+
+Diverter 会识别哪些工作值得交给专家，并让主任务在专家处理独立交付物的同时继续推进。
+
+- 你选择的 skill 继续掌控主流程，只在确实有帮助时获得聚焦支持。
+- 清晰的写入边界让独立修改同步推进，并把重叠修改改为串行处理。
+- 主线程检查并整合专家结果，最终交付一个一致的答案。
+
+当 Codex 已经拥有原生主动委派的编排权时，Diverter 会静默让路。参见 OpenAI 的[子代理文档](https://learn.chatgpt.com/docs/agent-configuration/subagents)。
+
+已经过 60+ 项自动化测试和真实原生子代理生命周期运行验证。
+
+## 🧭 选择委派策略
 
 <table align="center">
   <thead>
@@ -98,18 +118,6 @@ Diverter 先选择能力，再映射到 Codex 环境中已安装的原生角色�
 
 Diverter 在分派前始终明确标注一种工作模式。
 
-## 🎯 Diverter 何时分派
-
-Diverter 为非 Ultra 的 GPT-5.6 Codex 会话带来按任务主动分工的能力，并在原生主动委派已经拥有会话编排权时静默让路。参见 OpenAI 的[子代理文档](https://learn.chatgpt.com/docs/agent-configuration/subagents)。
-
-- 一个有边界的原生专家负责 Child Lane，Root Session 同时推进另一项有效交付物。
-- 聚焦 skill 保留自己的主流程，并可获得一个不重复工作的 Supporting Child。
-- 相关追问回到同一个原生子代理，延续它已经建立的上下文。
-- 每条可写工作线都有明确产物归属；互不重叠的工作并行推进，重叠工作自动串行。
-- Root 汇总并按任务风险验证子代理证据，再交付一个一致的最终结果。
-
-Diverter 会匹配用户的语言；角色名称和工作模式标记保持英文。
-
 ## ⚙️ 工作原理
 
 1. `SessionStart` Hook 加载用户级委派策略并激活委派门控。
@@ -117,7 +125,11 @@ Diverter 会匹配用户的语言；角色名称和工作模式标记保持英�
 3. `ask` 等待批准；`auto` 告知后立即通过原生角色子代理分派。
 4. Root 在所有子代理保持叶子节点的同时持续推进，随后完成整合、验证和最终交付。
 
+相关追问会回到同一个原生子代理，延续它已经建立的上下文。
+
 每个 handoff 都包含显式目标、范围、写入策略和可验证交付物。详见 [`delegation-contract.md`](skills/diverter/references/delegation-contract.md) 和 [`handoff-schema.md`](skills/diverter/references/handoff-schema.md)。
+
+Diverter 会匹配用户的语言；角色名称和工作模式标记保持英文。
 
 ## 🙏 致谢
 

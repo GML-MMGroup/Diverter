@@ -18,7 +18,13 @@
   <img src="assets/diverter-hero-tagline.png" alt="One task in. The right subagents out." width="480">
 </p>
 
-Diverter distills Ultra's subagent decomposition and routing into non-Ultra GPT-5.6 Codex sessions: one task becomes a useful Root Lane plus the right native specialist Child Lane.
+Diverter distills Ultra's delegation strategy into non-Ultra Codex sessions: when a task benefits from specialist help, the main thread keeps moving while the right native subagent handles the independent work.
+
+## Why Diverter
+
+- **Ultra-inspired delegation without Ultra.** Bring task splitting, specialist routing, and result integration to non-Ultra Codex sessions.
+- **No manual agent choreography.** Diverter decides when specialist help is useful and which role fits.
+- **Keep the main thread moving.** Specialists handle independent work while simple tasks stay simple.
 
 ## ✨ See Diverter in action
 
@@ -30,7 +36,7 @@ Diverter distills Ultra's subagent decomposition and routing into non-Ultra GPT-
 
 ## 🚀 Quick Start
 
-**Codex CLI `0.145.0+` is recommended for the full native subagent experience.**
+**Diverter requires Codex CLI `0.145.0` or later for native subagent support.**
 
 1. Tell Codex:
 
@@ -47,6 +53,20 @@ Diverter distills Ultra's subagent decomposition and routing into non-Ultra GPT-
    $diverter-mode auto
    $diverter-mode ask
    ```
+
+## 🎯 How Diverter helps
+
+Diverter looks for work that benefits from a specialist, then keeps the main task moving while that specialist handles an independent deliverable.
+
+- Your selected skill keeps control of its workflow and gets focused help only when it adds value.
+- Clear write boundaries keep independent changes moving and serialize overlapping work.
+- The main thread checks and integrates specialist results into one coherent answer.
+
+When Codex already owns native proactive delegation, Diverter silently steps aside. See OpenAI's [subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
+
+Verified with 60+ automated tests and real native subagent lifecycle runs.
+
+## 🧭 Choose your delegation policy
 
 <table align="center">
   <thead>
@@ -98,18 +118,6 @@ Diverter selects capabilities first, then maps them to the native roles installe
 
 Diverter always names one Work Mode before dispatch.
 
-## 🎯 When Diverter Delegates
-
-Diverter brings proactive, task-shaped delegation to non-Ultra GPT-5.6 Codex sessions and silently steps aside when native proactive delegation already owns the session. See OpenAI's [subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents).
-
-- A bounded native specialist handles the Child Lane while the Root Session continues a distinct useful deliverable.
-- Focused skills keep their workflow and can receive a non-duplicative Supporting Child.
-- Related follow-ups return to the same native child, preserving the context it already built.
-- Every write-capable lane declares artifact ownership; disjoint work can progress together and overlapping work is serialized.
-- Root integrates and proportionally verifies child evidence before delivering one coherent outcome.
-
-Diverter matches the user's language. Role names and Work Mode tokens remain in English.
-
 ## ⚙️ How It Works
 
 1. The `SessionStart` Hook loads the user-level Delegation Policy and activates the Delegation Gate.
@@ -117,7 +125,11 @@ Diverter matches the user's language. Role names and Work Mode tokens remain in 
 3. `ask` waits for approval; `auto` announces and dispatches immediately through native role-specific subagents.
 4. Root keeps progressing while every child remains a leaf, then integrates, verifies, and returns the final result.
 
+Related follow-ups return to the same native child, preserving the context it already built.
+
 Every handoff carries an explicit goal, scope, write policy, and verifiable deliverable. See [`delegation-contract.md`](skills/diverter/references/delegation-contract.md) and [`handoff-schema.md`](skills/diverter/references/handoff-schema.md).
+
+Diverter matches the user's language. Role names and Work Mode tokens remain in English.
 
 ## 🙏 Acknowledgments
 

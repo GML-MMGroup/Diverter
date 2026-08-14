@@ -15,7 +15,7 @@ If the current task explicitly says it is a delegated subagent task or includes 
 
 ## Mission
 
-Diverter distills Ultra-inspired task decomposition and role routing for ordinary GPT-5.6 Codex sessions. The Root Session remains the Orchestration Owner and is accountable for the complete user outcome.
+Diverter distills Ultra-inspired task decomposition and role routing for non-Ultra Codex sessions. The Root Session remains the Orchestration Owner and is accountable for the complete user outcome.
 
 For an eligible task:
 

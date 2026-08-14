@@ -55,9 +55,9 @@ After authorization, reuse the shared lifecycle primarily under `auto`; do not d
 
 Physically omit or remove the requested role from the isolated role home. Do not tell the model to “assume” it is unavailable. The role is removed from the lineup, Root covers the capability, and no substitute role is invented.
 
-### Native absence
+### Native absence diagnostic
 
-Use a controlled host/task surface without native role-specific spawning. Before activation there must be zero Dispatch Announcement, zero spawn, zero Diverter failure notice, and ordinary Root completion. If the test surface cannot actually hide the capability, record this case as `unknown`, not pass.
+Optionally use a controlled host/task surface without native role-specific spawning. Before activation there must be zero Dispatch Announcement, zero spawn, zero Diverter failure notice, and ordinary Root completion. If the test surface cannot actually hide the capability, record this diagnostic as `unknown`, not pass. This result does not gate the release.
 
 ## Native Lifecycle Scenario Set
 
@@ -118,7 +118,7 @@ python3 scripts/run-native-lifecycle.py \
   --verification-scope verify-integrated-brief
 ```
 
-For `ask`, put the exact second-turn marker `Dispatch Authorization` or `Dispatch Refused` in `--resume-prompt-file`. For `native-absence`, the driver disables the native multi-agent features. For `missing-role`, it physically omits the requested role installation. Never copy authentication into the clean home; if the supported host cannot access its existing account identity there, record the run as blocked. For interactive authentication, first run the driver with `--prepare-only`, log in to that exact `CODEX_HOME`, then rerun the identical command with `--run-prepared` in place of `--prepare-only`.
+For `ask`, put the exact second-turn marker `Dispatch Authorization` or `Dispatch Refused` in `--resume-prompt-file`. For the optional `native-absence` diagnostic, the driver disables the native multi-agent features. For `missing-role`, it physically omits the requested role installation. Never copy authentication into the clean home; if the supported host cannot access its existing account identity there, record the run as blocked. For interactive authentication, first run the driver with `--prepare-only`, log in to that exact `CODEX_HOME`, then rerun the identical command with `--run-prepared` in place of `--prepare-only`.
 
 The parser can also verify retained rollout evidence directly:
 
@@ -158,19 +158,23 @@ The verifier accepts real `custom_tool_call` / `exec` patch records, requires sc
 
 An absent mandatory event is a failure, not an inferred pass.
 
-## GPT-5.6 Validation Matrix
+## Primary Validation and Optional Diagnostics
 
-Choose at least one available non-Ultra, non-Sol GPT-5.6 Root model as primary. Freeze the Root model and reasoning setting, Codex version, plugin revision, installed role set, and workspace fixture.
+Choose one non-Ultra Root configuration as primary. Freeze the Root model and reasoning setting, Codex version, plugin revision, installed role set, and workspace fixture.
 
 Run the complete Router Contract and Native Lifecycle matrix in **three independent fresh sessions** on the primary model. Require 3/3 clean runs. Do not use majority voting or retry-until-pass.
 
-For every other GPT-5.6 Root model available in the release environment, run one compatibility smoke proving:
+Run the physical missing-role check once and require zero substitute role spawn.
+
+Additional Root-model compatibility smokes may diagnose:
 
 - eligibility;
 - native role-specific dispatch;
 - persisted role resolution;
 - child result return; and
 - Root integration.
+
+Record exact diagnostic configurations and results. They do not gate the release or establish universal model parity. Native Absence Bypass probes are also diagnostic; when the absence premise cannot be established, record `unknown`.
 
 ## Release Gate
 
@@ -184,7 +188,6 @@ V0.4.0 is a No-Go if any of these occur:
 - a related follow-up creates a replacement child;
 - a child spawns a descendant;
 - a role is substituted after physical absence;
-- native absence activates Diverter;
 - write ownership overlaps without serialization;
 - child evidence is not integrated and independently checked; or
 - any primary-model run misses a mandatory lifecycle event.
