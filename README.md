@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <strong>You turn on Ultra for a complex task—then research, testing, and other independent work start consuming the same premium capacity. Does every step really need Ultra?</strong>
+  <em>You turn on Ultra for a complex task—then research, testing, and other independent work start consuming the same premium capacity. Does every step really need Ultra?</em>
 </p>
 
 ## 💡 Why Diverter
