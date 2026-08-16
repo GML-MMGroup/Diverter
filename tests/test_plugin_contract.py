@@ -25,7 +25,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Restart or reopen the task", skill)
         self.assertIn("Never invoke `$diverter`", skill)
 
-    def test_session_start_loads_persisted_delegation_policy(self) -> None:
+    def test_session_start_injects_canonical_contract_with_policy(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             codex_home = Path(temp_dir) / "codex-home"
             config = codex_home / "diverter" / "config.json"
@@ -41,9 +41,17 @@ class PluginContractTest(unittest.TestCase):
                 check=True,
             )
 
-            self.assertIn("## Diverter Delegation Gate", result.stdout)
-            self.assertIn("delegation_policy: auto", result.stdout)
-            self.assertIn("$diverter-mode", result.stdout)
+            contract = (
+                ROOT
+                / "skills"
+                / "diverter"
+                / "references"
+                / "session-contract.md"
+            ).read_text()
+            self.assertEqual(
+                result.stdout,
+                f"{contract.rstrip()}\n\ndelegation_policy: auto\n",
+            )
 
     def test_session_start_expands_tilde_in_codex_home(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -64,6 +72,13 @@ class PluginContractTest(unittest.TestCase):
             self.assertIn("delegation_policy: auto", result.stdout)
 
     def test_session_start_falls_back_to_ask_for_missing_or_invalid_config(self) -> None:
+        contract = (
+            ROOT
+            / "skills"
+            / "diverter"
+            / "references"
+            / "session-contract.md"
+        ).read_text()
         for invalid_content in (None, "not json\n", '{"delegation_policy":"fast"}\n'):
             with (
                 self.subTest(invalid_content=invalid_content),
@@ -84,7 +99,48 @@ class PluginContractTest(unittest.TestCase):
                     check=True,
                 )
 
-                self.assertIn("delegation_policy: ask", result.stdout)
+                self.assertEqual(
+                    result.stdout,
+                    f"{contract.rstrip()}\n\ndelegation_policy: ask\n",
+                )
+
+    def test_user_prompt_submit_injects_only_the_root_turn_reminder(self) -> None:
+        result = subprocess.run(
+            [sys.executable, ROOT / "hooks" / "user_prompt_submit.py"],
+            input='{"turn_id":"root-turn","prompt":"Inspect the repository"}',
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+
+        self.assertEqual(
+            result.stdout,
+            "Mandatory turn preflight: Before task work, apply the active Diverter "
+            "Session Contract to this prompt. If eligible or the Contract is missing, "
+            "load $diverter first; otherwise continue silently in Root.\n",
+        )
+        self.assertNotIn("Implicit eligibility", result.stdout)
+
+    def test_user_prompt_submit_is_silent_when_agent_id_is_present(self) -> None:
+        for agent_id in (None, "child-123"):
+            with self.subTest(agent_id=agent_id):
+                result = subprocess.run(
+                    [sys.executable, ROOT / "hooks" / "user_prompt_submit.py"],
+                    input=json.dumps(
+                        {
+                            "turn_id": "child-turn",
+                            "prompt": "Execute the assigned handoff",
+                            "agent_id": agent_id,
+                            "agent_type": "reviewer",
+                        }
+                    ),
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                )
+
+                self.assertEqual(result.stdout, "")
+                self.assertEqual(result.stderr, "")
 
     def test_session_start_defers_to_native_before_triggering_diverter(self) -> None:
         result = subprocess.run(
@@ -95,9 +151,9 @@ class PluginContractTest(unittest.TestCase):
         )
 
         native_stop = result.stdout.index("proactive multi-agent delegation is active")
-        trigger = result.stdout.index("invoke `$diverter` first")
+        trigger = result.stdout.index("load `$diverter` before any task work")
         self.assertLess(native_stop, trigger)
-        self.assertIn("Do not invoke or mention Diverter", result.stdout)
+        self.assertIn("Do not evaluate, load, or mention Diverter", result.stdout)
 
     def test_session_start_exposes_root_child_eligibility_and_native_absence(
         self,
@@ -110,32 +166,25 @@ class PluginContractTest(unittest.TestCase):
         )
 
         gate = result.stdout
-        self.assertIn("one bounded independent Child Lane", gate)
-        self.assertIn("one distinct useful Root Lane", gate)
-        self.assertIn("No effective Root Lane", gate)
-        self.assertIn("affirmative delegation intent", gate)
+        self.assertIn("One bounded, independently executable Child Lane", gate)
+        self.assertIn("One distinct, useful Root Lane", gate)
+        self.assertIn("Waiting, supervision", gate)
+        self.assertIn("An affirmative request", gate)
         self.assertIn(
             "`$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role",
             gate,
         )
-        self.assertIn("Scheduling words alone do not qualify", gate)
+        self.assertIn("scheduling language", gate)
         self.assertIn("explicitly selected focused skill", gate)
         self.assertIn("Supporting Child", gate)
-        self.assertIn("native subagent dispatch is unavailable", gate)
+        self.assertIn("native role-specific subagent dispatch", gate)
         self.assertIn("continue silently in the Root Session", gate)
-        self.assertIn("Sanitized Failure Reporting", gate)
-        self.assertIn("internal failure recovers successfully", gate)
-        self.assertIn("continuing in the Root Session", gate)
-        self.assertIn("ask whether to continue in the Root Session", gate)
-        for internal_detail in (
-            "skill aliases",
-            "plugin cache paths",
-            "`SKILL.md` loading",
-            "retry steps",
-        ):
-            self.assertIn(internal_detail, gate)
+        self.assertIn("`BYPASS`", gate)
+        self.assertIn("`ROOT_ONLY`", gate)
+        self.assertIn("`ELIGIBLE`", gate)
+        self.assertNotIn("Sanitized Failure Reporting", gate)
 
-    def test_plugin_package_and_session_start_hook_are_discoverable(self) -> None:
+    def test_plugin_package_and_root_preflight_hooks_are_discoverable(self) -> None:
         manifest = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text())
         marketplace = json.loads(
             (ROOT / ".agents" / "plugins" / "marketplace.json").read_text()
@@ -162,7 +211,10 @@ class PluginContractTest(unittest.TestCase):
         self.assertEqual(entry[0]["policy"]["installation"], "AVAILABLE")
         self.assertEqual(entry[0]["policy"]["authentication"], "ON_INSTALL")
 
-        self.assertEqual(set(hooks["hooks"]), {"SessionStart"})
+        self.assertEqual(
+            set(hooks["hooks"]),
+            {"SessionStart", "UserPromptSubmit"},
+        )
         group = hooks["hooks"]["SessionStart"][0]
         self.assertEqual(group["matcher"], "startup|resume|clear|compact")
         handler = group["hooks"][0]
@@ -170,7 +222,19 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("${PLUGIN_ROOT}/hooks/session_start.py", handler["command"])
         self.assertIn("$env:PLUGIN_ROOT", handler["commandWindows"])
         self.assertEqual(handler["timeout"], 5)
-        self.assertEqual(handler["statusMessage"], "Loading Diverter Delegation Gate...")
+        self.assertEqual(handler["statusMessage"], "Loading Diverter Session Contract...")
+
+        prompt_group = hooks["hooks"]["UserPromptSubmit"][0]
+        self.assertNotIn("matcher", prompt_group)
+        prompt_handler = prompt_group["hooks"][0]
+        self.assertEqual(prompt_handler["type"], "command")
+        self.assertIn(
+            "${PLUGIN_ROOT}/hooks/user_prompt_submit.py",
+            prompt_handler["command"],
+        )
+        self.assertIn("$env:PLUGIN_ROOT", prompt_handler["commandWindows"])
+        self.assertEqual(prompt_handler["timeout"], 5)
+        self.assertNotIn("statusMessage", prompt_handler)
 
         result = subprocess.run(
             [sys.executable, ROOT / "hooks" / "session_start.py"],
@@ -179,9 +243,9 @@ class PluginContractTest(unittest.TestCase):
             capture_output=True,
             check=True,
         )
-        self.assertIn("Diverter Delegation Gate", result.stdout)
+        self.assertIn("Diverter Session Contract", result.stdout)
         self.assertIn("delegation_context: delegated-subagent", result.stdout)
-        self.assertIn("invoke `$diverter` first", result.stdout)
+        self.assertIn("load `$diverter` before any task work", result.stdout)
 
     def test_core_skill_selects_policy_and_native_lifecycle(self) -> None:
         skill_path = ROOT / "skills" / "diverter" / "SKILL.md"
@@ -190,6 +254,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertTrue(skill_path.is_file())
         self.assertFalse((ROOT / "SKILL.md").exists())
         for name in (
+            "session-contract.md",
             "decision-rules.md",
             "role-lineups.md",
             "handoff-schema.md",
@@ -221,29 +286,31 @@ class PluginContractTest(unittest.TestCase):
         self.assertNotIn("scripts/run-cli-agent.py", skill)
         self.assertIn("delegation_context: delegated-subagent", skill)
 
-    def test_core_skill_refines_eligibility_and_sanitizes_failures(self) -> None:
+    def test_core_skill_uses_session_contract_as_the_preflight_authority(self) -> None:
         skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
+        contract = (
+            ROOT / "skills" / "diverter" / "references" / "session-contract.md"
+        ).read_text()
         rules = (
             ROOT / "skills" / "diverter" / "references" / "decision-rules.md"
         ).read_text()
 
         for phrase in (
-            "one bounded independent Child Lane",
-            "one distinct useful Root Lane",
-            "recognized by the SessionStart Delegation Gate",
-            "explicitly selected focused skill",
+            "Session Contract is the sole normative authority",
+            "completed Preflight",
+            "Missing-Contract fallback",
+            "references/session-contract.md",
             "Sanitized Failure Reporting",
             "internal failure recovers successfully",
             "ask whether to continue in the Root Session",
         ):
             self.assertIn(phrase, skill)
 
-        for phrase in (
-            "same implementation decision",
-            "Root requires the Child result before safely progressing",
-            "Reclassifying an invented supporting task as read-only",
-        ):
-            self.assertIn(phrase, skill)
+        self.assertNotIn("## Eligibility", skill)
+        self.assertNotIn("CLARIFY", contract)
+        self.assertIn("Non-normative examples", rules)
+        self.assertIn("cannot override the Session Contract", rules)
+        self.assertNotIn("Practical tie-breakers", rules)
 
         capability_table = skill.split("## Capability Selection", 1)[1].split(
             "Smallest Sufficient Lineup rules:", 1
@@ -266,6 +333,47 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Explicit delegation request", rules)
         self.assertIn("Focused skill ownership", rules)
         self.assertIn("Vague risk language", rules)
+
+    def test_explicit_dispatch_does_not_require_an_implicit_root_lane(self) -> None:
+        skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
+        message_contract = (
+            ROOT
+            / "skills"
+            / "diverter"
+            / "references"
+            / "delegation-contract.md"
+        ).read_text()
+        rubric = (ROOT / "evals" / "rubric.md").read_text()
+        scenarios = (ROOT / "evals" / "scenarios.md").read_text()
+
+        self.assertIn("Only implicit eligibility requires", skill)
+        self.assertIn(
+            "An Explicit Delegation Request may have no distinct Root Lane",
+            skill,
+        )
+        self.assertIn("For implicit eligibility, declare", skill)
+        self.assertIn("For implicit eligibility", message_contract)
+        self.assertIn("For explicit eligibility", message_contract)
+        self.assertIn("Implicit eligibility", rubric)
+        self.assertIn("explicit eligibility", rubric)
+        self.assertIn("Implicit positive fixtures", scenarios)
+        self.assertIn("Explicit positive fixtures", scenarios)
+        self.assertIn("For implicit eligibility, the Root Lane", scenarios)
+        self.assertIn("For explicit eligibility, Root coordination", scenarios)
+
+    def test_positive_examples_do_not_restore_single_lane_implicit_routes(self) -> None:
+        examples = (
+            ROOT / "skills" / "diverter" / "references" / "examples-positive.md"
+        ).read_text()
+        numbered = {
+            int(line.split(".", 1)[0]): line
+            for line in examples.splitlines()
+            if line.split(".", 1)[0].isdigit()
+        }
+
+        for number in range(9, 15):
+            self.assertIn(" while ", numbered[number].lower())
+            self.assertIn("Root", numbered[number])
 
     def test_native_role_spawn_uses_no_history_or_model_overrides(self) -> None:
         skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
@@ -346,7 +454,7 @@ class PluginContractTest(unittest.TestCase):
             "### 3. Choose the global Bundled Subagents",
             "### 4. Run the Role Installer for the user",
             "### 5. Choose the Delegation Policy",
-            "### 6. Trust the SessionStart Hook",
+            "### 6. Trust the SessionStart and UserPromptSubmit Hooks",
             "### 7. Verify and finish",
         )
         positions = [guide.index(heading) for heading in install_order]
@@ -363,6 +471,35 @@ class PluginContractTest(unittest.TestCase):
             self.assertNotIn("temporary leaf `codex exec`", readme, readme_name)
 
         self.assertFalse((ROOT / "scripts" / "install-agents-gate.py").exists())
+
+    def test_docs_define_the_two_hook_preflight_architecture(self) -> None:
+        english = (ROOT / "README.md").read_text()
+        chinese = (ROOT / "README.zh.md").read_text()
+        guide = (ROOT / ".codex" / "INSTALL.md").read_text()
+        adr = ROOT / "docs" / "adr" / "0012-run-preflight-on-every-root-turn.md"
+
+        for document in (english, chinese, guide):
+            self.assertIn("SessionStart", document)
+            self.assertIn("UserPromptSubmit", document)
+            self.assertIn("Session Contract", document)
+
+        self.assertIn("agent_id", guide)
+        self.assertIn("Codex CLI `0.145.0`", guide)
+        self.assertIn("For implicit routing", english)
+        self.assertIn("对于隐式路由", chinese)
+        self.assertIn("Explicit delegation may coordinate and wait", english)
+        self.assertIn("显式委派可以协调并等待", chinese)
+        self.assertTrue(adr.is_file())
+        adr_text = adr.read_text()
+        for term in (
+            "**Session Contract**:",
+            "**Turn Reminder**:",
+            "**Preflight**:",
+            "**Dispatch Workflow**:",
+        ):
+            self.assertIn(term, adr_text)
+
+        self.assertIn("status: accepted", adr_text)
 
     def test_auto_smoke_covers_required_policy_boundaries(self) -> None:
         prompts = (ROOT / "evals" / "prompts.yaml").read_text()
@@ -406,6 +543,9 @@ class PluginContractTest(unittest.TestCase):
         rubric = (ROOT / "evals" / "rubric.md").read_text()
         results_template = (ROOT / "evals" / "results-template.md").read_text()
         self.assertIn("hooks/session_start.py", scenarios)
+        self.assertIn("hooks/user_prompt_submit.py", scenarios)
+        self.assertIn("agent_id", scenarios)
+        self.assertIn("second Root prompt", scenarios)
         self.assertIn(
             'prompt: "While you map the changed execution path and integrate the final review, use one independent reviewer for correctness and maintainability regressions against origin/main."',
             prompts,

@@ -1,6 +1,6 @@
 ---
 name: diverter
-description: "Use when an explicit delegation request or an eligible task has one bounded independent Child Lane and one distinct useful Root Lane. Apply the loaded ask or auto Delegation Policy. Do not use for Mode Control, delegated subagent handoffs, unclear requests, explicit opt-out, or when native proactive delegation owns orchestration."
+description: "Use after the Root Session Preflight returns ELIGIBLE, or when the Diverter Session Contract is missing and fallback Preflight is required. Apply the loaded ask or auto Delegation Policy. Do not use for Mode Control, delegated subagent handoffs, explicit opt-out, or when native proactive delegation owns orchestration."
 ---
 
 <NATIVE-PROACTIVE-DELEGATION-STOP>
@@ -21,44 +21,26 @@ For an eligible task:
 
 - choose the Smallest Sufficient Lineup of 1-4 available roles;
 - assign every child one bounded independent Child Lane;
-- declare the distinct useful Root Lane that will progress while children run;
+- for implicit eligibility, declare the distinct useful Root Lane that will progress while children run;
 - state exactly one Work Mode: `read-only`, `mixed`, or `write-capable`;
 - apply the loaded `ask` or `auto` Delegation Policy; and
 - integrate and proportionally verify child results before answering the user.
 
-If the task is ineligible or native dispatch is unavailable, continue silently in the Root Session.
+Only implicit eligibility requires a distinct useful Root Lane and material benefit. An Explicit Delegation Request may have no distinct Root Lane; Root still owns orchestration, integration, verification, and the final outcome.
 
-## Eligibility
+If Preflight returns `ROOT_ONLY` or native dispatch is unavailable, continue silently in the Root Session.
 
-The SessionStart Delegation Gate is the sole authority for explicit-trigger vocabulary and coarse activation. This skill is the detailed authority for eligibility, lineup selection, policy, ownership, dispatch, reuse, and integration.
+## Preflight Handoff
 
-Implicit delegation requires all of the following:
+The Session Contract is the sole normative authority for `BYPASS`, `ROOT_ONLY`, and `ELIGIBLE`. In the normal path, this skill loads only after `ELIGIBLE`; trust the completed Preflight and do not re-adjudicate eligibility.
 
-1. one bounded independent Child Lane with a clear deliverable;
-2. one distinct useful Root Lane that can make substantive progress while the child is active;
-3. a material accuracy, speed, or context benefit from running the lanes separately;
-4. non-duplicative scopes; and
-5. safe read/write ownership.
+Use the Missing-Contract fallback only when the active Session Contract is absent:
 
-No effective Root Lane means no implicit delegation. Waiting, supervising, promising to synthesize later, or repeating the Child Lane is not a Root Lane. A second child is never required merely to meet the threshold.
+1. read `references/session-contract.md` completely;
+2. apply its ordered Preflight to the current prompt and existing conversation context; and
+3. continue with this skill only for `ELIGIBLE`; otherwise follow the Contract's result action.
 
-Decide lane independence semantically before role selection or Work Mode. If Root and Child concern the same implementation decision, or Root requires the Child result before safely progressing, keep the task in Root. Reclassifying an invented supporting task as read-only does not create an independent Child Lane. Sharing a filename alone is allowed when the decisions, deliverables, and progress are genuinely independent.
-
-An Explicit Delegation Request recognized by the SessionStart Delegation Gate bypasses the implicit benefit threshold. It does not bypass task clarity, explicit opt-out, Native Proactive Delegation ownership, Codex permissions, sandboxing, leaf-child rules, or Write Ownership.
-
-An explicitly selected focused skill may keep its core workflow and Root Lane while Diverter supplies a Supporting Child for a separate, non-duplicative deliverable. Respect higher-priority and focused-skill constraints. Do not replace or duplicate the focused skill.
-
-Do not implicitly delegate:
-
-- trivial, wording-only, or strongly sequential work;
-- ambiguous work that needs clarification;
-- a one-path fact lookup that blocks all other progress;
-- duplicate Root/child investigation;
-- tightly coupled or overlapping writes;
-- vague security, test, performance, or release language without a concrete artifact or boundary;
-- an explicit subagent opt-out;
-- a delegated-subagent handoff; or
-- work already owned by Native Proactive Delegation.
+The native-proactive and delegated-subagent stops above remain defense in depth. They do not create a second eligibility standard.
 
 ## Decision Process
 
@@ -66,15 +48,14 @@ Follow this sequence:
 
 1. Apply the Native Proactive Delegation and delegated-subagent stops above.
 2. Execute `$diverter-mode` directly when explicitly invoked; never delegate Mode Control.
-3. Honor explicit opt-out and clarify an unclear objective.
+3. Trust the completed Preflight, or run the Missing-Contract fallback above.
 4. Resolve the Delegation Policy.
-5. Identify the candidate Child Lane, Root Lane, expected benefit, and ownership, then decide eligibility.
-6. Perform the Native Capability Check before mentioning Diverter or proposing a lineup.
-7. Select the Smallest Sufficient Lineup from available roles.
-8. Classify the complete workflow's Work Mode.
-9. Produce the policy-specific Delegation Contract.
-10. Dispatch only after Dispatch Authorization.
-11. Continue the Root Lane, collect child results, resolve conflicts, verify proportionally, and integrate the final outcome.
+5. Confirm the Native Capability Check remains satisfied before mentioning Diverter or proposing a lineup.
+6. Select the Smallest Sufficient Lineup from available roles.
+7. Classify the complete workflow's Work Mode.
+8. Produce the policy-specific Delegation Contract.
+9. Dispatch only after Dispatch Authorization.
+10. Continue the declared Root Lane when one exists; otherwise coordinate the explicitly requested child. Collect results, resolve conflicts, verify proportionally, and integrate the final outcome.
 
 ## Delegation Policy
 
@@ -83,7 +64,7 @@ Resolve policy in this order:
 1. the stops and Mode Control bypasses above;
 2. Native Proactive Delegation ownership from higher-priority instructions;
 3. an explicit Task Policy Override in the current user message;
-4. the loaded `delegation_policy` from the Delegation Gate; and
+4. the loaded `delegation_policy` from the Session Contract; and
 5. `ask` when no valid policy is available.
 
 Valid values are `delegation_policy: ask` and `delegation_policy: auto`.
@@ -97,7 +78,7 @@ Work Mode classifies the complete Root-and-Child workflow: `read-only` when no a
 
 ## Native Capability Check
 
-Diverter uses the Native Subagent Backend exclusively. Before activation, confirm that the current host exposes native role-specific spawning with a target `agent_type`, supports isolated `fork_turns: "none"`, and exposes the requested installed role.
+Diverter uses the Native Subagent Backend exclusively. Before announcement or dispatch, confirm that the current host still exposes native role-specific spawning with a target `agent_type`, supports isolated `fork_turns: "none"`, and exposes the requested installed role.
 
 - Do not require or pass runtime `model` or `reasoning_effort` overrides. The installed Bundled Subagent definition owns those settings.
 - Do not use a generic child as a substitute for a missing requested role.
@@ -123,7 +104,8 @@ Select capabilities first, then map only to roles available in the current Codex
 
 Smallest Sufficient Lineup rules:
 
-- Default to one child plus the Root Lane.
+- Default to one child. Pair it with the required Root Lane for implicit eligibility.
+- When a focused skill owns the Root Lane, select only a separate, non-duplicative Supporting Child.
 - Add another child only for another necessary, independent, non-duplicative deliverable.
 - Never exceed four roles; four is a safety cap, not a target.
 - Prefer the central specialist over a generic reviewer when the concrete boundary is security, test strategy, or Web performance.
@@ -135,9 +117,9 @@ Smallest Sufficient Lineup rules:
 
 Every policy branch conveys, in order:
 
-1. why delegation materially fits;
+1. why the task is eligible: explicit delegation intent or implicit material fit;
 2. exactly one lineup with an assignment for each exact role name;
-3. the distinct Root Lane;
+3. For implicit eligibility, declare the distinct Root Lane; for explicit eligibility, state any useful Root work or that Root will coordinate and integrate;
 4. exactly one Work Mode; and
 5. the policy-specific ending.
 
@@ -145,7 +127,7 @@ Keep the message conversational, concise, and in the user's language when natura
 
 Under `ask`, end with a direct approval question matched to the Work Mode and stop. Do not inspect, run, search, summarize, implement, or spawn before approval.
 
-Under `auto`, make a declarative Dispatch Announcement, state that dispatch starts now and the Root Lane will continue, ask no question, and spawn in the same turn.
+Under `auto`, make a declarative Dispatch Announcement, state that dispatch starts now and what Root will do, ask no question, and spawn in the same turn.
 
 If the same scope was already announced or dispatched, do not announce or dispatch it again after compact, resume, or another skill check.
 
@@ -177,7 +159,7 @@ The child is always a Leaf Child. Root alone owns decomposition, follow-up routi
 
 ## Root Progress and Integration
 
-After dispatch, Root must make substantive, distinct, traceable progress on the declared Root Lane while the child is active. Choose task-appropriate work under Outcome-Bounded Autonomy; do not force research, writing, planning, design, and code into one action checklist.
+After an implicitly eligible dispatch, Root must make substantive, distinct, traceable progress on the declared Root Lane while the child is active. After an explicit dispatch with no distinct Root Lane, Root may coordinate and wait for the requested child before integration. Choose task-appropriate work under Outcome-Bounded Autonomy; do not force research, writing, planning, design, and code into one action checklist.
 
 Root must:
 
@@ -220,7 +202,8 @@ Never expose skill aliases, plugin cache paths, `SKILL.md` loading, retry mechan
 
 Read only as needed:
 
-- `references/decision-rules.md` for classification examples;
+- `references/session-contract.md` only for Missing-Contract fallback Preflight;
+- `references/decision-rules.md` for non-normative classification examples;
 - `references/role-lineups.md` for capability mapping;
 - `references/handoff-schema.md` for leaf handoffs and ownership; and
 - `references/delegation-contract.md` for policy-specific wording.

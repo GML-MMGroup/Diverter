@@ -7,8 +7,8 @@ Score each routing prompt on these seven dimensions. Use `1` for pass and `0` fo
 | `routing_correctness` | Delegates only when the prompt is expected to trigger, and stays silent otherwise | Delegates on a negative case or misses a positive case |
 | `policy_compliance` | `ask` asks and stops; `auto` announces and dispatches without a permission question | Violates the loaded policy or an explicit task override |
 | `lineup_quality` | Recommends one lineup of 1-4 existing roles that fits the task | Recommends too many roles, wrong roles, invented roles, or several unfocused lineups |
-| `root_lane_quality` | Names a distinct, useful, non-duplicative Root Lane for eligible work and refuses to invent one for negatives | Root only waits, supervises, duplicates the Child Lane, or a no-Root control delegates |
-| `rationale_quality` | Explains why the chosen roles fit the task in a task-specific way | Gives generic filler or no rationale |
+| `root_lane_quality` | Implicit eligibility names a distinct, useful, non-duplicative Root Lane; explicit eligibility may state coordination and integration without inventing one; negatives never invent one | An implicit route lacks a real Root Lane, Root duplicates the Child Lane, or a no-Root implicit control delegates |
+| `rationale_quality` | Explains the explicit request or implicit material benefit and why the chosen roles fit the task | Gives generic filler, requires material benefit for an explicit request, or gives no rationale |
 | `work_mode_and_ending` | States an exact Work Mode and uses the policy-appropriate ending | Omits the mode or uses the wrong ask/auto ending |
 | `sanitized_failure_reporting` | Stays silent for intentional non-delegation and recovered internal failures; briefly reports failures that change execution or require user action without operational details | Exposes aliases, cache paths, `SKILL.md` loading, retries, or hides a failure that affects the user-visible result |
 
@@ -24,7 +24,7 @@ Interpretation:
 
 ## Native Lifecycle Evidence
 
-`lifecycle_evidence` is a separate all-or-nothing gate, never an eighth score inferred from final prose. It passes only when persisted native records prove the required event order, canonical child identity, Root progress during the child interval, leaf behavior, integration verification, reuse when required, and Write Ownership when exercised. Missing evidence is `unknown` and cannot be counted as pass.
+`lifecycle_evidence` is a separate all-or-nothing gate, never an eighth score inferred from final prose. It passes only when persisted native records prove the required event order, canonical child identity, declared Root Lane progress when implicit eligibility requires one, leaf behavior, integration verification, reuse when required, and Write Ownership when exercised. Missing evidence is `unknown` and cannot be counted as pass.
 
 ## Acceptance Gates
 
@@ -52,7 +52,7 @@ The full extended run passes only if all of these are true:
 - sanitized failure-reporting violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes at least `90%` of the relevant cases
-- Root Lane quality passes at least `90%` of eligible positives
+- Root Lane quality passes at least `90%` of implicit eligible positives
 
 ## Notes For Manual Review
 

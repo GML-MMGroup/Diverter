@@ -1,9 +1,10 @@
 # Evaluation Scenarios
 
-V0.4.0 has two evidence seams:
+V0.4.0 has three evidence seams:
 
-1. **Router Contract** — deterministic and prompt-level evidence for eligibility, Root/Child lanes, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
-2. **Native Lifecycle** — persisted Codex records proving what actually spawned and happened over time.
+1. **Preflight Delivery** — Hook input/output evidence proving the Session Contract is restored, every Root prompt gets one short Turn Reminder, and child prompts get none.
+2. **Router Contract** — deterministic and prompt-level evidence for eligibility, Root/Child lanes, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
+3. **Native Lifecycle** — persisted Codex records proving what actually spawned and happened over time.
 
 Final-response wording is never Native Lifecycle evidence.
 
@@ -17,16 +18,31 @@ Required checks:
 
 - `diverter` is visible;
 - `diverter-mode` is present but explicit-only;
-- `hooks/session_start.py` is installed and trusted;
+- `hooks/session_start.py` and `hooks/user_prompt_submit.py` are installed and trusted;
 - every intended role exists under the isolated home;
 - no unrelated role or skill is visible; and
 - the installed plugin reports version `0.4.1`.
 
 ## Installation Policy Choice
 
-Run one fresh install choosing recommended `auto` and one choosing `ask`. Verify that the selected value is persisted and appears in a new SessionStart gate. Missing or invalid configuration must load `ask`.
+Run one fresh install choosing recommended `auto` and one choosing `ask`. Verify that the selected value is persisted and appears in a new SessionStart Contract. Missing or invalid configuration must load `ask`.
 
 Do not infer a fresh-install choice from `diverter-mode.py init`; the installation conversation must explicitly ask and recommend `auto`.
+
+## Root Turn Preflight Delivery
+
+On the minimum supported released Codex version, capture immutable `UserPromptSubmit` command input and hook-completion evidence in a fresh installed task. Submit an ineligible first Root prompt and an eligible second Root prompt in the same task, then allow the eligible turn to create one native child.
+
+Require all of the following:
+
+- `SessionStart` injects the complete Session Contract and active policy at startup and again after compact;
+- each Root `UserPromptSubmit` input omits `agent_id` and receives exactly one short Turn Reminder, never the full Contract;
+- the eligible second Root prompt loads Diverter before other task work;
+- the child `UserPromptSubmit` input contains `agent_id` and `agent_type`;
+- `hooks/user_prompt_submit.py` exits successfully with zero stdout and zero model context for that child input; and
+- InterAgentCommunication produces no extra `UserPromptSubmit` event.
+
+Direct hook subprocess tests prove deterministic filtering, but they do not replace this released-runtime evidence. If the host cannot create or observe the child, record the run as blocked or failed; never infer the Child result from the official schema or Root behavior alone.
 
 ## Router Contract Suite
 
@@ -41,13 +57,13 @@ The paired controls are central:
 - `neg-04` ↔ `ultra-pos-doc-check`; and
 - `auto-idempotency` ↔ `ultra-reuse-same-scope`.
 
-The positive half must name a bounded Child Lane and a distinct useful Root Lane. The negative half must not invent a Root Lane merely to trigger.
+Implicit positive fixtures must name a bounded Child Lane and a distinct useful Root Lane. Explicit positive fixtures must name the requested Child Lane but may state Root coordination and integration instead of inventing a Root Lane. The negative half must not invent a Root Lane merely to trigger.
 
 ### Policy split
 
 - `ask` approval: the recommendation precedes approval and the first native spawn occurs only afterward.
 - `ask` refusal: zero spawn; Root continues.
-- `auto`: Dispatch Announcement precedes native spawn in the same turn, asks no permission question, and identifies lineup, Root Lane, and Work Mode.
+- `auto`: Dispatch Announcement precedes native spawn in the same turn, asks no permission question, and identifies lineup, Work Mode, and Root activity: the Root Lane for implicit eligibility or coordination and integration for an explicit request without one.
 
 After authorization, reuse the shared lifecycle primarily under `auto`; do not duplicate the complete matrix under `ask`.
 
@@ -183,7 +199,8 @@ V0.4.0 is a No-Go if any of these occur:
 - a strict or paired negative dispatches;
 - `ask` spawns before approval or after refusal;
 - `auto` asks permission or fails to announce before spawn;
-- the Root Lane is missing, passive, or duplicates the child;
+- For implicit eligibility, the Root Lane is missing, passive, or duplicates the child;
+- For explicit eligibility, Root coordination or integration responsibility is missing;
 - an equivalent scope is spawned twice;
 - a related follow-up creates a replacement child;
 - a child spawns a descendant;

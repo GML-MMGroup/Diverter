@@ -6,7 +6,7 @@ This file is the only supported installation entry. Follow it as one agent-led f
 
 ## Prerequisites
 
-- Codex with plugin and Hook support
+- Codex CLI `0.145.0` or later with plugin and Hook support. Root omission and Child presence of `UserPromptSubmit.agent_id` are verified against the official `0.145.0` release runtime.
 - Python 3.11+
 
 ## Installation
@@ -87,9 +87,9 @@ python3 "$DIVERTER_PLUGIN/scripts/diverter-mode.py" ask
 
 Keep the returned `delegation_policy` for the final response. Missing or invalid configuration still resolves safely to `ask` at SessionStart until the user selects a valid policy.
 
-### 6. Trust the SessionStart Hook
+### 6. Trust the SessionStart and UserPromptSubmit Hooks
 
-After the selected roles are installed, tell the user to open `/hooks`, review the Diverter `SessionStart` command, and trust it before starting a new Codex task. Do not pause role installation while waiting for Hook trust. Codex's normal warning and fail-open behavior applies when the Hook is untrusted, skipped, times out, or fails.
+After the selected roles are installed, tell the user to open `/hooks`, review the Diverter `SessionStart` and `UserPromptSubmit` commands, and trust both before starting a new Codex task. `SessionStart` injects the full Session Contract and policy; `UserPromptSubmit` injects only a short Root Turn Reminder and emits nothing whenever `agent_id` is present. Do not pause role installation while waiting for Hook trust. Codex's normal warning and fail-open behavior applies when either Hook is untrusted, skipped, times out, or fails.
 
 ### 7. Verify and finish
 
@@ -107,8 +107,8 @@ End with the following fixed structure, translated into the user's language when
 ```text
 Diverter is installed in the selected `<policy>` mode.
 
-Before using it, open `/hooks`, review Diverter's `SessionStart` Hook,
-and trust it. Then start or reopen a task.
+Before using it, open `/hooks`, review Diverter's `SessionStart` and
+`UserPromptSubmit` Hooks, and trust both. Then start or reopen a task.
 
 - `ask` — proposes one lineup and waits for approval.
 - `auto` — announces one lineup and dispatches it immediately for any Work Mode.
@@ -132,4 +132,4 @@ codex plugin marketplace upgrade diverter
 codex plugin add diverter@diverter --json
 ```
 
-Use the newly returned `installedPath`. Repeat the role selection and run the current release's Role Installer so selected global roles receive the new definitions. Run `python3 "$DIVERTER_PLUGIN/scripts/diverter-mode.py" init`; updates preserve an existing valid policy and safely initialize missing configuration to `ask`. If Codex marks the changed Hook for review, ask the user to repeat `/hooks` trust before starting a new task. Report the policy returned by `init`.
+Use the newly returned `installedPath`. Repeat the role selection and run the current release's Role Installer so selected global roles receive the new definitions. Run `python3 "$DIVERTER_PLUGIN/scripts/diverter-mode.py" init`; updates preserve an existing valid policy and safely initialize missing configuration to `ask`. If Codex marks either changed Hook for review, ask the user to repeat `/hooks` trust before starting a new task. Report the policy returned by `init`.

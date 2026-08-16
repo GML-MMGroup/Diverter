@@ -40,7 +40,7 @@
 
 ## 🚀 快速开始
 
-**Diverter 的原生子代理能力最低需要 Codex CLI `0.145.0`。**
+**Diverter 的原生子代理与 Root-only turn Hook 最低需要 Codex CLI `0.145.0`。**
 
 1. 告诉 Codex：
 
@@ -48,7 +48,7 @@
    请获取并按照这个安装说明执行：https://raw.githubusercontent.com/GML-MMGroup/Diverter/refs/heads/main/.codex/INSTALL.md
    ```
 
-2. 安装完成后打开 `/hooks`，检查并信任 Diverter 的 `SessionStart` Hook，然后新建或重新打开任务。
+2. 安装完成后打开 `/hooks`，检查并信任 Diverter 的 `SessionStart` 与 `UserPromptSubmit` Hook，然后新建或重新打开任务。
 
 3. 安装时选择 `auto`（推荐，用于主动分派）或 `ask`（批准后分派）。通过以下命令查看或修改用户级策略：
 
@@ -124,10 +124,11 @@ Diverter 在分派前始终明确标注一种工作模式。
 
 ## ⚙️ 工作原理
 
-1. `SessionStart` Hook 加载用户级委派策略并激活委派门控。
-2. Diverter 识别有边界的 Child Lane、会继续推进的有效 Root Lane、最小充分阵容和一种工作模式。
-3. `ask` 等待批准；`auto` 告知后立即通过原生角色子代理分派。
-4. Root 在所有子代理保持叶子节点的同时持续推进，随后完成整合、验证和最终交付。
+1. `SessionStart` Hook 加载用户级委派策略和完整 Session Contract，并在 compact 后恢复两者。
+2. 每个 Root turn 开始前，`UserPromptSubmit` 只注入一条简短 Turn Reminder；子代理 turn 通过 `agent_id` 被确定性过滤，不接收提醒。
+3. Preflight 对不适合委派的任务静默留在 Root，对适合的任务则要求在任何任务工作前加载 Diverter。
+4. Diverter 再选择有边界的 Child Lane、最小充分阵容和 Work Mode。对于隐式路由，它还要求有效 Root Lane；显式委派可以让 Root 只负责协调和整合。`ask` 等待批准，`auto` 告知后立即分派。
+5. 对于隐式路由，Root 会在所有子代理保持叶子节点的同时实质推进；显式委派可以协调并等待，随后由 Root 完成整合、验证和最终交付。
 
 相关追问会回到同一个原生子代理，延续它已经建立的上下文。
 
@@ -145,6 +146,6 @@ Diverter 会匹配用户的语言；角色名称和工作模式标记保持英�
 
 欢迎提交 Issue 和 Pull Request。有效的贡献可以改进任务形态规则、角色映射、正反例或评估场景。一条好的新规则应同时包含一个应该触发分派的提示，以及一个相似但应留在主线程的提示。
 
-可以从 [`decision-rules.md`](skills/diverter/references/decision-rules.md)、[`role-lineups.md`](skills/diverter/references/role-lineups.md) 和 [`evals/scenarios.md`](evals/scenarios.md) 开始。
+先从规范性的 [`session-contract.md`](skills/diverter/references/session-contract.md) 开始，再用 [`decision-rules.md`](skills/diverter/references/decision-rules.md) 查看案例、用 [`role-lineups.md`](skills/diverter/references/role-lineups.md) 查看角色映射，并用 [`evals/scenarios.md`](evals/scenarios.md) 做验证。
 
 本项目基于 [MIT License](LICENSE) 发布。

@@ -40,7 +40,7 @@
 
 ## 🚀 Quick Start
 
-**Diverter requires Codex CLI `0.145.0` or later for native subagent support.**
+**Diverter requires Codex CLI `0.145.0` or later for native subagents and Root-only turn hooks.**
 
 1. Tell Codex:
 
@@ -48,7 +48,7 @@
    Fetch and follow instructions from https://raw.githubusercontent.com/GML-MMGroup/Diverter/refs/heads/main/.codex/INSTALL.md
    ```
 
-2. After installation, open `/hooks`, review and trust Diverter's `SessionStart` Hook, then start or reopen a task.
+2. After installation, open `/hooks`, review and trust Diverter's `SessionStart` and `UserPromptSubmit` Hooks, then start or reopen a task.
 
 3. During installation, choose `auto` (recommended) for proactive dispatch or `ask` for approval-first dispatch. Inspect or change the user-level policy with:
 
@@ -124,10 +124,11 @@ Diverter always names one Work Mode before dispatch.
 
 ## ⚙️ How It Works
 
-1. The `SessionStart` Hook loads the user-level Delegation Policy and activates the Delegation Gate.
-2. Diverter identifies a bounded Child Lane, the useful Root Lane that will continue, the Smallest Sufficient Lineup, and one Work Mode.
-3. `ask` waits for approval; `auto` announces and dispatches immediately through native role-specific subagents.
-4. Root keeps progressing while every child remains a leaf, then integrates, verifies, and returns the final result.
+1. The `SessionStart` Hook loads the user-level Delegation Policy and full Session Contract, restoring both after compaction.
+2. Before each Root turn, `UserPromptSubmit` adds one short Turn Reminder; child turns are filtered deterministically through `agent_id` and receive no reminder.
+3. Preflight stays silent in Root when ineligible and loads Diverter before task work when eligible.
+4. Diverter selects the bounded Child Lane, Smallest Sufficient Lineup, and Work Mode. For implicit routing, it also requires a useful Root Lane; explicit delegation may leave Root coordinating and integrating. `ask` waits for approval; `auto` announces and dispatches immediately.
+5. For implicit routing, Root keeps making substantive progress while every child remains a leaf. Explicit delegation may coordinate and wait before Root integrates, verifies, and returns the final result.
 
 Related follow-ups return to the same native child, preserving the context it already built.
 
@@ -145,6 +146,6 @@ Diverter matches the user's language. Role names and Work Mode tokens remain in 
 
 Issues and pull requests are welcome. Useful contributions improve task-shape rules, role mappings, positive and negative examples, or eval scenarios. A good new rule includes both a prompt that should trigger delegation and a similar prompt that should stay focused.
 
-Start with [`decision-rules.md`](skills/diverter/references/decision-rules.md), [`role-lineups.md`](skills/diverter/references/role-lineups.md), and [`evals/scenarios.md`](evals/scenarios.md).
+Start with the normative [`session-contract.md`](skills/diverter/references/session-contract.md), then use [`decision-rules.md`](skills/diverter/references/decision-rules.md) for examples, [`role-lineups.md`](skills/diverter/references/role-lineups.md) for role mapping, and [`evals/scenarios.md`](evals/scenarios.md) for validation.
 
 This project is released under the [MIT License](LICENSE).
