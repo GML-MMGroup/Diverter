@@ -1,6 +1,6 @@
 # Evaluation Scenarios
 
-V0.4.0 has three evidence seams:
+Diverter release validation has three evidence seams:
 
 1. **Preflight Delivery** — Hook input/output evidence proving the Session Contract is restored, every Root prompt gets one short Turn Reminder, and child prompts get none.
 2. **Router Contract** — deterministic and prompt-level evidence for eligibility, Root/Child lanes, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
@@ -21,7 +21,7 @@ Required checks:
 - `hooks/session_start.py` and `hooks/user_prompt_submit.py` are installed and trusted;
 - every intended role exists under the isolated home;
 - no unrelated role or skill is visible; and
-- the installed plugin reports version `0.4.1`.
+- the installed plugin reports the release version.
 
 ## Installation Policy Choice
 
@@ -194,7 +194,7 @@ Record exact diagnostic configurations and results. They do not gate the release
 
 ## Release Gate
 
-V0.4.0 is a No-Go if any of these occur:
+A release is a No-Go if any of these occur:
 
 - a strict or paired negative dispatches;
 - `ask` spawns before approval or after refusal;

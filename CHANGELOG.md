@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.2 - 2026-08-17
 
 - Add a Root-only `UserPromptSubmit` Turn Reminder so every user prompt applies Diverter Preflight before task work.
 - Make the `SessionStart`-injected Session Contract the sole normative eligibility source and keep the Diverter skill focused on the post-eligibility Dispatch Workflow.
