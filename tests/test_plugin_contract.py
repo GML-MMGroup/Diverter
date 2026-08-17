@@ -201,7 +201,7 @@ class PluginContractTest(unittest.TestCase):
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())
 
         self.assertEqual(manifest["name"], "diverter")
-        self.assertEqual(manifest["version"], "0.4.2")
+        self.assertEqual(manifest["version"], "0.4.3")
         self.assertEqual(manifest["interface"]["displayName"], "Diverter")
         self.assertEqual(manifest["skills"], "./skills/")
         self.assertNotIn("hooks", manifest)
