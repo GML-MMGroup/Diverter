@@ -1,6 +1,6 @@
 # Delegation Contract
 
-Every eligible Diverter message uses one shared structure and one policy ending. That policy-specific message is the routing receipt; never precede it with a second eligibility message.
+The literal eligible-receipt templates are owned only by `../SKILL.md`. This reference defines their semantics and failure cases; do not copy or rephrase the templates here. The policy-specific message is the routing receipt, so never precede it with a second eligibility message.
 
 ## Root-only Receipt
 
@@ -12,28 +12,19 @@ Match the user's language in the reason. Do not emit this receipt for bypass, ex
 
 ## Shared Information
 
-Convey these in order:
+Each selected child gets one `Child:` line in lineup order with its exact role name and a concise, user-facing summary of its task. The `Root:` line summarizes the distinct Root Lane for implicit eligibility; for explicit eligibility without one, it summarizes coordination and integration instead of inventing work. The receipt also states exactly one Work Mode: `read-only`, `mixed`, or `write-capable`.
 
-1. Why the task is eligible: explicit delegation intent or implicit material benefit from separate lanes.
-2. Exactly one Smallest Sufficient Lineup of 1-4 available roles, with a bounded Child Lane for each.
-3. For implicit eligibility, the distinct useful Root Lane that will continue while children run. For explicit eligibility, any useful Root work or a concise statement that Root will coordinate and integrate.
-4. Exactly one Work Mode: `read-only`, `mixed`, or `write-capable`.
-
-Keep the message conversational and concise. Never list alternatives, invent roles, describe results that do not exist, or imply a child started before the message.
+Task summaries say who will do what. They do not expose handoff steps, file scope, success criteria, verification, deliverables, or routing rationale. Never list alternatives, invent roles, describe results that do not exist, or imply a child started before the receipt.
 
 ## `ask` Ending
 
-End with a direct permission question matched to the Work Mode, then stop before task work and spawning.
+Use the `ask` template in `../SKILL.md`, end with a direct permission question in the user's language, then stop before task work and spawning.
 
-> This splits cleanly: `docs-researcher` can verify the API contract as a bounded Child Lane, while I trace the implementation and prepare the decision criteria in the Root Lane. Work Mode is `read-only`. Should I dispatch that supporting check?
-
-Refusal means zero spawn and ordinary Root continuation.
+Refusal means zero spawn and ordinary Root continuation without a `ROOT_ONLY` receipt.
 
 ## `auto` Ending
 
-End with a declarative Dispatch Announcement, then spawn in the same turn without asking a question.
-
-> This splits cleanly: `docs-researcher` will verify the API contract as the Child Lane, while I trace the implementation and prepare the decision criteria in the Root Lane. Work Mode is `read-only`. I'm dispatching that check now and will integrate the evidence here.
+Use the `auto` template in `../SKILL.md`, end with an immediate-start statement in the user's language, then spawn in the same turn without asking a question.
 
 ## Explicit Delegation Requests
 

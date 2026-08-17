@@ -360,9 +360,9 @@ class PluginContractTest(unittest.TestCase):
             "An Explicit Delegation Request may have no distinct Root Lane",
             skill,
         )
-        self.assertIn("For implicit eligibility, declare", skill)
-        self.assertIn("For implicit eligibility", message_contract)
-        self.assertIn("For explicit eligibility", message_contract)
+        self.assertIn("for implicit eligibility, declare", skill)
+        self.assertIn("for implicit eligibility", message_contract)
+        self.assertIn("for explicit eligibility", message_contract)
         self.assertIn("Implicit eligibility", rubric)
         self.assertIn("explicit eligibility", rubric)
         self.assertIn("Explicit-lane implicit positives", scenarios)
@@ -403,6 +403,46 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Router Score / 7", results)
         self.assertIn("Routing: ROOT_ONLY", english)
         self.assertIn("Routing: ROOT_ONLY", chinese)
+
+    def test_eligible_receipt_templates_are_user_facing_and_skill_owned(self) -> None:
+        skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
+        message_contract = (
+            ROOT / "skills" / "diverter" / "references" / "delegation-contract.md"
+        ).read_text()
+        rubric = (ROOT / "evals" / "rubric.md").read_text()
+        adr = (
+            ROOT
+            / "docs"
+            / "adr"
+            / "0013-deliberate-task-shape-and-emit-routing-receipts.md"
+        ).read_text()
+
+        self.assertEqual(skill.count("Routing: ELIGIBLE"), 2)
+        self.assertEqual(
+            skill.count("Child: `<exact-role>` — <concise task summary>"),
+            2,
+        )
+        self.assertEqual(skill.count("Root: <concise task summary>"), 2)
+        self.assertEqual(
+            skill.count(
+                "Work Mode: <read-only | mixed | write-capable>",
+            ),
+            2,
+        )
+        self.assertIn("Repeat `Child:` once per selected role", skill)
+        self.assertIn("➡️ Dispatch Authorization: <direct approval question>", skill)
+        self.assertIn("➡️ Dispatch: <immediate-start statement>", skill)
+        self.assertNotIn("Why:", skill)
+        self.assertNotIn("Routing: ELIGIBLE", message_contract)
+        self.assertNotIn("This splits cleanly", message_contract)
+        self.assertIn("owned only by `../SKILL.md`", message_contract)
+        self.assertIn("`assignment_clarity`", rubric)
+        self.assertNotIn("`rationale_quality`", rubric)
+        self.assertIn("literal templates are owned only", adr)
+
+        scenarios = (ROOT / "evals" / "scenarios.md").read_text()
+        self.assertIn("literal policy template", scenarios)
+        self.assertIn("Reject a `Why:` field", scenarios)
 
     def test_positive_examples_do_not_restore_single_lane_implicit_routes(self) -> None:
         examples = (

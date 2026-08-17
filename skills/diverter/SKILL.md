@@ -115,19 +115,35 @@ Smallest Sufficient Lineup rules:
 
 ## Delegation Contract
 
-Every policy branch conveys, in order:
+Render exactly one user-facing routing receipt using the applicable literal template below. Do not wrap it in a code fence or add eligibility, rationale, recommendation, or announcement prose around it. This restriction applies to the routing message; later normal progress and final-result messages remain allowed.
 
-1. why the task is eligible: explicit delegation intent or implicit material fit;
-2. exactly one lineup with an assignment for each exact role name;
-3. For implicit eligibility, declare the distinct Root Lane; for explicit eligibility, state any useful Root work or that Root will coordinate and integrate;
-4. exactly one Work Mode; and
-5. the policy-specific ending.
+Repeat `Child:` once per selected role in lineup order. Each `Child:` value contains the exact role name and one concise task summary. `Root:` contains one concise task summary; when an Explicit Delegation Request has no distinct Root Lane, summarize Root's coordination and integration instead of inventing work. Do not include steps, file scope, success criteria, verification, or deliverables in these summaries. Those details belong in the internal handoff.
 
-Keep the message conversational, concise, and in the user's language when natural. Do not list alternatives or imply results already exist.
+Keep the literal field labels, exact role names, and Work Mode tokens in English. Write task summaries and the final action text in the user's language.
 
-Under `ask`, end with a direct approval question matched to the Work Mode and stop. Do not inspect, run, search, summarize, implement, or spawn before approval.
+Under `ask`, render:
 
-Under `auto`, make a declarative Dispatch Announcement, state that dispatch starts now and what Root will do, ask no question, and spawn in the same turn.
+```text
+Routing: ELIGIBLE
+Child: `<exact-role>` — <concise task summary>
+Root: <concise task summary>
+Work Mode: <read-only | mixed | write-capable>
+➡️ Dispatch Authorization: <direct approval question>
+```
+
+Then stop. Do not inspect, run, search, summarize, implement, or spawn before approval. After approval, dispatch the declared lineup without repeating the receipt. Refusal creates zero children; continue in Root without emitting a `ROOT_ONLY` receipt.
+
+Under `auto`, render:
+
+```text
+Routing: ELIGIBLE
+Child: `<exact-role>` — <concise task summary>
+Root: <concise task summary>
+Work Mode: <read-only | mixed | write-capable>
+➡️ Dispatch: <immediate-start statement>
+```
+
+Then spawn the declared lineup in the same turn without asking a question and continue the declared Root responsibility.
 
 If the same scope was already announced or dispatched, do not announce or dispatch it again after compact, resume, or another skill check.
 
@@ -207,4 +223,4 @@ Read only as needed:
 - `references/decision-rules.md` for non-normative classification examples;
 - `references/role-lineups.md` for capability mapping;
 - `references/handoff-schema.md` for leaf handoffs and ownership; and
-- `references/delegation-contract.md` for policy-specific wording.
+- `references/delegation-contract.md` for receipt semantics and failure cases; the literal templates live only in this skill.

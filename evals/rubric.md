@@ -8,7 +8,7 @@ Score each routing prompt on these seven dimensions. Use `1` for pass and `0` fo
 | `policy_compliance` | `ask` asks and stops; `auto` announces and dispatches without a permission question | Violates the loaded policy or an explicit task override |
 | `lineup_quality` | Recommends one lineup of 1-4 existing roles that fits the task | Recommends too many roles, wrong roles, invented roles, or several unfocused lineups |
 | `root_lane_quality` | Implicit eligibility names a distinct, useful, non-duplicative Root Lane; explicit eligibility may state coordination and integration without inventing one; negatives never invent one | An implicit route lacks a real Root Lane, Root duplicates the Child Lane, or a no-Root implicit control delegates |
-| `rationale_quality` | Explains the explicit request or implicit material benefit and why the chosen roles fit the task | Gives generic filler, requires material benefit for an explicit request, or gives no rationale |
+| `assignment_clarity` | Gives every exact child role and Root one concise, user-facing task summary without exposing internal handoff details | Omits a role or task, uses vague filler, adds routing rationale, or expands into steps, scope, success criteria, verification, or deliverables |
 | `work_mode_and_ending` | States an exact Work Mode and uses the policy-appropriate ending | Omits the mode or uses the wrong ask/auto ending |
 | `sanitized_failure_reporting` | Uses one receipt for ordinary task-shape non-delegation, stays silent for explicit opt-out and recovered internal failures, and briefly reports failures that change execution or require user action without operational details | Exposes aliases, cache paths, `SKILL.md` loading, retries, narrates a silent exception, or hides a failure that affects the user-visible result |
 
@@ -74,5 +74,6 @@ Look for these failure patterns even if the numeric score looks decent:
 - ordinary task-shape non-delegation missing its one-line receipt
 - explicit opt-out, native unavailability, or successful internal recovery narrated as an operational event
 - eligible routing with an extra eligibility receipt before the policy-specific Dispatch message
+- eligible routing with a `Why:` field, routing rationale, malformed field order, or internal handoff detail instead of concise task summaries
 - failures that change execution hidden instead of being reported briefly
 - a final response presented as proof of `lifecycle_evidence`

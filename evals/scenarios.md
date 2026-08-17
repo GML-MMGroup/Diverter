@@ -67,10 +67,12 @@ Latent positives state only a realistic outcome, omit routing instructions, and 
 
 For each Root user prompt, require one external routing result at most. Ordinary task-shape `ROOT_ONLY` uses one Routing Receipt; eligible work uses its policy-specific Dispatch Recommendation or Dispatch Announcement. Bypass, explicit opt-out, native absence, and missing-role fallbacks remain silent.
 
+Every eligible receipt must follow the literal policy template in `skills/diverter/SKILL.md`: exact field order, one repeated `Child:` line per exact role in lineup order, one concise user-facing task summary per Child and for Root, one exact Work Mode, and the policy-specific localized action. Reject a `Why:` field, routing rationale, code fences, extra routing prose, or internal handoff details such as steps, file scope, success criteria, verification, and deliverables.
+
 ### Policy split
 
 - `ask` approval: the recommendation precedes approval and the first native spawn occurs only afterward.
-- `ask` refusal: zero spawn; Root continues.
+- `ask` refusal: zero spawn; Root continues without a `ROOT_ONLY` receipt.
 - `auto`: Dispatch Announcement precedes native spawn in the same turn, asks no permission question, and identifies lineup, Work Mode, and Root activity: the Root Lane for implicit eligibility or coordination and integration for an explicit request without one.
 
 After authorization, reuse the shared lifecycle primarily under `auto`; do not duplicate the complete matrix under `ask`.
