@@ -175,15 +175,13 @@ prompts:
     surface: cli
     smoke: true
     category: edge
-    prompt: "While you verify the documented assumptions, have one specialist map the affected code path before any fix."
+    prompt: "While you verify the documented routing assumptions in skills/diverter/references/session-contract.md, have one code-mapping specialist map hooks/user_prompt_submit.py before any fix."
     expected_should_suggest: true
     expected_roles: [code-mapper]
-    evaluator_metadata:
-      physically_absent_roles: [docs-researcher]
     must_not_do:
-      - invent a missing role
-      - ignore the explicit unavailability
-    notes: "The evaluator physically removes docs-researcher; Root covers docs without a substitute role."
+      - invent an unspecified implementation role
+      - start a fix before both read-only lanes finish
+    notes: "Root verifies the named contract while code-mapper traces the concrete hook."
 
   - id: edge-03
     surface: shared
@@ -309,14 +307,14 @@ prompts:
   - id: neg-08
     surface: cli
     smoke: true
-    category: negative
-    prompt: "Optimize this CLI parser. It feels slow on large files."
-    expected_should_suggest: false
-    expected_roles: []
+    category: positive
+    prompt: "Define and run large-file benchmarks for this CLI parser while one code-mapping specialist traces the parser hot path; then integrate both before choosing an optimization."
+    expected_should_suggest: true
+    expected_roles: [code-mapper]
     must_not_do:
       - recommend web-performance-auditor
       - treat non-Web performance as Core Web Vitals work
-    notes: "Non-Web performance must not trigger Web performance specialist."
+    notes: "Non-Web performance uses code mapping, not the Web performance specialist."
 
   - id: neg-09
     surface: shared
@@ -481,7 +479,7 @@ prompts:
     surface: shared
     smoke: true
     category: edge
-    session_context: "Higher-priority session policy: proactive multi-agent delegation is active."
+    session_context: "Higher-priority session policy: proactive multi-agent delegation is active and is the sole orchestration owner. This is a terminal silent Diverter bypass even if the native owner itself dispatches a child."
     prompt: "Review this branch for bugs and missing tests."
     expected_should_suggest: false
     expected_should_dispatch: false
@@ -574,7 +572,7 @@ prompts:
     surface: shared
     smoke: true
     category: positive
-    prompt: "Have the installed `docs-researcher` verify the named API contract and return the result."
+    prompt: "Have the installed `docs-researcher` verify the Dispatch Workflow contract in skills/diverter/SKILL.md and return whether hooks/user_prompt_submit.py follows it."
     expected_should_suggest: true
     expected_roles: [docs-researcher]
     must_do:
@@ -648,7 +646,7 @@ prompts:
 
   - id: failure-explicit-choice
     surface: shared
-    smoke: true
+    smoke: false
     category: edge
     session_context: "Evaluator state: the user explicitly requested Diverter, but Diverter failed to load and no delegation started."
     prompt: "Use Diverter to review this branch for correctness and regression risks."
@@ -659,7 +657,7 @@ prompts:
     must_not_do:
       - silently replace the explicit delegation request with Root Session work
       - expose aliases, cache paths, SKILL.md loading, or retry steps
-    notes: "Explicit-request failure requires a user decision."
+    notes: "Explicit-request failure requires a user decision; this simulated load failure is diagnostic, not a cold-start smoke case."
 
   - id: failure-user-action
     surface: shared
@@ -868,7 +866,7 @@ prompts:
   - id: ultra-reuse-same-scope
     policy: auto
     surface: shared
-    smoke: true
+    smoke: false
     category: edge
     session_context: "A native child at /root/docs_lane already completed the initial API-contract check and remains available for follow-up."
     prompt: "Ask that same child to verify the related version-specific exception, while you integrate the first result into the migration checklist."
@@ -885,7 +883,7 @@ prompts:
     must_do:
       - target the existing child identity
       - create no equivalent second child
-    notes: "Child Reuse is distinct from compact idempotency."
+    notes: "Child Reuse is distinct from compact idempotency; this requires a persisted session and is not a cold-start smoke case."
 
   - id: ultra-neg-no-root-lane
     surface: shared

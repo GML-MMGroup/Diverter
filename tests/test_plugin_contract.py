@@ -118,11 +118,13 @@ class PluginContractTest(unittest.TestCase):
             "Mandatory turn preflight: Before any user-visible message or task work, "
             "apply the active Diverter "
             "Session Contract to this prompt and deliberate the task shape before "
-            "deciding. If eligible or the Contract is missing, load $diverter silently "
+            "deciding. Native Proactive Delegation ownership is a terminal silent bypass. "
+            "Otherwise, if eligible or the Contract is missing, load $diverter silently "
             "and make its routing receipt the first user-visible output. "
             "For an ordinary ROOT_ONLY decision, emit exactly one "
             "`Routing: ROOT_ONLY — <one task-shape reason>` receipt; keep bypass, "
-            "explicit opt-out, and native unavailability silent.\n",
+            "explicit opt-out, and native unavailability silent. The first routing "
+            "result is final for this prompt; never re-route after task work starts.\n",
         )
         self.assertNotIn("Implicit eligibility", result.stdout)
 
@@ -176,6 +178,12 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("One bounded, independently executable Child Lane", gate)
         self.assertIn("One distinct, useful Root Lane", gate)
         self.assertIn("Waiting, supervision", gate)
+        self.assertIn("continues an already announced or dispatched workflow", gate)
+        self.assertIn("mapping the audited flow", gate)
+        self.assertIn("Reading the same artifact", gate)
+        self.assertIn("LCP, INP, and CLS", gate)
+        self.assertIn("known regression with a named behavior boundary", gate)
+        self.assertIn("`test-engineer` independently designs", gate)
         self.assertIn("An affirmative request", gate)
         self.assertIn(
             "`$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role",
@@ -195,6 +203,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Keep this deliberation private", gate)
         self.assertIn("Routing: ROOT_ONLY", gate)
         self.assertIn("Emit at most one receipt", gate)
+        self.assertIn("first routing result is final", gate)
         self.assertNotIn("Sanitized Failure Reporting", gate)
 
     def test_plugin_package_and_root_preflight_hooks_are_discoverable(self) -> None:
@@ -285,6 +294,9 @@ class PluginContractTest(unittest.TestCase):
         )
         self.assertIn("Delegation Policy", skill)
         self.assertIn("Dispatch Authorization", skill)
+        self.assertIn("only non-empty assistant message", skill)
+        self.assertIn("output nothing else", skill)
+        self.assertIn("make the declared spawn the first action", skill)
         self.assertIn("Dispatch Announcement", skill)
         self.assertIn("delegation_policy: ask", skill)
         self.assertIn("delegation_policy: auto", skill)
@@ -296,6 +308,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Child Lane", skill)
         self.assertIn("Supporting Child", skill)
         self.assertIn("Smallest Sufficient Lineup", skill)
+        self.assertIn("assign the official contract to `docs-researcher`", skill)
         self.assertIn("Child Reuse", skill)
         self.assertIn("Write Ownership", skill)
         self.assertNotIn("CLI Worker Backend", skill)
@@ -324,6 +337,12 @@ class PluginContractTest(unittest.TestCase):
 
         self.assertNotIn("## Eligibility", skill)
         self.assertNotIn("CLARIFY", contract)
+        self.assertIn("terminal Root-only recovery state", contract)
+        self.assertIn("Do not call `spawn_agent`", contract)
+        self.assertIn("requested read-only specialist lane", contract)
+        self.assertIn(
+            "derive repository-specific constraints and a plan", contract
+        )
         self.assertIn("Non-normative examples", rules)
         self.assertIn("cannot override the Session Contract", rules)
         self.assertNotIn("Practical tie-breakers", rules)

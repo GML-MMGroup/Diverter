@@ -4,7 +4,7 @@ description: "Use after the Root Session Preflight returns ELIGIBLE, or when the
 ---
 
 <NATIVE-PROACTIVE-DELEGATION-STOP>
-If higher-priority session instructions explicitly state that proactive multi-agent delegation is active, skip this skill, even when explicitly invoked. Do not mention Diverter, select a lineup, request Dispatch Authorization, or spawn children. Continue the current task under the native policy.
+If higher-priority session instructions explicitly state that proactive multi-agent delegation is active, skip this skill, even when explicitly invoked. This stop is terminal even when the native owner itself spawns children. Do not mention Diverter, select a lineup, request Dispatch Authorization, or spawn children under Diverter. Continue the current task under the native policy.
 </NATIVE-PROACTIVE-DELEGATION-STOP>
 
 <SUBAGENT-STOP>
@@ -33,6 +33,8 @@ If the Missing-Contract fallback returns `ROOT_ONLY`, follow the Session Contrac
 ## Preflight Handoff
 
 The Session Contract is the sole normative authority for `BYPASS`, `ROOT_ONLY`, and `ELIGIBLE`. In the normal path, this skill loads only after `ELIGIBLE`; trust the completed Preflight and do not re-adjudicate eligibility.
+
+If the current Root prompt already received any Routing Receipt, do not emit another receipt or dispatch a new scope. Continue the first routing decision for that prompt.
 
 Use the Missing-Contract fallback only when the active Session Contract is absent:
 
@@ -74,6 +76,8 @@ Valid values are `delegation_policy: ask` and `delegation_policy: auto`.
 
 Task Policy Overrides apply only to the current task. Work Mode describes write risk; it never creates a hidden third policy.
 
+An affirmative delegation request that also says to show the lineup or wait for approval is a one-task `ask` override, not an opt-out. Render the `ask` receipt and stop before task work or spawning.
+
 Work Mode classifies the complete Root-and-Child workflow: `read-only` when no active lane may write, `mixed` when only some active lanes may write, and `write-capable` when every active lane may write. Per-role capability and child handoff write policy remain separate.
 
 ## Native Capability Check
@@ -109,8 +113,10 @@ Smallest Sufficient Lineup rules:
 - Add another child only for another necessary, independent, non-duplicative deliverable.
 - Never exceed four roles; four is a safety cap, not a target.
 - Prefer the central specialist over a generic reviewer when the concrete boundary is security, test strategy, or Web performance.
+- Prefer `search-specialist` for open-ended strategy or option evidence; reserve `docs-researcher` for a named documentation or API contract.
+- When repository analysis is paired with official contract verification, assign the official contract to `docs-researcher` and keep repository mapping and synthesis in Root.
 - Add `test-automator` only for explicitly requested, behaviorally clear test writes.
-- Add `web-performance-auditor` only for Web-facing artifacts or named Web metrics.
+- Add `web-performance-auditor` for Web-facing performance work or named Web metrics such as LCP, INP, or CLS, while Root may separately own component, accessibility, or design analysis.
 - If a capability lacks an available role, Root covers it; never invent a replacement.
 
 ## Delegation Contract
@@ -121,7 +127,7 @@ Repeat `Child:` once per selected role in lineup order. Each `Child:` value cont
 
 Keep the literal field labels, exact role names, and Work Mode tokens in English. Write task summaries and the final action text in the user's language.
 
-Under `ask`, render:
+Under `ask`, render exactly these five lines as the entire turn:
 
 ```text
 Routing: ELIGIBLE
@@ -131,7 +137,7 @@ Work Mode: <read-only | mixed | write-capable>
 ➡️ Dispatch Authorization: <direct approval question>
 ```
 
-Then stop. Do not inspect, run, search, summarize, implement, or spawn before approval. After approval, dispatch the declared lineup without repeating the receipt. Refusal creates zero children; continue in Root without emitting a `ROOT_ONLY` receipt.
+End the turn immediately after the authorization question. The receipt is the only non-empty assistant message for that turn; output nothing else, including an acknowledgement or waiting status. Do not inspect, run, search, summarize, implement, or spawn before approval. After approval, make the declared spawn the first action: do not emit an acknowledgement or progress message before it, and do not repeat the receipt. Refusal creates zero children; continue in Root without emitting a `ROOT_ONLY` receipt.
 
 Under `auto`, render:
 
@@ -206,10 +212,10 @@ Every write-capable Root or Child Lane declares exclusive Write Ownership over a
 ## Sanitized Failure Reporting
 
 - Ordinary task-shape non-delegation is already covered by the single Routing Receipt; do not narrate it again.
-- Explicit opt-out stays silent; if an internal failure recovers successfully, continue silently.
+- Explicit opt-out stays silent; if an internal failure recovers successfully, continue silently without substituting generic agents or another delegation backend.
 - Pre-activation native absence stays silent and Root completes the task.
 - A missing role is dropped and covered by Root without inventing a substitute.
-- If a spawn or child fails after Dispatch Announcement, report the affected lane briefly, preserve successful lanes, and let Root take over when possible.
+- If a spawn or child fails after Dispatch Announcement, report the affected lane briefly, preserve successful lanes, and let Root take over when possible. Do not emit a new routing receipt or spawn a replacement unless the user explicitly requests a retry or new delegation.
 - If an explicitly requested Diverter skill fails to load before the Native Capability Check, report that briefly and ask whether to continue in the Root Session.
 - If user action is required, explain only the problem and required action.
 

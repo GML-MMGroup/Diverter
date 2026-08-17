@@ -267,6 +267,124 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
 
+    def test_accepts_skill_load_before_eligible_receipt(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records.insert(
+            2,
+            exec_call(
+                "2026-08-13T10:00:00.250000Z",
+                'await tools.exec_command({"cmd":"sed -n 1,220p plugins/diverter/skills/diverter/SKILL.md"})',
+                "skill-load",
+            ),
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_accepts_markdown_line_break_spaces_in_receipt(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        receipt = root_records[2]["payload"]["content"][0]["text"]
+        root_records[2]["payload"]["content"][0]["text"] = receipt.replace(
+            "\n", "  \n"
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_rejects_task_work_before_eligible_receipt(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records.insert(
+            2,
+            exec_call(
+                "2026-08-13T10:00:00.250000Z",
+                'await tools.exec_command({"cmd":"rg bug src"})',
+                "early-task-work",
+            ),
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
+
+    def test_rejects_mixed_wrapper_before_eligible_receipt(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records.insert(
+            2,
+            exec_call(
+                "2026-08-13T10:00:00.250000Z",
+                'await tools.update_plan({"plan":[]}); '
+                'await tools.exec_command({"cmd":"sed -n 1,220p plugins/diverter/skills/diverter/SKILL.md"}); '
+                'await tools.apply_patch("*** Begin Patch")',
+                "mixed-early-work",
+            ),
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
+
+    def test_rejects_task_command_appended_to_skill_load(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records.insert(
+            2,
+            exec_call(
+                "2026-08-13T10:00:00.250000Z",
+                'await tools.exec_command({"cmd":"sed -n 1,220p plugins/diverter/skills/diverter/SKILL.md && rg bug src"})',
+                "combined-early-work",
+            ),
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
+
+    def test_rejects_receipt_role_that_differs_from_spawn(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        receipt = root_records[2]["payload"]["content"][0]["text"]
+        root_records[2]["payload"]["content"][0]["text"] = receipt.replace(
+            "`docs-researcher`", "`reviewer`"
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
+
+    def test_rejects_second_routing_marker_after_eligible_receipt(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records.insert(
+            3,
+            message(
+                "2026-08-13T10:00:00.750000Z",
+                "assistant",
+                "Routing: ROOT_ONLY — changed my mind",
+            ),
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
+
     def test_accepts_single_spawn_with_encrypted_handoff(self) -> None:
         root_records, child_records, manifest = self.happy_records()
         root_records[3]["payload"]["arguments"] = json.dumps(
@@ -315,6 +433,87 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(json.loads(result.stdout)["checks"]["policy_order"])
+
+    def test_rejects_task_work_before_ask_approval(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records[2] = message(
+            "2026-08-13T10:00:00.500000Z",
+            "assistant",
+            "Routing: ELIGIBLE\n"
+            "Child: `docs-researcher` — Collect documentation evidence\n"
+            "Root: Review root-progress-artifact.md\n"
+            "Work Mode: mixed\n"
+            "➡️ Dispatch Authorization: Proceed?",
+        )
+        root_records[3:3] = [
+            exec_call(
+                "2026-08-13T10:00:00.625000Z",
+                'await tools.exec_command({"cmd":"rg bug src"})',
+                "early-task-work",
+            ),
+            message(
+                "2026-08-13T10:00:00.750000Z",
+                "user",
+                "Dispatch Authorization",
+            ),
+        ]
+        args = list(self.common_args())
+        args[args.index("auto")] = "ask-approved"
+
+        result = self.run_verifier(
+            root_records, child_records, *args, manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
+
+    def test_rejects_assistant_output_before_ask_approval(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records[2] = message(
+            "2026-08-13T10:00:00.500000Z",
+            "assistant",
+            "Routing: ELIGIBLE\n"
+            "Child: `docs-researcher` — Collect documentation evidence\n"
+            "Root: Review root-progress-artifact.md\n"
+            "Work Mode: mixed\n"
+            "➡️ Dispatch Authorization: Proceed?",
+        )
+        root_records[3:3] = [
+            message(
+                "2026-08-13T10:00:00.625000Z",
+                "assistant",
+                "I will wait for approval.",
+            ),
+            message(
+                "2026-08-13T10:00:00.750000Z",
+                "user",
+                "Dispatch Authorization",
+            ),
+        ]
+        args = list(self.common_args())
+        args[args.index("auto")] = "ask-approved"
+
+        result = self.run_verifier(
+            root_records, child_records, *args, manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
+
+    def test_rejects_single_spawn_without_a_handoff(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        arguments = json.loads(root_records[3]["payload"]["arguments"])
+        arguments["message"] = ""
+        root_records[3]["payload"]["arguments"] = json.dumps(arguments)
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(
+            json.loads(result.stdout)["checks"]["no_duplicate_scope_spawn"]
+        )
 
     def test_accepts_integration_after_child_result_before_terminal(self) -> None:
         root_records, child_records, manifest = self.happy_records()
@@ -647,9 +846,37 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
                     json.loads(result.stdout)["checks"]["policy_or_inert_boundary"]
                 )
 
+    def test_rejects_malformed_eligible_marker_for_preactivation_bypasses(self) -> None:
+        root_records = [
+            exec_call(
+                "2026-08-13T10:00:02Z",
+                'await tools.exec_command({"cmd":"root-only-artifact"})',
+                "root-only",
+            ),
+            message("2026-08-13T10:00:03Z", "assistant", "Routing: ELIGIBLE"),
+        ]
+
+        result = self.run_verifier(
+            root_records,
+            None,
+            "--scenario",
+            "native-absence",
+            "--root-progress-scope",
+            "root-only-artifact",
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(
+            json.loads(result.stdout)["checks"]["policy_or_inert_boundary"]
+        )
+
     def controlled_failure_records(self) -> tuple[list[dict], list[dict]]:
         root_records, child_records, _ = self.happy_records()
         child_records = child_records[:4]
+        receipt = root_records[2]["payload"]["content"][0]["text"]
+        root_records[2]["payload"]["content"][0]["text"] = receipt.replace(
+            "`docs-researcher`", "`test-automator`"
+        )
         root_records[3] = call(
             "2026-08-13T10:00:01Z",
             "spawn_agent",
@@ -796,6 +1023,17 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertFalse(json.loads(result.stdout)["checks"]["failure_reported"])
 
+    def test_rejects_failure_report_with_only_the_matching_role(self) -> None:
+        root_records, child_records = self.controlled_failure_records()
+        root_records[-2]["payload"]["content"][0]["text"] = (
+            "Affected Child Lane: another_lane (test-automator). Root is taking over."
+        )
+
+        result = self.run_controlled_failure(root_records, child_records)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["failure_reported"])
+
     def test_rejects_takeover_that_does_not_verify_preserved_root_work(self) -> None:
         root_records, child_records = self.controlled_failure_records()
         root_records[-1]["payload"]["input"] = (
@@ -880,6 +1118,28 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual(report["failure_kind"], "spawn")
         self.assertTrue(report["ok"], report)
+
+        root_records[3]["payload"]["output"] = "Role availability details unavailable"
+        result = self.run_verifier(
+            root_records,
+            None,
+            "--scenario",
+            "failure",
+            "--expected-role",
+            "docs-researcher",
+            "--policy",
+            "auto",
+            "--root-progress-scope",
+            "root-takeover-artifact",
+            "--verification-scope",
+            "root-takeover-artifact",
+            "--expected-root-model",
+            "gpt-5.6-terra",
+            "--expected-root-effort",
+            "high",
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)["checks"]["spawn_failure_observed"])
 
 
 if __name__ == "__main__":
