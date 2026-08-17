@@ -358,11 +358,18 @@ def verify_root_only(
         recommendations = [when for when, text in assistants if "Dispatch Recommendation" in text]
         refusals = [when for when, text in users if "Dispatch Refused" in text]
         boundary = max(refusals) if refusals else None
-        policy_check = bool(recommendations and refusals and recommendations[-1] < refusals[-1])
+        policy_check = bool(
+            recommendations
+            and refusals
+            and recommendations[-1] < refusals[-1]
+            and all("Routing: ROOT_ONLY" not in text for _, text in assistants)
+        )
     else:
         boundary = None
         policy_check = all(
-            "Dispatch Announcement" not in text and "Diverter" not in text
+            "Dispatch Announcement" not in text
+            and "Diverter" not in text
+            and "Routing: ROOT_ONLY" not in text
             for _, text in assistants
         )
     root_continues = any(

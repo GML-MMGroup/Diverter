@@ -7,8 +7,11 @@ import sys
 
 TURN_REMINDER = (
     "Mandatory turn preflight: Before task work, apply the active Diverter "
-    "Session Contract to this prompt. If eligible or the Contract is missing, "
-    "load $diverter first; otherwise continue silently in Root."
+    "Session Contract to this prompt and deliberate the task shape before "
+    "deciding. If eligible or the Contract is missing, load $diverter first. "
+    "For an ordinary ROOT_ONLY decision, emit exactly one "
+    "`Routing: ROOT_ONLY — <one task-shape reason>` receipt; keep bypass, "
+    "explicit opt-out, and native unavailability silent."
 )
 
 

@@ -20,7 +20,15 @@ An Explicit Delegation Request bypasses only the implicit benefit threshold. It 
 
 ### 4. Implicit eligibility
 
-Without an Explicit Delegation Request, return candidate `ELIGIBLE` ONLY IF all five conditions are affirmatively established from the current prompt, existing conversation context, and this contract:
+Without an Explicit Delegation Request, perform Task-shape Deliberation before classifying the prompt:
+
+1. Infer the concrete outcome and the work needed to produce it. Do not classify from surface wording alone.
+2. Construct the strongest plausible split with one bounded Child Lane and one distinct useful Root Lane.
+3. Test that candidate split against the five conditions below. Do not treat the absence of user-written lanes, delegation language, or multiple directions as evidence that no useful split exists.
+
+Keep this deliberation private. Do not expose chain-of-thought or add a separate reasoning report.
+
+Return candidate `ELIGIBLE` ONLY IF all five conditions are affirmatively established from the current prompt, existing conversation context, and this contract:
 
 1. One bounded, independently executable Child Lane has a clear deliverable.
 2. One distinct, useful Root Lane can make substantive progress while the child runs. Waiting, supervision, or repeating the Child Lane does not count.
@@ -39,8 +47,11 @@ Before final activation, confirm that native role-specific subagent dispatch and
 ### 6. Result action
 
 - `BYPASS`: exit Diverter entirely and continue under the owning mechanism.
-- `ROOT_ONLY`: continue silently in the Root Session.
-- `ELIGIBLE`: load `$diverter` before any task work. The completed Preflight is authoritative; do not re-adjudicate eligibility in the normal Skill path.
+- `ROOT_ONLY` from Explicit opt-out or Native availability: continue silently in the Root Session.
+- `ROOT_ONLY` from ordinary eligibility adjudication: emit exactly one Routing Receipt for this Root user prompt, then continue in Root: `Routing: ROOT_ONLY — <one task-shape reason>`. Match the user's language in the reason. Do not mention Diverter, skill loading, role availability, or other internal checks.
+- `ELIGIBLE`: load `$diverter` before any task work. The completed Preflight is authoritative; do not re-adjudicate eligibility in the normal Skill path. The policy-specific Dispatch Recommendation or Dispatch Announcement is the single external receipt; do not add another eligibility message.
+
+`SessionStart`, resume, clear, and compact restore context but never emit a Routing Receipt by themselves. Emit at most one receipt for each Root user prompt.
 
 The active `ask` or `auto` Delegation Policy does not change eligibility. It controls the Dispatch Workflow only after `ELIGIBLE`, and an explicit Task Policy Override retains its existing one-task scope.
 

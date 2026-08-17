@@ -116,8 +116,11 @@ class PluginContractTest(unittest.TestCase):
         self.assertEqual(
             result.stdout,
             "Mandatory turn preflight: Before task work, apply the active Diverter "
-            "Session Contract to this prompt. If eligible or the Contract is missing, "
-            "load $diverter first; otherwise continue silently in Root.\n",
+            "Session Contract to this prompt and deliberate the task shape before "
+            "deciding. If eligible or the Contract is missing, load $diverter first. "
+            "For an ordinary ROOT_ONLY decision, emit exactly one "
+            "`Routing: ROOT_ONLY — <one task-shape reason>` receipt; keep bypass, "
+            "explicit opt-out, and native unavailability silent.\n",
         )
         self.assertNotIn("Implicit eligibility", result.stdout)
 
@@ -182,6 +185,12 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("`BYPASS`", gate)
         self.assertIn("`ROOT_ONLY`", gate)
         self.assertIn("`ELIGIBLE`", gate)
+        self.assertIn("Task-shape Deliberation", gate)
+        self.assertIn("strongest plausible split", gate)
+        self.assertIn("absence of user-written lanes", gate)
+        self.assertIn("Keep this deliberation private", gate)
+        self.assertIn("Routing: ROOT_ONLY", gate)
+        self.assertIn("Emit at most one receipt", gate)
         self.assertNotIn("Sanitized Failure Reporting", gate)
 
     def test_plugin_package_and_root_preflight_hooks_are_discoverable(self) -> None:
@@ -356,10 +365,44 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("For explicit eligibility", message_contract)
         self.assertIn("Implicit eligibility", rubric)
         self.assertIn("explicit eligibility", rubric)
-        self.assertIn("Implicit positive fixtures", scenarios)
-        self.assertIn("Explicit positive fixtures", scenarios)
+        self.assertIn("Explicit-lane implicit positives", scenarios)
+        self.assertIn("Latent positives", scenarios)
+        self.assertIn("Explicit delegation positives", scenarios)
         self.assertIn("For implicit eligibility, the Root Lane", scenarios)
         self.assertIn("For explicit eligibility, Root coordination", scenarios)
+
+    def test_routing_receipt_is_one_external_result_without_a_new_score(self) -> None:
+        contract = (
+            ROOT / "skills" / "diverter" / "references" / "session-contract.md"
+        ).read_text()
+        skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
+        message_contract = (
+            ROOT / "skills" / "diverter" / "references" / "delegation-contract.md"
+        ).read_text()
+        rubric = (ROOT / "evals" / "rubric.md").read_text()
+        results = (ROOT / "evals" / "results-template.md").read_text()
+        english = (ROOT / "README.md").read_text()
+        chinese = (ROOT / "README.zh.md").read_text()
+        adr = (
+            ROOT
+            / "docs"
+            / "adr"
+            / "0013-deliberate-task-shape-and-emit-routing-receipts.md"
+        ).read_text()
+
+        self.assertIn("ordinary eligibility adjudication", contract)
+        self.assertIn("Dispatch Recommendation or Dispatch Announcement", contract)
+        self.assertIn("Routing Receipt and silence rules", skill)
+        self.assertIn("## Root-only Receipt", message_contract)
+        self.assertIn("status: accepted", adr)
+        self.assertIn("Task-shape", adr)
+        self.assertIn("Routing Receipt", adr)
+        self.assertIn("does not introduce a routing-discovery phase", adr)
+        self.assertIn("Routing Receipt violations", rubric)
+        self.assertIn("Routing Receipt valid?", results)
+        self.assertIn("Router Score / 7", results)
+        self.assertIn("Routing: ROOT_ONLY", english)
+        self.assertIn("Routing: ROOT_ONLY", chinese)
 
     def test_positive_examples_do_not_restore_single_lane_implicit_routes(self) -> None:
         examples = (
@@ -526,6 +569,9 @@ class PluginContractTest(unittest.TestCase):
             "failure-implicit-fallback",
             "failure-explicit-choice",
             "failure-user-action",
+            "latent-pos-doc-contract",
+            "latent-pos-regression",
+            "latent-pos-web-audit",
             "ultra-pos-ui-root-continues",
             "ultra-pos-focused-skill-support",
             "ultra-pos-regression-root-continues",
@@ -559,6 +605,7 @@ class PluginContractTest(unittest.TestCase):
         )
         self.assertIn("sanitized_failure_reporting", rubric)
         self.assertIn("root_lane_quality", rubric)
+        self.assertIn("Routing Receipt violations", rubric)
         self.assertIn("lifecycle_evidence", rubric)
         self.assertIn("Router Score / 7", results_template)
         self.assertIn("Native Lifecycle Evidence", results_template)
@@ -583,6 +630,34 @@ class PluginContractTest(unittest.TestCase):
             "expected_reuse:",
         ):
             self.assertIn(metadata, prompts)
+
+    def test_latent_positive_prompts_require_inference_not_lane_copying(self) -> None:
+        prompts = (ROOT / "evals" / "prompts.yaml").read_text()
+        for case_id in (
+            "latent-pos-doc-contract",
+            "latent-pos-regression",
+            "latent-pos-web-audit",
+        ):
+            block = prompts.split(f"  - id: {case_id}\n", 1)[1].split(
+                "\n  - id:", 1
+            )[0]
+            prompt = next(
+                line.split('prompt: "', 1)[1].rsplit('"', 1)[0]
+                for line in block.splitlines()
+                if line.startswith("    prompt: ")
+            ).lower()
+            for forbidden in (
+                "root",
+                "child",
+                "subagent",
+                "子代理",
+                "while",
+                "independently",
+                "同时",
+            ):
+                self.assertNotIn(forbidden, prompt, case_id)
+            self.assertIn("expected_should_suggest: true", block)
+            self.assertIn("latent_task_shape: true", block)
 
     def test_readmes_explain_native_proactive_delegation_boundary(self) -> None:
         english = (ROOT / "README.md").read_text()

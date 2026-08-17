@@ -14,3 +14,5 @@ Non-normative examples only. These examples illustrate common applications and c
 | Focused skill with duplicate helper | `ROOT_ONLY` | duplicates the selected skill | no independent benefit |
 | Tightly coupled or overlapping writes | `ROOT_ONLY` | conflicting ownership | serialize in Root |
 | Vague risk language | `ROOT_ONLY` unless the positive conditions are established | no concrete boundary | no distinct deliverable |
+
+Before using any implicit row, perform the Session Contract's Task-shape Deliberation. The user does not need to state the lanes. An ordinary `ROOT_ONLY` row produces one Routing Receipt; bypass, explicit opt-out, and native unavailability remain silent.

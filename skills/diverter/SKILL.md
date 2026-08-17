@@ -28,7 +28,7 @@ For an eligible task:
 
 Only implicit eligibility requires a distinct useful Root Lane and material benefit. An Explicit Delegation Request may have no distinct Root Lane; Root still owns orchestration, integration, verification, and the final outcome.
 
-If Preflight returns `ROOT_ONLY` or native dispatch is unavailable, continue silently in the Root Session.
+If the Missing-Contract fallback returns `ROOT_ONLY`, follow the Session Contract's Routing Receipt and silence rules. If native dispatch is unavailable, continue silently in the Root Session.
 
 ## Preflight Handoff
 
@@ -189,7 +189,8 @@ Every write-capable Root or Child Lane declares exclusive Write Ownership over a
 
 ## Sanitized Failure Reporting
 
-- Intentional non-delegation stays silent; if an internal failure recovers successfully, continue silently.
+- Ordinary task-shape non-delegation is already covered by the single Routing Receipt; do not narrate it again.
+- Explicit opt-out stays silent; if an internal failure recovers successfully, continue silently.
 - Pre-activation native absence stays silent and Root completes the task.
 - A missing role is dropped and covered by Root without inventing a substitute.
 - If a spawn or child fails after Dispatch Announcement, report the affected lane briefly, preserve successful lanes, and let Root take over when possible.

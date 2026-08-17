@@ -115,6 +115,8 @@ prompts:
     prompt: "What port is the dev server using right now?"
     expected_should_suggest: false
     expected_roles: []
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - suggest delegation
       - invent multi-step work
@@ -323,10 +325,12 @@ prompts:
     prompt: "Review this small README typo fix."
     expected_should_suggest: false
     expected_roles: []
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - inflate generic review into specialist roles
       - add delegation overhead
-    notes: "Generic small review should stay silent."
+    notes: "Generic small review stays in Root with one Routing Receipt."
 
   - id: neg-10
     surface: cli
@@ -335,6 +339,8 @@ prompts:
     prompt: "Add some tests here, not sure what exactly."
     expected_should_suggest: false
     expected_roles: []
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - suggest write-capable test-automator immediately
       - pretend the behavior boundary is clear
@@ -523,6 +529,8 @@ prompts:
     prompt: "你看一下当前工作目录下的标注网站。现在我想要调整一下网页侧边栏的这个显示。当前侧边栏的这个样本列表显示是直接竖着铺的，我觉得样本列表应该改成滚动的，而不是这样直接铺开的。你觉得呢？说说你的想法和设计方案。"
     expected_should_suggest: false
     expected_roles: []
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - mention Diverter or subagents
       - narrate skill loading or internal recovery
@@ -666,6 +674,81 @@ prompts:
     must_not_do:
       - expose aliases, cache paths, SKILL.md loading, or retry steps
     notes: "A blocking failure reports the required user action without operational chatter."
+
+  - id: latent-pos-doc-contract
+    policy: auto
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "请基于当前仓库制定 OpenAI Responses API 升级迁移清单，确认现有调用约束是否符合官方版本边界；先不要修改代码。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [docs-researcher]
+    evaluator_metadata:
+      latent_task_shape: true
+      root_continuation: "trace repository constraints and draft the migration checklist"
+      child_scope: "verify the official API contract and version boundary"
+      root_scope: "repository analysis, checklist drafting, and synthesis"
+      benefit_claim: "official contract verification can progress during repository analysis"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - derive the distinct Root and Child lanes from the requested outcome
+      - use the Dispatch Announcement as the single routing receipt
+    must_not_do:
+      - require the user to state lanes or delegation intent
+      - emit a separate eligibility receipt
+    notes: "Latent positive paired with neg-04; the prompt names the outcome but not the routing plan."
+
+  - id: latent-pos-regression
+    policy: auto
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "这个已知的 falsey-value settings 保存缺陷需要一份最小修复建议，以及能够证明行为边界的回归测试策略。先分析，不要修改代码。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [test-engineer]
+    evaluator_metadata:
+      latent_task_shape: true
+      root_continuation: "trace the defect boundary and develop the minimal fix recommendation"
+      child_scope: "design the smallest Prove-It regression strategy"
+      root_scope: "behavior mapping, fix recommendation, and integration"
+      benefit_claim: "test strategy can be developed during defect analysis"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - derive the distinct Root and Child lanes from the requested outcome
+      - use the Dispatch Announcement as the single routing receipt
+    must_not_do:
+      - require the user to state lanes or delegation intent
+      - emit a separate eligibility receipt
+    notes: "Latent positive paired with neg-10; the known boundary makes test strategy independently useful."
+
+  - id: latent-pos-web-audit
+    policy: auto
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "评估把侧边栏样本列表改成滚动区域的方案，需要覆盖组件高度约束、键盘与屏幕阅读器交互，以及 LCP、INP、CLS 风险；先不要修改代码。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [web-performance-auditor]
+    evaluator_metadata:
+      latent_task_shape: true
+      root_continuation: "analyze component constraints, accessibility, and design acceptance criteria"
+      child_scope: "audit LCP, INP, and CLS risks"
+      root_scope: "component and accessibility analysis plus final design synthesis"
+      benefit_claim: "Web performance evidence can be gathered during interaction design analysis"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - derive the distinct Root and Child lanes from the requested outcome
+      - use the Dispatch Announcement as the single routing receipt
+    must_not_do:
+      - require the user to state lanes or delegation intent
+      - emit a separate eligibility receipt
+    notes: "Latent positive paired with gate-neg-focused-ui; named Web metrics create a separate specialist boundary."
 
   - id: ultra-pos-ui-root-continues
     policy: auto
@@ -818,6 +901,8 @@ prompts:
       benefit_claim: "none; Root would wait"
       max_active_children: 0
       expected_reuse: false
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - invent a Root Lane
       - delegate the entire task implicitly
@@ -837,6 +922,8 @@ prompts:
       benefit_claim: "none; the proposed read-only lane is only a prerequisite"
       max_active_children: 0
       expected_reuse: false
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - reclassify prerequisite mapping or review as an independent Child Lane
       - split one implementation decision across Root and Child
@@ -856,6 +943,8 @@ prompts:
       benefit_claim: "none; ownership overlaps"
       max_active_children: 0
       expected_reuse: false
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - assign overlapping concurrent writers
       - claim disjoint Write Ownership

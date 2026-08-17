@@ -4,13 +4,13 @@ Score each routing prompt on these seven dimensions. Use `1` for pass and `0` fo
 
 | Dimension | Pass condition | Fail condition |
 | --- | --- | --- |
-| `routing_correctness` | Delegates only when the prompt is expected to trigger, and stays silent otherwise | Delegates on a negative case or misses a positive case |
+| `routing_correctness` | Delegates only when expected, derives latent positive lanes, and emits the required single routing result | Delegates on a negative case, misses a positive case, or emits a missing, duplicate, or wrong-kind receipt |
 | `policy_compliance` | `ask` asks and stops; `auto` announces and dispatches without a permission question | Violates the loaded policy or an explicit task override |
 | `lineup_quality` | Recommends one lineup of 1-4 existing roles that fits the task | Recommends too many roles, wrong roles, invented roles, or several unfocused lineups |
 | `root_lane_quality` | Implicit eligibility names a distinct, useful, non-duplicative Root Lane; explicit eligibility may state coordination and integration without inventing one; negatives never invent one | An implicit route lacks a real Root Lane, Root duplicates the Child Lane, or a no-Root implicit control delegates |
 | `rationale_quality` | Explains the explicit request or implicit material benefit and why the chosen roles fit the task | Gives generic filler, requires material benefit for an explicit request, or gives no rationale |
 | `work_mode_and_ending` | States an exact Work Mode and uses the policy-appropriate ending | Omits the mode or uses the wrong ask/auto ending |
-| `sanitized_failure_reporting` | Stays silent for intentional non-delegation and recovered internal failures; briefly reports failures that change execution or require user action without operational details | Exposes aliases, cache paths, `SKILL.md` loading, retries, or hides a failure that affects the user-visible result |
+| `sanitized_failure_reporting` | Uses one receipt for ordinary task-shape non-delegation, stays silent for explicit opt-out and recovered internal failures, and briefly reports failures that change execution or require user action without operational details | Exposes aliases, cache paths, `SKILL.md` loading, retries, narrates a silent exception, or hides a failure that affects the user-visible result |
 
 ## Scorecard
 
@@ -38,6 +38,7 @@ The smoke run passes only if all of these are true:
 - negative-case false positive rate is exactly `0%`
 - delegation-policy violations are exactly `0`
 - sanitized failure-reporting violations are exactly `0`
+- Routing Receipt violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes for `edge-02`
 - paired no-Root-Lane and ownership-conflict false positives are exactly `0`
@@ -50,6 +51,7 @@ The full extended run passes only if all of these are true:
 - negative-case false positive rate is at most `15%`
 - delegation-policy violations are exactly `0`
 - sanitized failure-reporting violations are exactly `0`
+- Routing Receipt violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes at least `90%` of the relevant cases
 - Root Lane quality passes at least `90%` of implicit eligible positives
@@ -69,6 +71,8 @@ Look for these failure patterns even if the numeric score looks decent:
 - `test-automator` suggested before behavior scope is clear
 - security buzzword prompts treated as concrete security audit scope without clarification
 - internal aliases, cache paths, `SKILL.md` loading, or retry mechanics exposed to the user
-- intentional non-delegation or successful internal recovery narrated as an operational event
+- ordinary task-shape non-delegation missing its one-line receipt
+- explicit opt-out, native unavailability, or successful internal recovery narrated as an operational event
+- eligible routing with an extra eligibility receipt before the policy-specific Dispatch message
 - failures that change execution hidden instead of being reported briefly
 - a final response presented as proof of `lifecycle_evidence`

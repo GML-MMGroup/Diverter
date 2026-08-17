@@ -1,6 +1,14 @@
 # Delegation Contract
 
-Every Diverter message uses one shared structure and one policy ending.
+Every eligible Diverter message uses one shared structure and one policy ending. That policy-specific message is the routing receipt; never precede it with a second eligibility message.
+
+## Root-only Receipt
+
+Ordinary task-shape non-delegation uses exactly one line and nothing else about routing:
+
+> `Routing: ROOT_ONLY — <one task-shape reason>`
+
+Match the user's language in the reason. Do not emit this receipt for bypass, explicit opt-out, or native unavailability, and do not mention Diverter or internal checks.
 
 ## Shared Information
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Require private Task-shape Deliberation before implicit `ROOT_ONLY` decisions and emit one concise Routing Receipt for ordinary Root-only routing.
+- Add natural-language positive routing fixtures whose Root and Child lanes must be inferred instead of copied from the prompt.
+
 ## 0.4.2 - 2026-08-17
 
 - Add a Root-only `UserPromptSubmit` Turn Reminder so every user prompt applies Diverter Preflight before task work.

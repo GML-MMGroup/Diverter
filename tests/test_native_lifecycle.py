@@ -564,6 +564,35 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(json.loads(result.stdout)["ok"])
 
+    def test_rejects_routing_receipt_for_preactivation_bypasses(self) -> None:
+        root_records = [
+            exec_call(
+                "2026-08-13T10:00:02Z",
+                'await tools.exec_command({"cmd":"root-only-artifact"})',
+                "root-only",
+            ),
+            message(
+                "2026-08-13T10:00:03Z",
+                "assistant",
+                "Routing: ROOT_ONLY — native delegation is unavailable.",
+            ),
+        ]
+
+        for scenario in ("native-absence", "missing-role"):
+            with self.subTest(scenario=scenario):
+                result = self.run_verifier(
+                    root_records,
+                    None,
+                    "--scenario",
+                    scenario,
+                    "--root-progress-scope",
+                    "root-only-artifact",
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertFalse(
+                    json.loads(result.stdout)["checks"]["policy_or_inert_boundary"]
+                )
+
     def controlled_failure_records(self) -> tuple[list[dict], list[dict]]:
         root_records, child_records, _ = self.happy_records()
         child_records = child_records[:4]

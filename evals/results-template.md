@@ -28,15 +28,16 @@
 | Negative-case false positive rate |  |  |
 | Delegation-policy violations |  |  |
 | Sanitized failure-reporting violations |  |  |
+| Routing Receipt violations |  |  |
 | `>4` role violations |  |  |
 | Fallback correctness rate |  |  |
 | Root Lane quality rate |  |  |
 
 ## Prompt-by-Prompt Results
 
-| ID | Suite | Policy | Router Score / 7 | Delegated? | Roles used | Root Lane valid? | Policy-appropriate ending? | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  |  |
+| ID | Suite | Policy | Router Score / 7 | Delegated? | Roles used | Root Lane valid? | Routing Receipt valid? | Policy-appropriate ending? | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |  |  |  |  |
 
 ## Native Lifecycle Evidence
 
