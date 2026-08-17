@@ -267,6 +267,26 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
 
+    def test_accepts_single_spawn_with_encrypted_handoff(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records[3]["payload"]["arguments"] = json.dumps(
+            {
+                "task_name": "docs_lane",
+                "agent_type": "docs-researcher",
+                "fork_turns": "none",
+                "message": "gAAAAABencrypted",
+            }
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(
+            json.loads(result.stdout)["checks"]["no_duplicate_scope_spawn"]
+        )
+
     def test_accepts_ask_approval_only_before_spawn(self) -> None:
         root_records, child_records, manifest = self.happy_records()
         root_records[2] = message(

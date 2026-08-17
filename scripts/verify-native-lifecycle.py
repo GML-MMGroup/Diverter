@@ -655,10 +655,11 @@ def verify_child(
 
     spawn_scope_keys = [scope_key(arguments) for _, _, arguments in spawn_calls]
     scoped_spawns = [key for key in spawn_scope_keys if key]
-    no_duplicate_scope = bool(spawn_scope_keys) and len(scoped_spawns) == len(spawn_scope_keys)
-    no_duplicate_scope = no_duplicate_scope and all(
-        count == 1 for count in Counter(scoped_spawns).values()
-    )
+    no_duplicate_scope = len(spawn_calls) == 1
+    if len(spawn_calls) > 1:
+        no_duplicate_scope = len(scoped_spawns) == len(spawn_scope_keys) and all(
+            count == 1 for count in Counter(scoped_spawns).values()
+        )
 
     write_ownership = root_write_scope is None and child_write_scope is None
     hashes: dict[str, str | None] = {}
