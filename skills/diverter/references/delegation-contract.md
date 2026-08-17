@@ -1,6 +1,6 @@
 # Delegation Contract
 
-The literal eligible-receipt templates are owned only by `../SKILL.md`. This reference defines their semantics and failure cases; do not copy or rephrase the templates here. The policy-specific message is the routing receipt, so never precede it with a second eligibility message.
+The literal eligible-receipt templates are owned only by `../SKILL.md`. This reference defines their semantics and failure cases; do not copy or rephrase the templates here. Load the skill silently: its policy-specific routing receipt is the first user-visible output, with no eligibility or loading preface.
 
 ## Root-only Receipt
 

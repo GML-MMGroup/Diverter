@@ -305,6 +305,45 @@ def changed_paths(manifest: dict[str, dict[str, str]]) -> list[str]:
     )
 
 
+def eligible_receipt(text: str, policy: str) -> bool:
+    lines = text.strip().splitlines()
+    if len(lines) < 5 or lines[0] != "Routing: ELIGIBLE":
+        return False
+    index = 1
+    child_count = 0
+    while index < len(lines) and lines[index].startswith("Child: `"):
+        role, separator, task = lines[index][len("Child: `") :].partition("` — ")
+        if not role or separator != "` — " or not task.strip():
+            return False
+        child_count += 1
+        index += 1
+    if child_count == 0 or len(lines) != index + 3:
+        return False
+    if not lines[index].startswith("Root: ") or not lines[index][
+        len("Root: ") :
+    ].strip():
+        return False
+    if lines[index + 1] not in {
+        "Work Mode: read-only",
+        "Work Mode: mixed",
+        "Work Mode: write-capable",
+    }:
+        return False
+    ending = lines[index + 2]
+    if policy == "auto":
+        return (
+            ending.startswith("➡️ Dispatch: ")
+            and bool(ending[len("➡️ Dispatch: ") :].strip())
+            and "?" not in ending
+            and "？" not in ending
+        )
+    return (
+        ending.startswith("➡️ Dispatch Authorization: ")
+        and bool(ending[len("➡️ Dispatch Authorization: ") :].strip())
+        and ("?" in ending or "？" in ending)
+    )
+
+
 def policy_order(
     root_records: list[dict[str, Any]], policy: str | None, spawn_when: datetime | None
 ) -> bool:
@@ -316,30 +355,28 @@ def policy_order(
         announcements = [
             (when, text)
             for when, text in assistants
-            if "Dispatch Announcement" in text
-            and "Root Lane" in text
-            and "Work Mode" in text
+            if eligible_receipt(text, "auto")
         ]
         return bool(
             spawn_when
-            and announcements
-            and announcements[-1][0] < spawn_when
-            and "?" not in announcements[-1][1]
-            and "？" not in announcements[-1][1]
+            and len(announcements) == 1
+            and assistants[0] == announcements[0]
+            and announcements[0][0] < spawn_when
         )
     recommendations = [
         (when, text)
         for when, text in assistants
-        if "Dispatch Recommendation" in text
+        if eligible_receipt(text, "ask")
     ]
     approvals = [
         when for when, text in users if "Dispatch Authorization" in text
     ]
     return bool(
         spawn_when
-        and recommendations
+        and len(recommendations) == 1
+        and assistants[0] == recommendations[0]
         and approvals
-        and recommendations[-1][0] < approvals[-1] < spawn_when
+        and recommendations[0][0] < approvals[-1] < spawn_when
     )
 
 
@@ -355,19 +392,25 @@ def verify_root_only(
     assistants = messages(root_records, "assistant")
     users = messages(root_records, "user")
     if scenario == "ask-refused":
-        recommendations = [when for when, text in assistants if "Dispatch Recommendation" in text]
+        recommendations = [
+            when for when, text in assistants if eligible_receipt(text, "ask")
+        ]
         refusals = [when for when, text in users if "Dispatch Refused" in text]
         boundary = max(refusals) if refusals else None
         policy_check = bool(
-            recommendations
+            len(recommendations) == 1
+            and assistants
+            and assistants[0][0] == recommendations[0]
             and refusals
-            and recommendations[-1] < refusals[-1]
+            and recommendations[0] < refusals[-1]
             and all("Routing: ROOT_ONLY" not in text for _, text in assistants)
         )
     else:
         boundary = None
         policy_check = all(
-            "Dispatch Announcement" not in text
+            not eligible_receipt(text, "auto")
+            and not eligible_receipt(text, "ask")
+            and "Dispatch Announcement" not in text
             and "Diverter" not in text
             and "Routing: ROOT_ONLY" not in text
             for _, text in assistants

@@ -103,7 +103,11 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             message(
                 "2026-08-13T10:00:00.500000Z",
                 "assistant",
-                "Dispatch Announcement\nRoot Lane: root-progress-artifact.md\nWork Mode: mixed",
+                "Routing: ELIGIBLE\n"
+                "Child: `docs-researcher` — Collect documentation evidence\n"
+                "Root: Review root-progress-artifact.md\n"
+                "Work Mode: mixed\n"
+                "➡️ Dispatch: Starting now.",
             ),
             call(
                 "2026-08-13T10:00:01Z",
@@ -245,12 +249,34 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
         self.assertEqual(report["child_model"], "gpt-5.6-luna")
         self.assertTrue(all(report["checks"].values()), report)
 
+    def test_rejects_user_visible_preface_before_eligible_receipt(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records.insert(
+            2,
+            message(
+                "2026-08-13T10:00:00.250000Z",
+                "assistant",
+                "I will load the delegation workflow first.",
+            ),
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.common_args(), manifest=manifest
+        )
+
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["checks"]["policy_order"])
+
     def test_accepts_ask_approval_only_before_spawn(self) -> None:
         root_records, child_records, manifest = self.happy_records()
         root_records[2] = message(
             "2026-08-13T10:00:00.500000Z",
             "assistant",
-            "Dispatch Recommendation",
+            "Routing: ELIGIBLE\n"
+            "Child: `docs-researcher` — Collect documentation evidence\n"
+            "Root: Review root-progress-artifact.md\n"
+            "Work Mode: mixed\n"
+            "➡️ Dispatch Authorization: Proceed?",
         )
         root_records.insert(
             3,
@@ -476,7 +502,15 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
                 "type": "turn_context",
                 "payload": {"turn_id": "proposal", "model": "gpt-5.6-terra", "effort": "high"},
             },
-            message("2026-08-13T10:00:00Z", "assistant", "Dispatch Recommendation"),
+            message(
+                "2026-08-13T10:00:00Z",
+                "assistant",
+                "Routing: ELIGIBLE\n"
+                "Child: `docs-researcher` — Collect documentation evidence\n"
+                "Root: Coordinate execution and integrate results\n"
+                "Work Mode: read-only\n"
+                "➡️ Dispatch Authorization: Proceed?",
+            ),
             message("2026-08-13T10:00:01Z", "user", "Dispatch Refused"),
             {
                 "timestamp": "2026-08-13T10:00:01.500000Z",
@@ -763,7 +797,11 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             message(
                 "2026-08-13T10:00:00.500000Z",
                 "assistant",
-                "Dispatch Announcement\nRoot Lane: root-takeover-artifact\nWork Mode: read-only",
+                "Routing: ELIGIBLE\n"
+                "Child: `docs-researcher` — Collect documentation evidence\n"
+                "Root: Review root-takeover-artifact\n"
+                "Work Mode: read-only\n"
+                "➡️ Dispatch: Starting now.",
             ),
             call(
                 "2026-08-13T10:00:01Z",

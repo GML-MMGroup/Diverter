@@ -115,9 +115,11 @@ class PluginContractTest(unittest.TestCase):
 
         self.assertEqual(
             result.stdout,
-            "Mandatory turn preflight: Before task work, apply the active Diverter "
+            "Mandatory turn preflight: Before any user-visible message or task work, "
+            "apply the active Diverter "
             "Session Contract to this prompt and deliberate the task shape before "
-            "deciding. If eligible or the Contract is missing, load $diverter first. "
+            "deciding. If eligible or the Contract is missing, load $diverter silently "
+            "and make its routing receipt the first user-visible output. "
             "For an ordinary ROOT_ONLY decision, emit exactly one "
             "`Routing: ROOT_ONLY — <one task-shape reason>` receipt; keep bypass, "
             "explicit opt-out, and native unavailability silent.\n",
@@ -154,7 +156,9 @@ class PluginContractTest(unittest.TestCase):
         )
 
         native_stop = result.stdout.index("proactive multi-agent delegation is active")
-        trigger = result.stdout.index("load `$diverter` before any task work")
+        trigger = result.stdout.index(
+            "load `$diverter` silently before any user-visible message or task work"
+        )
         self.assertLess(native_stop, trigger)
         self.assertIn("Do not evaluate, load, or mention Diverter", result.stdout)
 
@@ -254,7 +258,10 @@ class PluginContractTest(unittest.TestCase):
         )
         self.assertIn("Diverter Session Contract", result.stdout)
         self.assertIn("delegation_context: delegated-subagent", result.stdout)
-        self.assertIn("load `$diverter` before any task work", result.stdout)
+        self.assertIn(
+            "load `$diverter` silently before any user-visible message or task work",
+            result.stdout,
+        )
 
     def test_core_skill_selects_policy_and_native_lifecycle(self) -> None:
         skill_path = ROOT / "skills" / "diverter" / "SKILL.md"
@@ -391,7 +398,7 @@ class PluginContractTest(unittest.TestCase):
         ).read_text()
 
         self.assertIn("ordinary eligibility adjudication", contract)
-        self.assertIn("Dispatch Recommendation or Dispatch Announcement", contract)
+        self.assertIn("policy-specific routing receipt", contract)
         self.assertIn("Routing Receipt and silence rules", skill)
         self.assertIn("## Root-only Receipt", message_contract)
         self.assertIn("status: accepted", adr)
@@ -430,6 +437,7 @@ class PluginContractTest(unittest.TestCase):
             2,
         )
         self.assertIn("Repeat `Child:` once per selected role", skill)
+        self.assertIn("first user-visible output", skill)
         self.assertIn("➡️ Dispatch Authorization: <direct approval question>", skill)
         self.assertIn("➡️ Dispatch: <immediate-start statement>", skill)
         self.assertNotIn("Why:", skill)
@@ -442,7 +450,8 @@ class PluginContractTest(unittest.TestCase):
 
         scenarios = (ROOT / "evals" / "scenarios.md").read_text()
         self.assertIn("literal policy template", scenarios)
-        self.assertIn("Reject a `Why:` field", scenarios)
+        self.assertIn("Reject a loading preface", scenarios)
+        self.assertIn("`Why:` field", scenarios)
 
     def test_positive_examples_do_not_restore_single_lane_implicit_routes(self) -> None:
         examples = (

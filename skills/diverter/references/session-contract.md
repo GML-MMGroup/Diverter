@@ -49,7 +49,7 @@ Before final activation, confirm that native role-specific subagent dispatch and
 - `BYPASS`: exit Diverter entirely and continue under the owning mechanism.
 - `ROOT_ONLY` from Explicit opt-out or Native availability: continue silently in the Root Session.
 - `ROOT_ONLY` from ordinary eligibility adjudication: emit exactly one Routing Receipt for this Root user prompt, then continue in Root: `Routing: ROOT_ONLY — <one task-shape reason>`. Match the user's language in the reason. Do not mention Diverter, skill loading, role availability, or other internal checks.
-- `ELIGIBLE`: load `$diverter` before any task work. The completed Preflight is authoritative; do not re-adjudicate eligibility in the normal Skill path. The policy-specific Dispatch Recommendation or Dispatch Announcement is the single external receipt; do not add another eligibility message.
+- `ELIGIBLE`: load `$diverter` silently before any user-visible message or task work. The completed Preflight is authoritative; do not re-adjudicate eligibility in the normal Skill path. The skill's policy-specific routing receipt is the first user-visible output and the single external receipt; do not add eligibility, loading, recommendation, or announcement prose around it.
 
 `SessionStart`, resume, clear, and compact restore context but never emit a Routing Receipt by themselves. Emit at most one receipt for each Root user prompt.
 

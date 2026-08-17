@@ -115,7 +115,7 @@ Smallest Sufficient Lineup rules:
 
 ## Delegation Contract
 
-Render exactly one user-facing routing receipt using the applicable literal template below. Do not wrap it in a code fence or add eligibility, rationale, recommendation, or announcement prose around it. This restriction applies to the routing message; later normal progress and final-result messages remain allowed.
+Render exactly one user-facing routing receipt using the applicable literal template below. It must be the first user-visible output for the eligible prompt. Do not wrap it in a code fence or add eligibility, loading, rationale, recommendation, or announcement prose around it. This restriction applies to the routing message; later normal progress and final-result messages remain allowed.
 
 Repeat `Child:` once per selected role in lineup order. Each `Child:` value contains the exact role name and one concise task summary. `Root:` contains one concise task summary; when an Explicit Delegation Request has no distinct Root Lane, summarize Root's coordination and integration instead of inventing work. Do not include steps, file scope, success criteria, verification, or deliverables in these summaries. Those details belong in the internal handoff.
 
