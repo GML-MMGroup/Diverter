@@ -115,6 +115,8 @@ prompts:
     prompt: "What port is the dev server using right now?"
     expected_should_suggest: false
     expected_roles: []
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - suggest delegation
       - invent multi-step work
@@ -173,15 +175,13 @@ prompts:
     surface: cli
     smoke: true
     category: edge
-    prompt: "While you verify the documented assumptions, have one specialist map the affected code path before any fix."
+    prompt: "While you verify the documented routing assumptions in skills/diverter/references/session-contract.md, have one code-mapping specialist map hooks/user_prompt_submit.py before any fix."
     expected_should_suggest: true
     expected_roles: [code-mapper]
-    evaluator_metadata:
-      physically_absent_roles: [docs-researcher]
     must_not_do:
-      - invent a missing role
-      - ignore the explicit unavailability
-    notes: "The evaluator physically removes docs-researcher; Root covers docs without a substitute role."
+      - invent an unspecified implementation role
+      - start a fix before both read-only lanes finish
+    notes: "Root verifies the named contract while code-mapper traces the concrete hook."
 
   - id: edge-03
     surface: shared
@@ -307,14 +307,14 @@ prompts:
   - id: neg-08
     surface: cli
     smoke: true
-    category: negative
-    prompt: "Optimize this CLI parser. It feels slow on large files."
-    expected_should_suggest: false
-    expected_roles: []
+    category: positive
+    prompt: "Define and run large-file benchmarks for this CLI parser while one code-mapping specialist traces the parser hot path; then integrate both before choosing an optimization."
+    expected_should_suggest: true
+    expected_roles: [code-mapper]
     must_not_do:
       - recommend web-performance-auditor
       - treat non-Web performance as Core Web Vitals work
-    notes: "Non-Web performance must not trigger Web performance specialist."
+    notes: "Non-Web performance uses code mapping, not the Web performance specialist."
 
   - id: neg-09
     surface: shared
@@ -323,10 +323,12 @@ prompts:
     prompt: "Review this small README typo fix."
     expected_should_suggest: false
     expected_roles: []
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - inflate generic review into specialist roles
       - add delegation overhead
-    notes: "Generic small review should stay silent."
+    notes: "Generic small review stays in Root with one Routing Receipt."
 
   - id: neg-10
     surface: cli
@@ -335,6 +337,8 @@ prompts:
     prompt: "Add some tests here, not sure what exactly."
     expected_should_suggest: false
     expected_roles: []
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - suggest write-capable test-automator immediately
       - pretend the behavior boundary is clear
@@ -475,7 +479,7 @@ prompts:
     surface: shared
     smoke: true
     category: edge
-    session_context: "Higher-priority session policy: proactive multi-agent delegation is active."
+    session_context: "Higher-priority session policy: proactive multi-agent delegation is active and is the sole orchestration owner. This is a terminal silent Diverter bypass even if the native owner itself dispatches a child."
     prompt: "Review this branch for bugs and missing tests."
     expected_should_suggest: false
     expected_should_dispatch: false
@@ -523,6 +527,8 @@ prompts:
     prompt: "你看一下当前工作目录下的标注网站。现在我想要调整一下网页侧边栏的这个显示。当前侧边栏的这个样本列表显示是直接竖着铺的，我觉得样本列表应该改成滚动的，而不是这样直接铺开的。你觉得呢？说说你的想法和设计方案。"
     expected_should_suggest: false
     expected_roles: []
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - mention Diverter or subagents
       - narrate skill loading or internal recovery
@@ -566,7 +572,7 @@ prompts:
     surface: shared
     smoke: true
     category: positive
-    prompt: "Have the installed `docs-researcher` verify the named API contract and return the result."
+    prompt: "Have the installed `docs-researcher` verify the Dispatch Workflow contract in skills/diverter/SKILL.md and return whether hooks/user_prompt_submit.py follows it."
     expected_should_suggest: true
     expected_roles: [docs-researcher]
     must_do:
@@ -640,7 +646,7 @@ prompts:
 
   - id: failure-explicit-choice
     surface: shared
-    smoke: true
+    smoke: false
     category: edge
     session_context: "Evaluator state: the user explicitly requested Diverter, but Diverter failed to load and no delegation started."
     prompt: "Use Diverter to review this branch for correctness and regression risks."
@@ -651,7 +657,7 @@ prompts:
     must_not_do:
       - silently replace the explicit delegation request with Root Session work
       - expose aliases, cache paths, SKILL.md loading, or retry steps
-    notes: "Explicit-request failure requires a user decision."
+    notes: "Explicit-request failure requires a user decision; this simulated load failure is diagnostic, not a cold-start smoke case."
 
   - id: failure-user-action
     surface: shared
@@ -666,6 +672,81 @@ prompts:
     must_not_do:
       - expose aliases, cache paths, SKILL.md loading, or retry steps
     notes: "A blocking failure reports the required user action without operational chatter."
+
+  - id: latent-pos-doc-contract
+    policy: auto
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "请基于当前仓库制定 OpenAI Responses API 升级迁移清单，确认现有调用约束是否符合官方版本边界；先不要修改代码。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [docs-researcher]
+    evaluator_metadata:
+      latent_task_shape: true
+      root_continuation: "trace repository constraints and draft the migration checklist"
+      child_scope: "verify the official API contract and version boundary"
+      root_scope: "repository analysis, checklist drafting, and synthesis"
+      benefit_claim: "official contract verification can progress during repository analysis"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - derive the distinct Root and Child lanes from the requested outcome
+      - use the Dispatch Announcement as the single routing receipt
+    must_not_do:
+      - require the user to state lanes or delegation intent
+      - emit a separate eligibility receipt
+    notes: "Latent positive paired with neg-04; the prompt names the outcome but not the routing plan."
+
+  - id: latent-pos-regression
+    policy: auto
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "这个已知的 falsey-value settings 保存缺陷需要一份最小修复建议，以及能够证明行为边界的回归测试策略。先分析，不要修改代码。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [test-engineer]
+    evaluator_metadata:
+      latent_task_shape: true
+      root_continuation: "trace the defect boundary and develop the minimal fix recommendation"
+      child_scope: "design the smallest Prove-It regression strategy"
+      root_scope: "behavior mapping, fix recommendation, and integration"
+      benefit_claim: "test strategy can be developed during defect analysis"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - derive the distinct Root and Child lanes from the requested outcome
+      - use the Dispatch Announcement as the single routing receipt
+    must_not_do:
+      - require the user to state lanes or delegation intent
+      - emit a separate eligibility receipt
+    notes: "Latent positive paired with neg-10; the known boundary makes test strategy independently useful."
+
+  - id: latent-pos-web-audit
+    policy: auto
+    surface: shared
+    smoke: true
+    category: positive
+    prompt: "评估把侧边栏样本列表改成滚动区域的方案，需要覆盖组件高度约束、键盘与屏幕阅读器交互，以及 LCP、INP、CLS 风险；先不要修改代码。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [web-performance-auditor]
+    evaluator_metadata:
+      latent_task_shape: true
+      root_continuation: "analyze component constraints, accessibility, and design acceptance criteria"
+      child_scope: "audit LCP, INP, and CLS risks"
+      root_scope: "component and accessibility analysis plus final design synthesis"
+      benefit_claim: "Web performance evidence can be gathered during interaction design analysis"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - derive the distinct Root and Child lanes from the requested outcome
+      - use the Dispatch Announcement as the single routing receipt
+    must_not_do:
+      - require the user to state lanes or delegation intent
+      - emit a separate eligibility receipt
+    notes: "Latent positive paired with gate-neg-focused-ui; named Web metrics create a separate specialist boundary."
 
   - id: ultra-pos-ui-root-continues
     policy: auto
@@ -785,7 +866,7 @@ prompts:
   - id: ultra-reuse-same-scope
     policy: auto
     surface: shared
-    smoke: true
+    smoke: false
     category: edge
     session_context: "A native child at /root/docs_lane already completed the initial API-contract check and remains available for follow-up."
     prompt: "Ask that same child to verify the related version-specific exception, while you integrate the first result into the migration checklist."
@@ -802,7 +883,7 @@ prompts:
     must_do:
       - target the existing child identity
       - create no equivalent second child
-    notes: "Child Reuse is distinct from compact idempotency."
+    notes: "Child Reuse is distinct from compact idempotency; this requires a persisted session and is not a cold-start smoke case."
 
   - id: ultra-neg-no-root-lane
     surface: shared
@@ -818,6 +899,8 @@ prompts:
       benefit_claim: "none; Root would wait"
       max_active_children: 0
       expected_reuse: false
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - invent a Root Lane
       - delegate the entire task implicitly
@@ -837,6 +920,8 @@ prompts:
       benefit_claim: "none; the proposed read-only lane is only a prerequisite"
       max_active_children: 0
       expected_reuse: false
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - reclassify prerequisite mapping or review as an independent Child Lane
       - split one implementation decision across Root and Child
@@ -856,6 +941,8 @@ prompts:
       benefit_claim: "none; ownership overlaps"
       max_active_children: 0
       expected_reuse: false
+    must_do:
+      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
       - assign overlapping concurrent writers
       - claim disjoint Write Ownership

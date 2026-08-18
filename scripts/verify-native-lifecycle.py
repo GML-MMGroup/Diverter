@@ -4,11 +4,11 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter
 from datetime import datetime
 import json
 from pathlib import Path
 import re
+import shlex
 import sys
 from typing import Any
 
@@ -200,8 +200,6 @@ def failed_tool_events(
         "sandbox denied",
         "spawn failed",
         "failed to spawn",
-        "unavailable",
-        "not available",
     )
     found = []
     for record in records:
@@ -259,11 +257,20 @@ def scope_key(arguments: dict[str, Any]) -> str | None:
     return " ".join(match.group(1).lower().split())
 
 
+def valid_handoff(arguments: dict[str, Any]) -> bool:
+    message = arguments.get("message")
+    return bool(
+        isinstance(message, str)
+        and message.strip()
+        and (scope_key(arguments) or message.strip().startswith("gAAAAA"))
+    )
+
+
 def substantive_call(call: dict[str, Any]) -> bool:
     if call.get("name") in BOOKKEEPING_TOOLS:
         return False
     nested_tools = re.findall(r"tools\.([A-Za-z0-9_]+)\s*\(", call_text(call))
-    return not any(tool in BOOKKEEPING_TOOLS for tool in nested_tools)
+    return not nested_tools or any(tool not in BOOKKEEPING_TOOLS for tool in nested_tools)
 
 
 def meaningful_call(call: dict[str, Any], marker: str) -> bool:
@@ -305,6 +312,74 @@ def changed_paths(manifest: dict[str, dict[str, str]]) -> list[str]:
     )
 
 
+def eligible_receipt(text: str, policy: str) -> bool:
+    lines = [line.rstrip() for line in text.strip().splitlines()]
+    if len(lines) < 5 or lines[0] != "Routing: ELIGIBLE":
+        return False
+    index = 1
+    child_count = 0
+    while index < len(lines) and lines[index].startswith("Child: `"):
+        role, separator, task = lines[index][len("Child: `") :].partition("` — ")
+        if not role or separator != "` — " or not task.strip():
+            return False
+        child_count += 1
+        index += 1
+    if child_count == 0 or len(lines) != index + 3:
+        return False
+    if not lines[index].startswith("Root: ") or not lines[index][
+        len("Root: ") :
+    ].strip():
+        return False
+    if lines[index + 1] not in {
+        "Work Mode: read-only",
+        "Work Mode: mixed",
+        "Work Mode: write-capable",
+    }:
+        return False
+    ending = lines[index + 2]
+    if policy == "auto":
+        return (
+            ending.startswith("➡️ Dispatch: ")
+            and bool(ending[len("➡️ Dispatch: ") :].strip())
+            and "?" not in ending
+            and "？" not in ending
+        )
+    return (
+        ending.startswith("➡️ Dispatch Authorization: ")
+        and bool(ending[len("➡️ Dispatch Authorization: ") :].strip())
+        and ("?" in ending or "？" in ending)
+    )
+
+
+def receipt_roles(text: str, policy: str) -> list[str] | None:
+    if not eligible_receipt(text, policy):
+        return None
+    return [
+        line[len("Child: `") :].partition("` — ")[0]
+        for line in (line.rstrip() for line in text.strip().splitlines())
+        if line.startswith("Child: `")
+    ]
+
+
+def routing_preflight_call(call: dict[str, Any]) -> bool:
+    text = call_text(call)
+    nested_tools = re.findall(r"tools\.([A-Za-z0-9_]+)\s*\(", text)
+    match = re.search(
+        r'tools\.exec_command\(\{"cmd":\s*("(?:\\.|[^"\\])*")', text
+    )
+    if call.get("name") != "exec" or nested_tools != ["exec_command"] or not match:
+        return False
+    try:
+        command = shlex.split(json.loads(match.group(1)))
+    except (json.JSONDecodeError, ValueError):
+        return False
+    return bool(
+        command
+        and command[0] in {"cat", "sed"}
+        and command[-1].lower().endswith("/skills/diverter/skill.md")
+    )
+
+
 def policy_order(
     root_records: list[dict[str, Any]], policy: str | None, spawn_when: datetime | None
 ) -> bool:
@@ -312,34 +387,53 @@ def policy_order(
         return True
     assistants = messages(root_records, "assistant")
     users = messages(root_records, "user")
-    if policy == "auto":
-        announcements = [
-            (when, text)
-            for when, text in assistants
-            if "Dispatch Announcement" in text
-            and "Root Lane" in text
-            and "Work Mode" in text
-        ]
-        return bool(
-            spawn_when
-            and announcements
-            and announcements[-1][0] < spawn_when
-            and "?" not in announcements[-1][1]
-            and "？" not in announcements[-1][1]
-        )
-    recommendations = [
-        (when, text)
+    receipt_policy = "auto" if policy == "auto" else "ask"
+    receipts = [
+        (when, text, receipt_roles(text, receipt_policy))
         for when, text in assistants
-        if "Dispatch Recommendation" in text
+        if eligible_receipt(text, receipt_policy)
     ]
+    if not spawn_when or len(receipts) != 1:
+        return False
+    receipt_when, receipt_text, roles = receipts[0]
+    if assistants[0] != (receipt_when, receipt_text):
+        return False
+    if any(
+        "Routing:" in text
+        for when, text in assistants
+        if (when, text) != (receipt_when, receipt_text)
+    ):
+        return False
+    pre_spawn_calls = [
+        call
+        for when, call in function_calls(root_records)
+        if when < spawn_when and call.get("name") != "spawn_agent"
+    ]
+    if any(
+        substantive_call(call) and not routing_preflight_call(call)
+        for call in pre_spawn_calls
+    ):
+        return False
+    spawn_roles = [
+        decoded_arguments(call).get("agent_type")
+        for when, call in function_calls(root_records)
+        if call.get("name") == "spawn_agent"
+    ]
+    if roles != spawn_roles:
+        return False
+    if policy == "auto":
+        return receipt_when < spawn_when
     approvals = [
         when for when, text in users if "Dispatch Authorization" in text
     ]
+    approvals = [when for when in approvals if receipt_when < when < spawn_when]
     return bool(
-        spawn_when
-        and recommendations
-        and approvals
-        and recommendations[-1][0] < approvals[-1] < spawn_when
+        approvals
+        and not any(
+            text.strip()
+            for when, text in assistants
+            if receipt_when < when < spawn_when
+        )
     )
 
 
@@ -355,14 +449,29 @@ def verify_root_only(
     assistants = messages(root_records, "assistant")
     users = messages(root_records, "user")
     if scenario == "ask-refused":
-        recommendations = [when for when, text in assistants if "Dispatch Recommendation" in text]
+        recommendations = [
+            when for when, text in assistants if eligible_receipt(text, "ask")
+        ]
         refusals = [when for when, text in users if "Dispatch Refused" in text]
         boundary = max(refusals) if refusals else None
-        policy_check = bool(recommendations and refusals and recommendations[-1] < refusals[-1])
+        policy_check = bool(
+            len(recommendations) == 1
+            and assistants
+            and assistants[0][0] == recommendations[0]
+            and refusals
+            and recommendations[0] < refusals[-1]
+            and all(
+                "Routing:" not in text or eligible_receipt(text, "ask")
+                for _, text in assistants
+            )
+        )
     else:
         boundary = None
         policy_check = all(
-            "Dispatch Announcement" not in text and "Diverter" not in text
+            "Routing:" not in text
+            and "Dispatch Announcement" not in text
+            and "Diverter" not in text
+            and "Routing: ROOT_ONLY" not in text
             for _, text in assistants
         )
     root_continues = any(
@@ -411,7 +520,7 @@ def verify_spawn_failure(
         if call.get("name") == "spawn_agent"
     ]
     spawn_when, spawn_call, spawn_arguments = spawns[0] if spawns else (None, {}, {})
-    lane_markers = (spawn_arguments.get("task_name"), expected_role)
+    lane_marker = spawn_arguments.get("task_name") or expected_role
     spawn_call_id = spawn_call.get("call_id")
     failed_outputs = [
         (when, payload)
@@ -420,7 +529,7 @@ def verify_spawn_failure(
     ]
     failure_when = failed_outputs[0][0] if failed_outputs else None
     report_after_failure = has_failure_report(
-        root_records, failure_when, failure_report_marker, lane_markers
+        root_records, failure_when, failure_report_marker, (lane_marker,)
     )
     root_takeover = any(
         when > failure_when and meaningful_call(call, verification_scope)
@@ -603,12 +712,7 @@ def verify_child(
             for when, arguments in followups
         )
 
-    spawn_scope_keys = [scope_key(arguments) for _, _, arguments in spawn_calls]
-    scoped_spawns = [key for key in spawn_scope_keys if key]
-    no_duplicate_scope = bool(spawn_scope_keys) and len(scoped_spawns) == len(spawn_scope_keys)
-    no_duplicate_scope = no_duplicate_scope and all(
-        count == 1 for count in Counter(scoped_spawns).values()
-    )
+    no_duplicate_scope = len(spawn_calls) == 1 and valid_handoff(spawn_calls[0][2])
 
     write_ownership = root_write_scope is None and child_write_scope is None
     hashes: dict[str, str | None] = {}
@@ -657,9 +761,9 @@ def verify_child(
     no_substitute_spawn = True
     successful_work_preserved = True
     if scenario == "failure":
-        lane_markers = (child_task_name, expected_role)
+        lane_marker = child_task_name or expected_role
         failure_reported = has_failure_report(
-            root_records, last_terminal, failure_report_marker, lane_markers
+            root_records, last_terminal, failure_report_marker, (lane_marker,)
         )
         no_substitute_spawn = len(spawn_calls) == 1
         failure_when = failures[0][0] if failures else None

@@ -3,7 +3,7 @@
 Diverter release validation has three evidence seams:
 
 1. **Preflight Delivery** — Hook input/output evidence proving the Session Contract is restored, every Root prompt gets one short Turn Reminder, and child prompts get none.
-2. **Router Contract** — deterministic and prompt-level evidence for eligibility, Root/Child lanes, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
+2. **Router Contract** — deterministic and prompt-level evidence for Task-shape Deliberation, one Routing Receipt, eligibility, Root/Child lanes, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
 3. **Native Lifecycle** — persisted Codex records proving what actually spawned and happened over time.
 
 Final-response wording is never Native Lifecycle evidence.
@@ -37,7 +37,9 @@ Require all of the following:
 
 - `SessionStart` injects the complete Session Contract and active policy at startup and again after compact;
 - each Root `UserPromptSubmit` input omits `agent_id` and receives exactly one short Turn Reminder, never the full Contract;
-- the eligible second Root prompt loads Diverter before other task work;
+- the ineligible first Root prompt emits exactly one `Routing: ROOT_ONLY — <reason>` receipt after Task-shape Deliberation;
+- the eligible second Root prompt loads Diverter silently before any user-visible message or other task work;
+- the eligible second Root prompt emits its policy-specific routing receipt first and emits no loading or separate eligibility message;
 - the child `UserPromptSubmit` input contains `agent_id` and `agent_type`;
 - `hooks/user_prompt_submit.py` exits successfully with zero stdout and zero model context for that child input; and
 - InterAgentCommunication produces no extra `UserPromptSubmit` event.
@@ -54,16 +56,24 @@ The paired controls are central:
 - `gate-neg-focused-skill` ↔ `ultra-pos-focused-skill-support`;
 - `neg-10` ↔ `ultra-pos-regression-root-continues`;
 - `neg-02` ↔ `ultra-pos-disjoint-write` and `ultra-ownership-conflict`;
-- `neg-04` ↔ `ultra-pos-doc-check`; and
+- `neg-04` ↔ `ultra-pos-doc-check` and `latent-pos-doc-contract`;
+- `neg-10` ↔ `latent-pos-regression`;
+- `gate-neg-focused-ui` ↔ `latent-pos-web-audit`; and
 - `auto-idempotency` ↔ `ultra-reuse-same-scope`.
 
-Implicit positive fixtures must name a bounded Child Lane and a distinct useful Root Lane. Explicit positive fixtures must name the requested Child Lane but may state Root coordination and integration instead of inventing a Root Lane. The negative half must not invent a Root Lane merely to trigger.
+Explicit-lane implicit positives must name a bounded Child Lane and a distinct useful Root Lane. Explicit delegation positives must name the requested Child Lane but may state Root coordination and integration instead of inventing a Root Lane. The negative half must not invent a Root Lane merely to trigger.
+
+Latent positives state only a realistic outcome, omit routing instructions, and require Task-shape Deliberation to derive a bounded Child Lane plus a distinct useful Root Lane.
+
+For each Root user prompt, require one external routing result at most. Ordinary task-shape `ROOT_ONLY` uses one Routing Receipt; eligible work uses its policy-specific eligible receipt. Bypass, explicit opt-out, native absence, and missing-role fallbacks remain silent.
+
+Every eligible receipt must be the first user-visible output and follow the literal policy template in `skills/diverter/SKILL.md`: exact field order, one repeated `Child:` line per exact role in lineup order, one concise user-facing task summary per Child and for Root, one exact Work Mode, and the policy-specific localized action. Reject a loading preface, `Why:` field, routing rationale, code fences, extra routing prose, or internal handoff details such as steps, file scope, success criteria, verification, and deliverables.
 
 ### Policy split
 
 - `ask` approval: the recommendation precedes approval and the first native spawn occurs only afterward.
-- `ask` refusal: zero spawn; Root continues.
-- `auto`: Dispatch Announcement precedes native spawn in the same turn, asks no permission question, and identifies lineup, Work Mode, and Root activity: the Root Lane for implicit eligibility or coordination and integration for an explicit request without one.
+- `ask` refusal: zero spawn; Root continues without a `ROOT_ONLY` receipt.
+- `auto`: the eligible receipt precedes native spawn in the same turn, asks no permission question, and identifies lineup, Work Mode, and Root activity: the Root Lane for implicit eligibility or coordination and integration for an explicit request without one.
 
 After authorization, reuse the shared lifecycle primarily under `auto`; do not duplicate the complete matrix under `ask`.
 
@@ -73,7 +83,7 @@ Physically omit or remove the requested role from the isolated role home. Do not
 
 ### Native absence diagnostic
 
-Optionally use a controlled host/task surface without native role-specific spawning. Before activation there must be zero Dispatch Announcement, zero spawn, zero Diverter failure notice, and ordinary Root completion. If the test surface cannot actually hide the capability, record this diagnostic as `unknown`, not pass. This result does not gate the release.
+Optionally use a controlled host/task surface without native role-specific spawning. Before activation there must be zero Routing Receipt, zero eligible receipt, zero spawn, zero Diverter failure notice, and ordinary Root completion. If the test surface cannot actually hide the capability, record this diagnostic as `unknown`, not pass. This result does not gate the release.
 
 ## Native Lifecycle Scenario Set
 
@@ -112,7 +122,7 @@ If a scenario intentionally overlaps ownership, it must serialize rather than ru
 
 ### Family 4: post-announcement failure
 
-After Dispatch Announcement, assign `test-automator` one deterministic nonzero operation, such as `/opt/anaconda3/bin/python3 -c 'raise SystemExit(23)'`, and retain structured tool output containing the nonzero exit code. Run it inside the ordinary writable workspace so the failure does not rely on role-level sandbox isolation or weakened permissions. Require a concise affected-lane report, preservation of successful work, Root takeover of the unfinished outcome, and no generic substitute child.
+After the `auto` eligible receipt, assign `test-automator` one deterministic nonzero operation, such as `/opt/anaconda3/bin/python3 -c 'raise SystemExit(23)'`, and retain structured tool output containing the nonzero exit code. Run it inside the ordinary writable workspace so the failure does not rely on role-level sandbox isolation or weakened permissions. Require a concise affected-lane report, preservation of successful work, Root takeover of the unfinished outcome, and no generic substitute child.
 
 Prompt-injected failure prose, empty wrapper output, and child self-report are not failure evidence. The persisted nonzero operation must precede the affected-lane report and Root takeover.
 
@@ -197,6 +207,7 @@ Record exact diagnostic configurations and results. They do not gate the release
 A release is a No-Go if any of these occur:
 
 - a strict or paired negative dispatches;
+- a prompt governed by ordinary or eligible routing emits a missing, duplicate, or wrong-kind Routing Receipt;
 - `ask` spawns before approval or after refusal;
 - `auto` asks permission or fails to announce before spawn;
 - For implicit eligibility, the Root Lane is missing, passive, or duplicates the child;

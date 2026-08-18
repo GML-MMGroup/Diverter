@@ -9,8 +9,8 @@ Choose capabilities first. Then keep only the roles that are available in the cu
 | code mapping | `code-mapper` | tracing code paths, ownership, or execution flow | Drop the capability or handle mapping in the main thread after Dispatch Authorization. |
 | code review | `reviewer` | general PR review, correctness, maintainability, contracts, regressions, and light security/test risk | Handle in the main thread or use another explicit review role if one is available. |
 | security audit | `security-auditor` | auth, authorization, secrets, user input, webhooks, SSRF, dependencies, LLM/tool permissions, or exploitable vulnerability risk | Mention that security audit is not delegated; do not substitute a generic reviewer when security is central. |
-| docs/API verification | `docs-researcher` | verifying documented API/framework behavior | Mention that docs verification is not delegated; do not substitute an unknown role. |
-| search | `search-specialist` | gathering high-signal codebase or external evidence | Drop if code mapping or docs verification already covers the task. |
+| docs/API verification | `docs-researcher` | verifying a named documentation or API/framework contract | Mention that docs verification is not delegated; do not substitute an unknown role. |
+| search | `search-specialist` | gathering high-signal evidence for open-ended options or strategy comparisons | Drop if code mapping or named contract verification already covers the task. |
 | synthesis | `knowledge-synthesizer` | consolidating multiple research outputs | Synthesize in the main thread after other agents return. |
 | planning | `task-distributor` | decomposing broad work into bounded subtasks | Plan in the main thread if no planning role is available. |
 | test strategy | `test-engineer` | coverage gaps, test plan, test level choice, or Prove-It regression planning | Handle test strategy in the main thread; do not jump directly to write-capable test automation. |
@@ -40,10 +40,11 @@ Choose capabilities first. Then keep only the roles that are available in the cu
 - If no relevant roles are available, stay silent during implicit checks and continue normally.
 - Never recommend 4 roles only to sound thorough.
 - Ordinary PR review defaults to one useful specialist alongside a substantive Root Lane; do not add every quality role.
+- For repository analysis plus official contract verification, use `docs-researcher` for the contract and keep repository mapping in Root.
 - Add `security-auditor` only for concrete security boundaries or explicit security audit requests.
 - Add `test-engineer` only for test strategy, coverage gaps, proof, or regression planning.
 - Add `test-automator` only when the user explicitly asks for test writes and the behavior scope is clear.
-- Add `web-performance-auditor` only for Web-facing performance work.
+- Add `web-performance-auditor` for Web-facing performance work or named metrics such as LCP, INP, or CLS.
 - For non-Web performance, use `code-mapper + reviewer` only if the task is multi-lane.
 - If more than 4 roles are triggered, keep only the most necessary independent deliverables; Root covers the rest.
 

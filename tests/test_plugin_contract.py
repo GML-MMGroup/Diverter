@@ -115,9 +115,16 @@ class PluginContractTest(unittest.TestCase):
 
         self.assertEqual(
             result.stdout,
-            "Mandatory turn preflight: Before task work, apply the active Diverter "
-            "Session Contract to this prompt. If eligible or the Contract is missing, "
-            "load $diverter first; otherwise continue silently in Root.\n",
+            "Mandatory turn preflight: Before any user-visible message or task work, "
+            "apply the active Diverter "
+            "Session Contract to this prompt and deliberate the task shape before "
+            "deciding. Native Proactive Delegation ownership is a terminal silent bypass. "
+            "Otherwise, if eligible or the Contract is missing, load $diverter silently "
+            "and make its routing receipt the first user-visible output. "
+            "For an ordinary ROOT_ONLY decision, emit exactly one "
+            "`Routing: ROOT_ONLY — <one task-shape reason>` receipt; keep bypass, "
+            "explicit opt-out, and native unavailability silent. The first routing "
+            "result is final for this prompt; never re-route after task work starts.\n",
         )
         self.assertNotIn("Implicit eligibility", result.stdout)
 
@@ -151,7 +158,9 @@ class PluginContractTest(unittest.TestCase):
         )
 
         native_stop = result.stdout.index("proactive multi-agent delegation is active")
-        trigger = result.stdout.index("load `$diverter` before any task work")
+        trigger = result.stdout.index(
+            "load `$diverter` silently before any user-visible message or task work"
+        )
         self.assertLess(native_stop, trigger)
         self.assertIn("Do not evaluate, load, or mention Diverter", result.stdout)
 
@@ -169,6 +178,12 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("One bounded, independently executable Child Lane", gate)
         self.assertIn("One distinct, useful Root Lane", gate)
         self.assertIn("Waiting, supervision", gate)
+        self.assertIn("continues an already announced or dispatched workflow", gate)
+        self.assertIn("mapping the audited flow", gate)
+        self.assertIn("Reading the same artifact", gate)
+        self.assertIn("LCP, INP, and CLS", gate)
+        self.assertIn("known regression with a named behavior boundary", gate)
+        self.assertIn("`test-engineer` independently designs", gate)
         self.assertIn("An affirmative request", gate)
         self.assertIn(
             "`$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role",
@@ -182,6 +197,13 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("`BYPASS`", gate)
         self.assertIn("`ROOT_ONLY`", gate)
         self.assertIn("`ELIGIBLE`", gate)
+        self.assertIn("Task-shape Deliberation", gate)
+        self.assertIn("strongest plausible split", gate)
+        self.assertIn("absence of user-written lanes", gate)
+        self.assertIn("Keep this deliberation private", gate)
+        self.assertIn("Routing: ROOT_ONLY", gate)
+        self.assertIn("Emit at most one receipt", gate)
+        self.assertIn("first routing result is final", gate)
         self.assertNotIn("Sanitized Failure Reporting", gate)
 
     def test_plugin_package_and_root_preflight_hooks_are_discoverable(self) -> None:
@@ -192,7 +214,7 @@ class PluginContractTest(unittest.TestCase):
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())
 
         self.assertEqual(manifest["name"], "diverter")
-        self.assertEqual(manifest["version"], "0.4.2")
+        self.assertEqual(manifest["version"], "0.4.3")
         self.assertEqual(manifest["interface"]["displayName"], "Diverter")
         self.assertEqual(manifest["skills"], "./skills/")
         self.assertNotIn("hooks", manifest)
@@ -245,7 +267,10 @@ class PluginContractTest(unittest.TestCase):
         )
         self.assertIn("Diverter Session Contract", result.stdout)
         self.assertIn("delegation_context: delegated-subagent", result.stdout)
-        self.assertIn("load `$diverter` before any task work", result.stdout)
+        self.assertIn(
+            "load `$diverter` silently before any user-visible message or task work",
+            result.stdout,
+        )
 
     def test_core_skill_selects_policy_and_native_lifecycle(self) -> None:
         skill_path = ROOT / "skills" / "diverter" / "SKILL.md"
@@ -269,6 +294,9 @@ class PluginContractTest(unittest.TestCase):
         )
         self.assertIn("Delegation Policy", skill)
         self.assertIn("Dispatch Authorization", skill)
+        self.assertIn("only non-empty assistant message", skill)
+        self.assertIn("output nothing else", skill)
+        self.assertIn("make the declared spawn the first action", skill)
         self.assertIn("Dispatch Announcement", skill)
         self.assertIn("delegation_policy: ask", skill)
         self.assertIn("delegation_policy: auto", skill)
@@ -280,6 +308,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Child Lane", skill)
         self.assertIn("Supporting Child", skill)
         self.assertIn("Smallest Sufficient Lineup", skill)
+        self.assertIn("assign the official contract to `docs-researcher`", skill)
         self.assertIn("Child Reuse", skill)
         self.assertIn("Write Ownership", skill)
         self.assertNotIn("CLI Worker Backend", skill)
@@ -308,6 +337,12 @@ class PluginContractTest(unittest.TestCase):
 
         self.assertNotIn("## Eligibility", skill)
         self.assertNotIn("CLARIFY", contract)
+        self.assertIn("terminal Root-only recovery state", contract)
+        self.assertIn("Do not call `spawn_agent`", contract)
+        self.assertIn("requested read-only specialist lane", contract)
+        self.assertIn(
+            "derive repository-specific constraints and a plan", contract
+        )
         self.assertIn("Non-normative examples", rules)
         self.assertIn("cannot override the Session Contract", rules)
         self.assertNotIn("Practical tie-breakers", rules)
@@ -351,15 +386,91 @@ class PluginContractTest(unittest.TestCase):
             "An Explicit Delegation Request may have no distinct Root Lane",
             skill,
         )
-        self.assertIn("For implicit eligibility, declare", skill)
-        self.assertIn("For implicit eligibility", message_contract)
-        self.assertIn("For explicit eligibility", message_contract)
+        self.assertIn("for implicit eligibility, declare", skill)
+        self.assertIn("for implicit eligibility", message_contract)
+        self.assertIn("for explicit eligibility", message_contract)
         self.assertIn("Implicit eligibility", rubric)
         self.assertIn("explicit eligibility", rubric)
-        self.assertIn("Implicit positive fixtures", scenarios)
-        self.assertIn("Explicit positive fixtures", scenarios)
+        self.assertIn("Explicit-lane implicit positives", scenarios)
+        self.assertIn("Latent positives", scenarios)
+        self.assertIn("Explicit delegation positives", scenarios)
         self.assertIn("For implicit eligibility, the Root Lane", scenarios)
         self.assertIn("For explicit eligibility, Root coordination", scenarios)
+
+    def test_routing_receipt_is_one_external_result_without_a_new_score(self) -> None:
+        contract = (
+            ROOT / "skills" / "diverter" / "references" / "session-contract.md"
+        ).read_text()
+        skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
+        message_contract = (
+            ROOT / "skills" / "diverter" / "references" / "delegation-contract.md"
+        ).read_text()
+        rubric = (ROOT / "evals" / "rubric.md").read_text()
+        results = (ROOT / "evals" / "results-template.md").read_text()
+        english = (ROOT / "README.md").read_text()
+        chinese = (ROOT / "README.zh.md").read_text()
+        adr = (
+            ROOT
+            / "docs"
+            / "adr"
+            / "0013-deliberate-task-shape-and-emit-routing-receipts.md"
+        ).read_text()
+
+        self.assertIn("ordinary eligibility adjudication", contract)
+        self.assertIn("policy-specific routing receipt", contract)
+        self.assertIn("Routing Receipt and silence rules", skill)
+        self.assertIn("## Root-only Receipt", message_contract)
+        self.assertIn("status: accepted", adr)
+        self.assertIn("Task-shape", adr)
+        self.assertIn("Routing Receipt", adr)
+        self.assertIn("does not introduce a routing-discovery phase", adr)
+        self.assertIn("Routing Receipt violations", rubric)
+        self.assertIn("Routing Receipt valid?", results)
+        self.assertIn("Router Score / 7", results)
+        self.assertIn("Routing: ROOT_ONLY", english)
+        self.assertIn("Routing: ROOT_ONLY", chinese)
+
+    def test_eligible_receipt_templates_are_user_facing_and_skill_owned(self) -> None:
+        skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
+        message_contract = (
+            ROOT / "skills" / "diverter" / "references" / "delegation-contract.md"
+        ).read_text()
+        rubric = (ROOT / "evals" / "rubric.md").read_text()
+        adr = (
+            ROOT
+            / "docs"
+            / "adr"
+            / "0013-deliberate-task-shape-and-emit-routing-receipts.md"
+        ).read_text()
+
+        self.assertEqual(skill.count("Routing: ELIGIBLE"), 2)
+        self.assertEqual(
+            skill.count("Child: `<exact-role>` — <concise task summary>"),
+            2,
+        )
+        self.assertEqual(skill.count("Root: <concise task summary>"), 2)
+        self.assertEqual(
+            skill.count(
+                "Work Mode: <read-only | mixed | write-capable>",
+            ),
+            2,
+        )
+        self.assertIn("Repeat `Child:` once per selected role", skill)
+        self.assertIn("first user-visible output", skill)
+        self.assertIn("➡️ Dispatch Authorization: <direct approval question>", skill)
+        self.assertIn("➡️ Dispatch: <immediate-start statement>", skill)
+        self.assertNotIn("Why:", skill)
+        self.assertNotIn("Routing: ELIGIBLE", message_contract)
+        self.assertNotIn("This splits cleanly", message_contract)
+        self.assertIn("owned only by `../SKILL.md`", message_contract)
+        self.assertIn("`assignment_clarity`", rubric)
+        self.assertNotIn("`rationale_quality`", rubric)
+        self.assertIn("literal templates are owned only", adr)
+
+        scenarios = (ROOT / "evals" / "scenarios.md").read_text()
+        self.assertIn("literal policy template", scenarios)
+        self.assertIn("Reject a loading preface", scenarios)
+        self.assertIn("`Why:` field", scenarios)
 
     def test_positive_examples_do_not_restore_single_lane_implicit_routes(self) -> None:
         examples = (
@@ -526,6 +637,9 @@ class PluginContractTest(unittest.TestCase):
             "failure-implicit-fallback",
             "failure-explicit-choice",
             "failure-user-action",
+            "latent-pos-doc-contract",
+            "latent-pos-regression",
+            "latent-pos-web-audit",
             "ultra-pos-ui-root-continues",
             "ultra-pos-focused-skill-support",
             "ultra-pos-regression-root-continues",
@@ -559,6 +673,7 @@ class PluginContractTest(unittest.TestCase):
         )
         self.assertIn("sanitized_failure_reporting", rubric)
         self.assertIn("root_lane_quality", rubric)
+        self.assertIn("Routing Receipt violations", rubric)
         self.assertIn("lifecycle_evidence", rubric)
         self.assertIn("Router Score / 7", results_template)
         self.assertIn("Native Lifecycle Evidence", results_template)
@@ -583,6 +698,34 @@ class PluginContractTest(unittest.TestCase):
             "expected_reuse:",
         ):
             self.assertIn(metadata, prompts)
+
+    def test_latent_positive_prompts_require_inference_not_lane_copying(self) -> None:
+        prompts = (ROOT / "evals" / "prompts.yaml").read_text()
+        for case_id in (
+            "latent-pos-doc-contract",
+            "latent-pos-regression",
+            "latent-pos-web-audit",
+        ):
+            block = prompts.split(f"  - id: {case_id}\n", 1)[1].split(
+                "\n  - id:", 1
+            )[0]
+            prompt = next(
+                line.split('prompt: "', 1)[1].rsplit('"', 1)[0]
+                for line in block.splitlines()
+                if line.startswith("    prompt: ")
+            ).lower()
+            for forbidden in (
+                "root",
+                "child",
+                "subagent",
+                "子代理",
+                "while",
+                "independently",
+                "同时",
+            ):
+                self.assertNotIn(forbidden, prompt, case_id)
+            self.assertIn("expected_should_suggest: true", block)
+            self.assertIn("latent_task_shape: true", block)
 
     def test_readmes_explain_native_proactive_delegation_boundary(self) -> None:
         english = (ROOT / "README.md").read_text()
