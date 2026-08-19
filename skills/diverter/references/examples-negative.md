@@ -27,7 +27,7 @@ These are examples that should usually not trigger delegation.
 Why these are negative examples:
 
 - the task is too small or too direct
-- there is no bounded Child Contribution with a material benefit
+- no strong positive signal justifies the coordination cost
 - the request is blocked on one immediate answer
 - the user has explicitly opted out
 - delegated subagent handoffs already have Dispatch Authorization and should execute, not select another lineup
@@ -36,4 +36,4 @@ Why these are negative examples:
 
 Borderline note:
 
-If a request grows to include a bounded autonomous Child Contribution with material benefit and safe ownership, it may become positive later in the conversation. A separate Root deliverable is not required.
+If clarification or lightweight discovery reveals a strong positive signal and one Child can be bounded safely, the request may become positive later in the conversation. A separate Root deliverable is not required.

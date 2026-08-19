@@ -1,4 +1,4 @@
 interface:
   display_name: "Diverter"
   short_description: "Distill Ultra-style native delegation for non-Ultra Codex."
-  default_prompt: "Identify one bounded native Child Contribution when it offers material benefit, then have Root judge and integrate it."
+  default_prompt: "Look for a strong positive task signal, offload one bounded native Child Contribution when useful, then have Root judge and integrate it."

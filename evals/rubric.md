@@ -4,13 +4,13 @@ Score each routing prompt on these seven dimensions. Use `1` for pass and `0` fo
 
 | Dimension | Pass condition | Fail condition |
 | --- | --- | --- |
-| `routing_correctness` | Delegates only when expected, derives latent positive lanes, and emits the required single routing result | Delegates on a negative case, misses a positive case, or emits a missing, duplicate, or wrong-kind receipt |
+| `routing_correctness` | Delegates on strong positive signals, stays silent on negative cases, and emits one eligible routing result when expected | Delegates on a negative case, misses a positive case, emits routing output for non-delegation, or emits a missing, duplicate, or wrong-kind eligible receipt |
 | `policy_compliance` | `ask` asks and stops; `auto` announces and dispatches without a permission question | Violates the loaded policy or an explicit task override |
 | `lineup_quality` | Recommends one lineup of 1-4 existing roles that fits the task | Recommends too many roles, wrong roles, invented roles, or several unfocused lineups |
 | `root_ownership_quality` | Every eligible route states how Root will judge, proportionally verify, integrate, or otherwise retain responsibility without inventing a separate deliverable | Root abandons integration, treats waiting alone as benefit, or invents work only to justify delegation |
 | `assignment_clarity` | Gives every exact child role and Root one concise, user-facing task summary without exposing internal handoff details | Omits a role or task, uses vague filler, adds routing rationale, or expands into steps, scope, success criteria, verification, or deliverables |
 | `work_mode_and_ending` | States an exact Work Mode and uses the policy-appropriate ending | Omits the mode or uses the wrong ask/auto ending |
-| `sanitized_failure_reporting` | Uses one receipt for ordinary task-shape non-delegation, stays silent for explicit opt-out and recovered internal failures, and briefly reports failures that change execution or require user action without operational details | Exposes aliases, cache paths, `SKILL.md` loading, retries, narrates a silent exception, or hides a failure that affects the user-visible result |
+| `sanitized_failure_reporting` | Keeps every pre-activation non-delegation path silent and briefly reports failures that change execution or require user action without operational details | Emits a Root-only routing receipt, exposes aliases, cache paths, `SKILL.md` loading, retries, narrates a silent exception, or hides a failure that affects the user-visible result |
 
 ## Scorecard
 
@@ -38,7 +38,7 @@ The smoke run passes only if all of these are true:
 - negative-case false positive rate is exactly `0%`
 - delegation-policy violations are exactly `0`
 - sanitized failure-reporting violations are exactly `0`
-- Routing Receipt violations are exactly `0`
+- eligible-receipt or Root-only-silence violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes for `edge-02`
 - context-preserving offload suggestion/dispatch rate is exactly `100%`
@@ -52,7 +52,7 @@ The full extended run passes only if all of these are true:
 - negative-case false positive rate is at most `15%`
 - delegation-policy violations are exactly `0`
 - sanitized failure-reporting violations are exactly `0`
-- Routing Receipt violations are exactly `0`
+- eligible-receipt or Root-only-silence violations are exactly `0`
 - recommended lineup count above 4 is exactly `0`
 - explicit fallback handling passes at least `90%` of the relevant cases
 - Root ownership quality passes at least `90%` of implicit eligible positives
@@ -72,7 +72,7 @@ Look for these failure patterns even if the numeric score looks decent:
 - `test-automator` suggested before behavior scope is clear
 - security buzzword prompts treated as concrete security audit scope without clarification
 - internal aliases, cache paths, `SKILL.md` loading, or retry mechanics exposed to the user
-- ordinary task-shape non-delegation missing its one-line receipt
+- any non-delegation path emitting a routing receipt or internal routing explanation
 - explicit opt-out, native unavailability, or successful internal recovery narrated as an operational event
 - eligible routing with an extra eligibility receipt before the policy-specific Dispatch message
 - eligible routing with a `Why:` field, routing rationale, malformed field order, or internal handoff detail instead of concise task summaries

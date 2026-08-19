@@ -3,7 +3,7 @@
 Diverter release validation has three evidence seams:
 
 1. **Preflight Delivery** — Hook input/output evidence proving the Session Contract is restored, every Root prompt gets one short Turn Reminder, and child prompts get none.
-2. **Router Contract** — deterministic and prompt-level evidence for Task-shape Deliberation, one Routing Receipt, eligibility, bounded Child Contributions, Root responsibilities, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
+2. **Router Contract** — deterministic and prompt-level evidence for Task-shape Deliberation, silent non-delegation, eligible Routing Receipts, bounded Child Contributions, Root responsibilities, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
 3. **Native Lifecycle** — persisted Codex records proving what actually spawned and happened over time.
 
 Final-response wording is never Native Lifecycle evidence.
@@ -37,7 +37,7 @@ Require all of the following:
 
 - `SessionStart` injects the complete Session Contract and active policy at startup and again after compact;
 - each Root `UserPromptSubmit` input omits `agent_id` and receives exactly one short Turn Reminder, never the full Contract;
-- the ineligible first Root prompt emits exactly one `Routing: ROOT_ONLY — <reason>` receipt after Task-shape Deliberation;
+- the ineligible first Root prompt continues normally with no routing receipt or mention of Diverter;
 - the eligible second Root prompt loads Diverter silently before any user-visible message or other task work;
 - the eligible second Root prompt emits its policy-specific routing receipt first and emits no loading or separate eligibility message;
 - the child `UserPromptSubmit` input contains `agent_id` and `agent_type`;
@@ -62,11 +62,11 @@ The paired controls are central:
 - `ultra-pos-context-offload` verifies useful specialist offload without a separate concurrent Root deliverable; and
 - `auto-idempotency` ↔ `ultra-reuse-same-scope`.
 
-Implicit positives must identify a bounded autonomous Child Contribution, a credible material benefit, safe ownership, and the Root responsibility that will judge and integrate it. Explicit delegation positives must name the requested Child Contribution and may state Root coordination and integration without independently proving material benefit. Neither path invents a separate Root deliverable.
+Implicit positives must match a strong positive task-shape signal, avoid the clear exclusions, and produce a bounded autonomous Child Contribution with safe ownership plus a Root responsibility that will judge and integrate it. Do not require every possible benefit to be independently proven. Explicit delegation positives must name the requested Child Contribution and may state Root coordination and integration without independently proving material benefit. Neither path invents a separate Root deliverable.
 
 Latent positives state only a realistic outcome, omit routing instructions, and require Task-shape Deliberation to derive a bounded Child Contribution plus Root judgment and integration. At least one latent positive must rely on Root Context Preservation rather than a second user-visible deliverable.
 
-For each Root user prompt, require one external routing result at most. Ordinary task-shape `ROOT_ONLY` uses one Routing Receipt; eligible work uses its policy-specific eligible receipt. Bypass, explicit opt-out, native absence, and missing-role fallbacks remain silent.
+For each Root user prompt, require one external routing result at most. Every `ROOT_ONLY` path stays silent; eligible work uses its policy-specific eligible receipt.
 
 Every eligible receipt must be the first user-visible output and follow the literal policy template in `skills/diverter/SKILL.md`: exact field order, one repeated `Child:` line per exact role in lineup order, one concise user-facing task summary per Child and for Root, one exact Work Mode, and the policy-specific localized action. Reject a loading preface, `Why:` field, routing rationale, code fences, extra routing prose, or internal handoff details such as steps, file scope, success criteria, verification, and deliverables.
 
@@ -207,10 +207,10 @@ Record exact diagnostic configurations and results. They do not gate the release
 A release is a No-Go if any of these occur:
 
 - a strict or paired negative dispatches;
-- a prompt governed by ordinary or eligible routing emits a missing, duplicate, or wrong-kind Routing Receipt;
+- a non-delegated prompt emits routing output, or eligible routing emits a missing, duplicate, or wrong-kind Routing Receipt;
 - `ask` spawns before approval or after refusal;
 - `auto` asks permission or fails to announce before spawn;
-- For implicit eligibility, the Child Contribution is unbounded, cannot run autonomously, lacks material benefit, or has unsafe ownership;
+- For implicit eligibility, no strong positive signal exists, a clear exclusion applies, or the selected Child Contribution is unbounded, non-autonomous, or has unsafe ownership;
 - For implicit eligibility, Root responsibility for judgment, proportional verification, and integration is missing;
 - For explicit eligibility, Root coordination or integration responsibility is missing;
 - an equivalent scope is spawned twice;

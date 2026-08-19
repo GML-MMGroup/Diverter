@@ -1,5 +1,6 @@
 ---
-status: accepted
+status: superseded
+superseded_by: ADR-0015
 ---
 
 # Deliberate task shape and emit one routing receipt

@@ -1,5 +1,6 @@
 ---
-status: accepted
+status: superseded
+superseded_by: ADR-0015
 ---
 
 # Allow context-preserving Child offload without a separate Root deliverable

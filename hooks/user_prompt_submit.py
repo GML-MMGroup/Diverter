@@ -10,12 +10,11 @@ TURN_REMINDER = (
     "apply the active Diverter "
     "Session Contract to this prompt and deliberate the task shape before "
     "deciding. Native Proactive Delegation ownership is a terminal silent bypass. "
-    "Otherwise, if eligible or the Contract is missing, load $diverter silently "
-    "and make its routing receipt the first user-visible output. "
-    "For an ordinary ROOT_ONLY decision, emit exactly one "
-    "`Routing: ROOT_ONLY — <one task-shape reason>` receipt; keep bypass, "
-    "explicit opt-out, and native unavailability silent. The first routing "
-    "result is final for this prompt; never re-route after task work starts."
+    "Otherwise, load $diverter silently only when eligible and make its routing "
+    "receipt the first user-visible output. If ROOT_ONLY, continue silently "
+    "without mentioning routing or internal checks. A silent ROOT_ONLY may be "
+    "reconsidered once only after clarification or lightweight read-only discovery "
+    "materially changes the task shape before implementation."
 )
 
 

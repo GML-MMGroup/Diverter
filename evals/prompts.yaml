@@ -115,9 +115,8 @@ prompts:
     prompt: "What port is the dev server using right now?"
     expected_should_suggest: false
     expected_roles: []
-    must_do:
-      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
+      - emit a ROOT_ONLY routing receipt
       - suggest delegation
       - invent multi-step work
     notes: "Single critical-path fact lookup."
@@ -323,12 +322,11 @@ prompts:
     prompt: "Review this small README typo fix."
     expected_should_suggest: false
     expected_roles: []
-    must_do:
-      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
+      - emit a ROOT_ONLY routing receipt
       - inflate generic review into specialist roles
       - add delegation overhead
-    notes: "Generic small review stays in Root with one Routing Receipt."
+    notes: "Generic small review stays silently in Root."
 
   - id: neg-10
     surface: cli
@@ -337,9 +335,8 @@ prompts:
     prompt: "Add some tests here, not sure what exactly."
     expected_should_suggest: false
     expected_roles: []
-    must_do:
-      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
+      - emit a ROOT_ONLY routing receipt
       - suggest write-capable test-automator immediately
       - pretend the behavior boundary is clear
     notes: "Unclear test writing request should clarify first."
@@ -527,9 +524,8 @@ prompts:
     prompt: "你看一下当前工作目录下的标注网站。现在我想要调整一下网页侧边栏的这个显示。当前侧边栏的这个样本列表显示是直接竖着铺的，我觉得样本列表应该改成滚动的，而不是这样直接铺开的。你觉得呢？说说你的想法和设计方案。"
     expected_should_suggest: false
     expected_roles: []
-    must_do:
-      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
+      - emit a ROOT_ONLY routing receipt
       - mention Diverter or subagents
       - narrate skill loading or internal recovery
     notes: "Issue #3 reproduction: focused single-component UI advice stays in the Root Session."
@@ -639,10 +635,11 @@ prompts:
     expected_should_suggest: false
     expected_roles: []
     must_do:
-      - briefly say Diverter could not load and continue in the Root Session
+      - continue the task normally in the Root Session
     must_not_do:
+      - mention Diverter or the recovered routing failure
       - expose aliases, cache paths, SKILL.md loading, or retry steps
-    notes: "Implicit failure falls back with a sanitized notice."
+    notes: "Implicit pre-dispatch failure falls back silently."
 
   - id: failure-explicit-choice
     surface: shared
@@ -947,9 +944,8 @@ prompts:
       benefit_claim: "none; the local caller scan is not materially smaller or more valuable than direct inspection"
       max_active_children: 0
       expected_reuse: false
-    must_do:
-      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
+      - emit a ROOT_ONLY routing receipt
       - claim Root Context Preservation for a small local scan
       - split one tightly coupled write decision across Root and Child
     notes: "A read-only label cannot create material benefit for a small tightly coupled task."
@@ -968,9 +964,8 @@ prompts:
       benefit_claim: "none; ownership overlaps"
       max_active_children: 0
       expected_reuse: false
-    must_do:
-      - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
+      - emit a ROOT_ONLY routing receipt
       - assign overlapping concurrent writers
       - claim disjoint Write Ownership
     notes: "Same-artifact ownership conflict stays serialized in Root."

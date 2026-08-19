@@ -126,8 +126,8 @@ Diverter always names one Work Mode before dispatch.
 
 1. The `SessionStart` Hook loads the user-level Delegation Policy and full Session Contract, restoring both after compaction.
 2. Before each Root turn, `UserPromptSubmit` adds one short Turn Reminder; child turns are filtered deterministically through `agent_id` and receive no reminder.
-3. Preflight privately derives the strongest plausible bounded Child Contribution and Root responsibility before deciding. Ordinary `ROOT_ONLY` decisions return one short `Routing: ROOT_ONLY — <reason>` receipt; bypass, explicit opt-out, and native unavailability stay silent. Eligible work loads Diverter before task work and uses its policy-specific dispatch message as the receipt.
-4. Diverter selects the bounded Child Contribution, Smallest Sufficient Lineup, and Work Mode. Implicit routing requires a credible benefit such as Root Context Preservation, elapsed time, expertise, coverage, quality, or independent verification; it does not require a separate concurrent Root deliverable. `ask` waits for approval; `auto` announces and dispatches immediately.
+3. Preflight privately evaluates strong positive task-shape signals, clear exclusions, and read-heavy versus write-heavy tie-breakers. Every `ROOT_ONLY` decision stays silent; eligible work loads Diverter before task work and uses its policy-specific dispatch message as the receipt.
+4. Diverter selects the bounded Child Contribution, Smallest Sufficient Lineup, and Work Mode. Read-heavy exploration, code-plus-docs verification, independent evidence, specialist review, and Root Context Preservation lean toward delegation without requiring a separate concurrent Root deliverable. `ask` waits for approval; `auto` announces and dispatches immediately.
 5. Root may continue useful work or wait for a needed Child result, while every child remains a leaf. Root then judges, proportionally verifies, integrates, and returns the final result.
 
 Related follow-ups return to the same native child, preserving the context it already built.

@@ -29,27 +29,40 @@ A requested read-only specialist lane is sufficiently bounded when the current r
 Without an Explicit Delegation Request, perform Task-shape Deliberation before classifying the prompt:
 
 1. Infer the concrete outcome and the work needed to produce it. Do not classify from surface wording alone.
-2. Construct the strongest plausible bounded Child Contribution and identify the Root responsibility that will use it.
-3. Test that candidate offload against the four conditions below. Do not treat the absence of user-written lanes, delegation language, multiple directions, or separate deliverables as evidence that no useful contribution exists.
+2. Look for one strong positive signal for useful offload, then check whether a clear exclusion applies.
+3. If the task shape is positive, construct the smallest safe Child Contribution and the Root responsibility that will use it.
 
 Keep this deliberation private. Do not expose chain-of-thought or add a separate reasoning report.
 
-Return candidate `ELIGIBLE` ONLY IF all four conditions are affirmatively established from the current prompt, existing conversation context, and this contract:
+Strong positive signals include any one of:
 
-1. One bounded Child Contribution has a clear scope, completion condition, and integration-ready handoff.
-2. The Child can complete that contribution without repeatedly waiting for Root decisions or an unfinished prerequisite.
-3. Separate execution offers a credible, non-trivial benefit in at least one of: Root Context Preservation, elapsed time, coverage or quality, relevant expertise, or independent verification. Mere theoretical divisibility is insufficient.
-4. Root and Child responsibilities are complementary, or intentionally overlap for independent verification, and all read and write ownership is safe.
+- read-heavy research, code mapping, log inspection, or other exploration that lets a Child absorb noisy source material and return compact evidence;
+- code and documentation or API verification that form complementary evidence;
+- multiple independent questions, review dimensions, or planning investigations;
+- a specialist viewpoint or independent verification that can materially improve confidence or quality; or
+- a focused skill that can use one bounded Supporting Child without giving up its core workflow.
 
-Root Context Preservation applies when the Child absorbs materially larger, noisier, or more exploratory source material and returns a compact, evidence-grounded handoff. A handoff expected to be as large or noisy as the source work does not establish this benefit.
+Clear exclusions include:
+
+- trivial, wording-only, or one-fact tasks where delegation overhead is larger than the work;
+- an ambiguous objective that needs clarification before useful work can be assigned;
+- one strongly sequential critical path with no useful independent contribution;
+- tightly coupled work where Root and Child would repeat the same decision; or
+- overlapping or unsafe write ownership.
+
+Use these tie-breakers instead of demanding proof of every possible benefit:
+
+- lean `ELIGIBLE` for read-heavy, exploratory, code-plus-docs, multi-perspective, and independent-verification work;
+- lean `ROOT_ONLY` for small, tightly coupled, or write-heavy work; and
+- when a positive signal is credible and one Child can be bounded safely, prefer the smallest one-Child lineup.
+
+Before dispatch, ensure the selected Child Contribution has a clear scope and completion condition, can proceed without repeatedly waiting for Root decisions, and has safe read and write ownership. These are execution safeguards after a positive task-shape judgment, not a requirement that the user predefine lanes, handoffs, multiple directions, or separate deliverables.
 
 A separate concurrent Root Lane or separate Root deliverable is not required. Root may continue other work or wait for the Child result, but waiting alone is not a benefit. Root remains responsible for judgment, proportional verification, integration, and the final response.
 
 Reading the same artifact does not make responsibilities duplicative when the questions differ or the overlap is intentional independent verification. Root's proportional verification of a Child result is not duplication.
 
-An explicitly selected focused skill may retain its core workflow while Diverter supplies a Supporting Child for a bounded complementary contribution.
-
-If boundedness, autonomy, material benefit, or safe ownership is uncertain or absent, return `ROOT_ONLY`.
+If a clear exclusion applies or no strong positive signal remains after considering the current prompt and conversation context, return `ROOT_ONLY`.
 
 ### 5. Native availability
 
@@ -58,14 +71,13 @@ Before final activation, confirm that native role-specific subagent dispatch and
 ### 6. Result action
 
 - `BYPASS`: exit Diverter entirely and continue under the owning mechanism.
-- `ROOT_ONLY` from Explicit opt-out or Native availability: continue silently in the Root Session.
-- `ROOT_ONLY` from ordinary eligibility adjudication: emit exactly one Routing Receipt for this Root user prompt, then continue in Root: `Routing: ROOT_ONLY — <one task-shape reason>`. Match the user's language in the reason. Do not mention Diverter, skill loading, role availability, or other internal checks.
+- `ROOT_ONLY`: continue silently in the Root Session. Every `ROOT_ONLY` result is silent: do not emit a routing receipt, mention Diverter, or expose the internal decision.
 - `ELIGIBLE`: load `$diverter` silently before any user-visible message or task work. The completed Preflight is authoritative; do not re-adjudicate eligibility in the normal Skill path. The skill's policy-specific routing receipt is the first user-visible output and the single external receipt; do not add eligibility, loading, recommendation, or announcement prose around it.
 
-`SessionStart`, resume, clear, and compact restore context but never emit a Routing Receipt by themselves. Emit at most one receipt for each Root user prompt.
+`SessionStart`, resume, clear, and compact restore context but never emit a Routing Receipt by themselves. Only `ELIGIBLE` produces a routing receipt.
 
-The first routing result is final for that Root user prompt. After `ROOT_ONLY`, do not later load Diverter, emit an `ELIGIBLE` receipt, or spawn because task analysis reveals a possible split.
+An emitted `ELIGIBLE` receipt is final for that normalized scope. A silent `ROOT_ONLY` decision may be reconsidered once if user clarification or lightweight read-only Root discovery materially changes the task shape before implementation; never announce the earlier non-delegation or duplicate an eligible dispatch.
 
 The active `ask` or `auto` Delegation Policy does not change eligibility. It controls the Dispatch Workflow only after `ELIGIBLE`, and an explicit Task Policy Override retains its existing one-task scope.
 
-Trivial, ambiguous, low-benefit, unnecessarily duplicative, or overlapping-write work normally fails the positive conditions above; these are examples, not a second eligibility standard.
+The strong signals, exclusions, and tie-breakers above are the implicit eligibility standard. Do not convert them into an all-conditions-must-pass checklist.

@@ -1,6 +1,6 @@
 {
   "name": "diverter",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Distill Ultra-style native delegation into non-Ultra Codex sessions.",
   "author": {
     "name": "917Dhj",
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "Diverter",
     "shortDescription": "Ultra-style delegation for non-Ultra Codex",
-    "longDescription": "Offloads bounded, beneficial contributions to native specialist subagents while Root retains judgment, verification, integration, and the final response.",
+    "longDescription": "Routes useful bounded contributions to native specialist subagents while Root retains judgment, verification, integration, and the final response.",
     "developerName": "GML-MMGroup",
     "category": "Productivity",
     "capabilities": [
@@ -29,7 +29,7 @@
     ],
     "websiteURL": "https://github.com/GML-MMGroup/Diverter",
     "defaultPrompt": [
-      "Offload bounded contributions to native specialist subagents when that materially improves the work or preserves Root context."
+      "Look for strong positive task signals and offload one bounded contribution to a native specialist when useful."
     ],
     "composerIcon": "./assets/diverter-icon.png",
     "logo": "./assets/diverter-icon.png"

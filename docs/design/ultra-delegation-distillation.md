@@ -39,9 +39,9 @@ Fresh installations explicitly ask the user to choose a Delegation Policy. `auto
 
 Recommending `auto` does not create a hidden `auto-safe` tier. After its Dispatch Announcement, `auto` continues to authorize suitable `read-only`, `mixed`, and `write-capable` delegation; the user task, Codex permissions, sandbox, explicit ownership, and write serialization remain the safety boundaries.
 
-### D2 — A separate concurrent Root lane is not mandatory
+### D2 — Positive task signals can justify one bounded Child
 
-Every implicit dispatch requires one bounded autonomous Child Contribution, credible material benefit, and safe ownership. Root need not produce a separate deliverable or make concurrent progress while the Child runs. Root remains accountable for judging, proportionally verifying, integrating, and returning the final outcome. Root Context Preservation is a material benefit when the Child absorbs substantially larger, noisier, or more exploratory source material and returns a compact evidence-grounded handoff.
+Implicit routing leans positive when read-heavy exploration, code-plus-docs verification, independent evidence, specialist review, or Root Context Preservation makes one bounded Child useful. Boundedness, autonomy, and safe ownership remain dispatch safeguards rather than an all-conditions-must-pass benefit test. Root need not produce a separate deliverable or make concurrent progress while the Child runs, and remains accountable for judging, proportionally verifying, integrating, and returning the final outcome.
 
 ### D3 — Focused skills may receive supporting children
 
@@ -153,21 +153,19 @@ The key reinterpretation is:
 ```text
 v0.3.2: child lane A + child lane B
 v0.4.0: child contribution + distinct Root lane
-target: bounded Child Contribution + Root judgment and integration
+target: positive task signal + bounded Child Contribution + Root judgment and integration
 ```
 
 One suitable child is sufficient. Additional children are justified only by additional independent contributions.
 
-Explicit delegation requests may bypass the implicit benefit threshold, but never clarity, permissions, sandboxing, write boundaries, delegated-child recursion guards, or an explicit opt-out.
+Explicit delegation requests may bypass the implicit positive-signal threshold, but never clarity, permissions, sandboxing, write boundaries, delegated-child recursion guards, or an explicit opt-out.
 
 ## Hard non-trigger cases
 
 Diverter should stay in the Root Session when:
 
 - the task is trivial or coordination would cost more than the work;
-- no bounded Child Contribution or completion condition can be stated;
-- the Child cannot proceed autonomously;
-- delegation has no material benefit, including no meaningful Root Context Preservation;
+- no useful Child Contribution can be bounded safely after a positive task-shape judgment;
 - Root and Child would unnecessarily repeat the same work;
 - concurrent writers would own the same mutable artifact or scope;
 - the request is ambiguous and must be clarified first;

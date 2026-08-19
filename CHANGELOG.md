@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.4.5 - 2026-08-20
+
+- Restore positive-signal implicit routing with explicit exclusions and read-heavy tie-breakers instead of requiring every eligibility factor to be affirmatively proven.
+- Keep all `ROOT_ONLY` decisions silent; only eligible delegation emits a routing receipt.
+
 ## 0.4.4 - 2026-08-19
 
 - Allow implicit delegation for one bounded Child Contribution when it materially preserves Root context or improves time, expertise, coverage, quality, or independent verification; a separate concurrent Root deliverable is no longer required.

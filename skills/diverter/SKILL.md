@@ -26,15 +26,15 @@ For an eligible task:
 - apply the loaded `ask` or `auto` Delegation Policy; and
 - integrate and proportionally verify child results before answering the user.
 
-Implicit eligibility requires material benefit; an Explicit Delegation Request bypasses that benefit threshold. Neither implicit nor explicit eligibility requires a separate concurrent Root Lane or Root deliverable. Root judgment, proportional verification, integration, and ownership of the final response are valid Root responsibilities.
+Implicit eligibility follows the Session Contract's strong positive signals, clear exclusions, and directional tie-breakers; an Explicit Delegation Request bypasses the need for an implicit positive signal. Neither implicit nor explicit eligibility requires a separate concurrent Root Lane or Root deliverable. Root judgment, proportional verification, integration, and ownership of the final response are valid Root responsibilities.
 
-If the Missing-Contract fallback returns `ROOT_ONLY`, follow the Session Contract's Routing Receipt and silence rules. If native dispatch is unavailable, continue silently in the Root Session.
+If the Missing-Contract fallback returns `ROOT_ONLY`, continue silently in the Root Session. If native dispatch is unavailable, do the same.
 
 ## Preflight Handoff
 
 The Session Contract is the sole normative authority for `BYPASS`, `ROOT_ONLY`, and `ELIGIBLE`. In the normal path, this skill loads only after `ELIGIBLE`; trust the completed Preflight and do not re-adjudicate eligibility.
 
-If the current Root prompt already received any Routing Receipt, do not emit another receipt or dispatch a new scope. Continue the first routing decision for that prompt.
+If the current Root prompt already received an eligible Routing Receipt, do not emit another receipt or dispatch the same scope again.
 
 Use the Missing-Contract fallback only when the active Session Contract is absent:
 
@@ -114,7 +114,7 @@ Smallest Sufficient Lineup rules:
 - Never exceed four roles; four is a safety cap, not a target.
 - Prefer the central specialist over a generic reviewer when the concrete boundary is security, test strategy, or Web performance.
 - Prefer `search-specialist` for open-ended strategy or option evidence; reserve `docs-researcher` for a named documentation or API contract.
-- Use `code-mapper` or `search-specialist` when a bounded evidence search materially preserves Root context; require a compact, evidence-grounded handoff.
+- Use `code-mapper` or `search-specialist` for bounded evidence searches that preserve Root context; require a compact, evidence-grounded handoff.
 - When repository analysis is paired with official contract verification, assign the official contract to `docs-researcher` and keep final judgment and synthesis in Root.
 - Add `test-automator` only for explicitly requested, behaviorally clear test writes.
 - Add `web-performance-auditor` for Web-facing performance work or named Web metrics such as LCP, INP, or CLS, while Root may separately own component, accessibility, or design analysis.
@@ -213,7 +213,7 @@ Every write-capable Root or Child Lane declares exclusive Write Ownership over a
 
 ## Sanitized Failure Reporting
 
-- Ordinary task-shape non-delegation is already covered by the single Routing Receipt; do not narrate it again.
+- All pre-activation non-delegation stays silent; continue the task in Root without a routing receipt or explanation.
 - Explicit opt-out stays silent; if an internal failure recovers successfully, continue silently without substituting generic agents or another delegation backend.
 - Pre-activation native absence stays silent and Root completes the task.
 - A missing role is dropped and covered by Root without inventing a substitute.

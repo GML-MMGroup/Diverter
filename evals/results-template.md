@@ -28,14 +28,14 @@
 | Negative-case false positive rate |  |  |
 | Delegation-policy violations |  |  |
 | Sanitized failure-reporting violations |  |  |
-| Routing Receipt violations |  |  |
+| Eligible receipt / Root-only silence violations |  |  |
 | `>4` role violations |  |  |
 | Fallback correctness rate |  |  |
 | Root ownership quality rate |  |  |
 
 ## Prompt-by-Prompt Results
 
-| ID | Suite | Policy | Router Score / 7 | Delegated? | Roles used | Root responsibility valid? | Routing Receipt valid? | Policy-appropriate ending? | Notes |
+| ID | Suite | Policy | Router Score / 7 | Delegated? | Roles used | Root responsibility valid? | Eligible receipt / silence valid? | Policy-appropriate ending? | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  |  |  |  |
 

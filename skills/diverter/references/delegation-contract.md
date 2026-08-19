@@ -1,14 +1,10 @@
 # Delegation Contract
 
-The literal eligible-receipt templates are owned only by `../SKILL.md`. This reference defines their semantics and failure cases; do not copy or rephrase the templates here. Load the skill silently: its policy-specific routing receipt is the first user-visible output, with no eligibility or loading preface.
+The literal eligible-receipt templates are owned only by `../SKILL.md`. This reference defines their semantics and failure cases; do not copy or rephrase the templates here. Load the skill silently: its policy-specific routing receipt is the first user-visible output, with no eligibility or loading preface. If routing returns `ROOT_ONLY`, continue in Root without any routing message.
 
-## Root-only Receipt
+## Root-only Silence
 
-Ordinary task-shape non-delegation uses exactly one line and nothing else about routing:
-
-> `Routing: ROOT_ONLY — <one task-shape reason>`
-
-Match the user's language in the reason. Do not emit this receipt for bypass, explicit opt-out, or native unavailability, and do not mention Diverter or internal checks.
+Every non-delegation path is silent, including ordinary task shape, bypass, explicit opt-out, missing roles, and native unavailability. Continue the user's task normally without mentioning Diverter or internal routing checks.
 
 ## Shared Information
 

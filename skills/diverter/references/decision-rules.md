@@ -1,6 +1,6 @@
 # Decision Rules
 
-Non-normative examples only. These examples illustrate common applications and cannot override the Session Contract or supply a missing eligibility condition.
+Examples for applying the Session Contract's strong signals, clear exclusions, and tie-breakers. The Session Contract remains authoritative.
 
 | Task shape | Example outcome | Child Contribution | Root Responsibility |
 | --- | --- | --- | --- |
@@ -11,11 +11,11 @@ Non-normative examples only. These examples illustrate common applications and c
 | Web interaction plus named Web metrics | Candidate `ELIGIBLE` | audit LCP, INP, or CLS risks | analyze component, accessibility, and design constraints |
 | Context-heavy research or code mapping | Candidate `ELIGIBLE` | absorb noisy source material and return compact evidence | judge the evidence and integrate the final outcome |
 | Disjoint mutable artifacts | Candidate `ELIGIBLE` | edit one declared artifact | progress another independently owned artifact |
-| Specialist offload with no separate Root deliverable | Candidate `ELIGIBLE` when material benefit is established | complete one bounded specialist contribution | wait if needed, then judge, verify, and integrate |
+| Specialist offload with no separate Root deliverable | Candidate `ELIGIBLE` when a strong positive signal applies | complete one bounded specialist contribution | wait if needed, then judge, verify, and integrate |
 | Focused skill with duplicate helper | `ROOT_ONLY` | duplicates the selected skill | no independent benefit |
 | Tightly coupled or overlapping writes | `ROOT_ONLY` | conflicting ownership | serialize in Root |
 | Trivial fact lookup | `ROOT_ONLY` | bounded but too small to justify a handoff | answer directly |
-| Small local refactor with caller mapping | `ROOT_ONLY` when the handoff would not be materially smaller than direct inspection | low-value prerequisite | one local implementation decision |
-| Vague risk language | `ROOT_ONLY` unless the positive conditions are established | no concrete scope or completion condition | clarify the objective |
+| Small local refactor with caller mapping | `ROOT_ONLY` when the handoff would cost more than direct inspection | low-value prerequisite | one local implementation decision |
+| Vague risk language | `ROOT_ONLY` until the objective is concrete | no usable specialist scope | clarify the objective |
 
-Before using any implicit row, perform the Session Contract's Task-shape Deliberation. The user does not need to state the contribution or Root responsibility. An ordinary `ROOT_ONLY` row produces one Routing Receipt; bypass, explicit opt-out, and native unavailability remain silent.
+Before using any implicit row, perform the Session Contract's Task-shape Deliberation. The user does not need to state the contribution or Root responsibility. Every `ROOT_ONLY` outcome stays silent; only `ELIGIBLE` produces a routing receipt.

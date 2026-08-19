@@ -119,12 +119,11 @@ class PluginContractTest(unittest.TestCase):
             "apply the active Diverter "
             "Session Contract to this prompt and deliberate the task shape before "
             "deciding. Native Proactive Delegation ownership is a terminal silent bypass. "
-            "Otherwise, if eligible or the Contract is missing, load $diverter silently "
-            "and make its routing receipt the first user-visible output. "
-            "For an ordinary ROOT_ONLY decision, emit exactly one "
-            "`Routing: ROOT_ONLY — <one task-shape reason>` receipt; keep bypass, "
-            "explicit opt-out, and native unavailability silent. The first routing "
-            "result is final for this prompt; never re-route after task work starts.\n",
+            "Otherwise, load $diverter silently only when eligible and make its routing "
+            "receipt the first user-visible output. If ROOT_ONLY, continue silently "
+            "without mentioning routing or internal checks. A silent ROOT_ONLY may be "
+            "reconsidered once only after clarification or lightweight read-only discovery "
+            "materially changes the task shape before implementation.\n",
         )
         self.assertNotIn("Implicit eligibility", result.stdout)
 
@@ -164,7 +163,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertLess(native_stop, trigger)
         self.assertIn("Do not evaluate, load, or mention Diverter", result.stdout)
 
-    def test_session_start_exposes_context_preserving_eligibility_and_native_absence(
+    def test_session_start_exposes_positive_signal_eligibility_and_silent_root_only(
         self,
     ) -> None:
         result = subprocess.run(
@@ -175,14 +174,19 @@ class PluginContractTest(unittest.TestCase):
         )
 
         gate = result.stdout
-        self.assertIn("One bounded Child Contribution", gate)
-        self.assertIn("clear scope, completion condition", gate)
-        self.assertIn("Root Context Preservation", gate)
-        self.assertIn("compact, evidence-grounded handoff", gate)
+        self.assertIn("Strong positive signals include any one of", gate)
+        self.assertIn("read-heavy research, code mapping, log inspection", gate)
+        self.assertIn("code and documentation or API verification", gate)
+        self.assertIn("specialist viewpoint or independent verification", gate)
+        self.assertIn("Clear exclusions include", gate)
+        self.assertIn("lean `ELIGIBLE` for read-heavy", gate)
+        self.assertIn("prefer the smallest one-Child lineup", gate)
+        self.assertIn("execution safeguards after a positive task-shape judgment", gate)
+        self.assertIn("Do not convert them into an all-conditions-must-pass checklist", gate)
         self.assertIn("A separate concurrent Root Lane", gate)
         self.assertIn("Root may continue other work or wait", gate)
         self.assertIn("continues an already announced or dispatched workflow", gate)
-        self.assertIn("intentionally overlap for independent verification", gate)
+        self.assertIn("overlap is intentional independent verification", gate)
         self.assertNotIn("One distinct, useful Root Lane", gate)
         self.assertNotIn("mapping the audited flow", gate)
         self.assertIn("An affirmative request", gate)
@@ -191,7 +195,7 @@ class PluginContractTest(unittest.TestCase):
             gate,
         )
         self.assertIn("scheduling language", gate)
-        self.assertIn("explicitly selected focused skill", gate)
+        self.assertIn("focused skill that can use one bounded Supporting Child", gate)
         self.assertIn("Supporting Child", gate)
         self.assertIn("native role-specific subagent dispatch", gate)
         self.assertIn("continue silently in the Root Session", gate)
@@ -199,12 +203,12 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("`ROOT_ONLY`", gate)
         self.assertIn("`ELIGIBLE`", gate)
         self.assertIn("Task-shape Deliberation", gate)
-        self.assertIn("strongest plausible bounded Child Contribution", gate)
-        self.assertIn("absence of user-written lanes", gate)
         self.assertIn("Keep this deliberation private", gate)
-        self.assertIn("Routing: ROOT_ONLY", gate)
-        self.assertIn("Emit at most one receipt", gate)
-        self.assertIn("first routing result is final", gate)
+        self.assertIn("Every `ROOT_ONLY` result is silent", gate)
+        self.assertIn("Only `ELIGIBLE` produces a routing receipt", gate)
+        self.assertIn("may be reconsidered once", gate)
+        self.assertNotIn("Routing: ROOT_ONLY", gate)
+        self.assertNotIn("ONLY IF all four", gate)
         self.assertNotIn("Sanitized Failure Reporting", gate)
 
     def test_plugin_package_and_root_preflight_hooks_are_discoverable(self) -> None:
@@ -215,7 +219,7 @@ class PluginContractTest(unittest.TestCase):
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())
 
         self.assertEqual(manifest["name"], "diverter")
-        self.assertEqual(manifest["version"], "0.4.4")
+        self.assertEqual(manifest["version"], "0.4.5")
         self.assertEqual(manifest["interface"]["displayName"], "Diverter")
         self.assertEqual(manifest["skills"], "./skills/")
         self.assertNotIn("hooks", manifest)
@@ -345,9 +349,9 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("terminal Root-only recovery state", contract)
         self.assertIn("Do not call `spawn_agent`", contract)
         self.assertIn("requested read-only specialist lane", contract)
-        self.assertIn("materially larger, noisier, or more exploratory", contract)
-        self.assertIn("Non-normative examples", rules)
-        self.assertIn("cannot override the Session Contract", rules)
+        self.assertIn("absorb noisy source material and return compact evidence", contract)
+        self.assertIn("strong signals, clear exclusions, and tie-breakers", rules)
+        self.assertIn("Session Contract remains authoritative", rules)
         self.assertNotIn("Practical tie-breakers", rules)
 
         capability_table = skill.split("## Capability Selection", 1)[1].split(
@@ -400,7 +404,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("For implicit eligibility, Root responsibility", scenarios)
         self.assertIn("For explicit eligibility, Root coordination", scenarios)
 
-    def test_routing_receipt_is_one_external_result_without_a_new_score(self) -> None:
+    def test_root_only_is_silent_and_only_eligible_routes_emit_receipts(self) -> None:
         contract = (
             ROOT / "skills" / "diverter" / "references" / "session-contract.md"
         ).read_text()
@@ -412,26 +416,33 @@ class PluginContractTest(unittest.TestCase):
         results = (ROOT / "evals" / "results-template.md").read_text()
         english = (ROOT / "README.md").read_text()
         chinese = (ROOT / "README.zh.md").read_text()
-        adr = (
+        old_adr = (
             ROOT
             / "docs"
             / "adr"
             / "0013-deliberate-task-shape-and-emit-routing-receipts.md"
         ).read_text()
+        adr = (
+            ROOT
+            / "docs"
+            / "adr"
+            / "0015-restore-positive-signal-routing-and-root-only-silence.md"
+        ).read_text()
 
-        self.assertIn("ordinary eligibility adjudication", contract)
+        self.assertIn("`ROOT_ONLY`: continue silently", contract)
         self.assertIn("policy-specific routing receipt", contract)
-        self.assertIn("Routing Receipt and silence rules", skill)
-        self.assertIn("## Root-only Receipt", message_contract)
+        self.assertIn("All pre-activation non-delegation stays silent", skill)
+        self.assertIn("## Root-only Silence", message_contract)
         self.assertIn("status: accepted", adr)
-        self.assertIn("Task-shape", adr)
-        self.assertIn("Routing Receipt", adr)
-        self.assertIn("does not introduce a routing-discovery phase", adr)
-        self.assertIn("Routing Receipt violations", rubric)
-        self.assertIn("Routing Receipt valid?", results)
+        self.assertIn("Every `ROOT_ONLY` result is silent", adr)
+        self.assertIn("superseded_by: ADR-0015", old_adr)
+        self.assertIn("eligible-receipt or Root-only-silence violations", rubric)
+        self.assertIn("Eligible receipt / Root-only silence violations", results)
         self.assertIn("Router Score / 7", results)
-        self.assertIn("Routing: ROOT_ONLY", english)
-        self.assertIn("Routing: ROOT_ONLY", chinese)
+        self.assertNotIn("Routing: ROOT_ONLY", english)
+        self.assertNotIn("Routing: ROOT_ONLY", chinese)
+        self.assertIn("Every `ROOT_ONLY` decision stays silent", english)
+        self.assertIn("所有 `ROOT_ONLY` 都保持沉默", chinese)
 
     def test_eligible_receipt_templates_are_user_facing_and_skill_owned(self) -> None:
         skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
@@ -600,8 +611,10 @@ class PluginContractTest(unittest.TestCase):
 
         self.assertIn("agent_id", guide)
         self.assertIn("Codex CLI `0.145.0`", guide)
-        self.assertIn("Implicit routing requires a credible benefit", english)
-        self.assertIn("隐式路由需要具备", chinese)
+        self.assertIn("Read-heavy exploration", english)
+        self.assertIn("偏读探索", chinese)
+        self.assertIn("Every `ROOT_ONLY` decision stays silent", english)
+        self.assertIn("所有 `ROOT_ONLY` 都保持沉默", chinese)
         self.assertIn("Root may continue useful work or wait", english)
         self.assertIn("Root 可以继续推进有价值的工作，也可以等待", chinese)
         self.assertTrue(adr.is_file())
@@ -678,7 +691,7 @@ class PluginContractTest(unittest.TestCase):
         )
         self.assertIn("sanitized_failure_reporting", rubric)
         self.assertIn("root_ownership_quality", rubric)
-        self.assertIn("Routing Receipt violations", rubric)
+        self.assertIn("eligible-receipt or Root-only-silence violations", rubric)
         self.assertIn("lifecycle_evidence", rubric)
         self.assertIn("Router Score / 7", results_template)
         self.assertIn("Native Lifecycle Evidence", results_template)
@@ -732,6 +745,24 @@ class PluginContractTest(unittest.TestCase):
                 self.assertNotIn(forbidden, prompt, case_id)
             self.assertIn("expected_should_suggest: true", block)
             self.assertIn("latent_task_shape: true", block)
+
+    def test_ordinary_negative_prompts_require_silent_root_only(self) -> None:
+        prompts = (ROOT / "evals" / "prompts.yaml").read_text()
+        self.assertNotIn("emit exactly one Routing: ROOT_ONLY receipt", prompts)
+
+        for case_id in (
+            "neg-04",
+            "neg-09",
+            "neg-10",
+            "gate-neg-focused-ui",
+            "ultra-neg-readonly-laundering",
+            "ultra-ownership-conflict",
+        ):
+            block = prompts.split(f"  - id: {case_id}\n", 1)[1].split(
+                "\n  - id:", 1
+            )[0]
+            self.assertIn("expected_should_suggest: false", block)
+            self.assertIn("emit a ROOT_ONLY routing receipt", block)
 
     def test_readmes_explain_native_proactive_delegation_boundary(self) -> None:
         english = (ROOT / "README.md").read_text()
