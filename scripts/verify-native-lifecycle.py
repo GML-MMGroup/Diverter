@@ -800,7 +800,6 @@ def verify_child(
         "spawn_returns_before_child_terminal": bool(spawn_returns)
         and first_terminal is not None
         and min(spawn_returns) < first_terminal,
-        "root_progress_while_child_active": root_progress,
         "root_integration_verification": integration_verification,
         "leaf_child": all(call.get("name") != "spawn_agent" for _, call in child_calls),
         "single_child_spawn": len(spawn_calls) == 1,
@@ -822,6 +821,7 @@ def verify_child(
     return {
         "ok": all(checks.values()),
         "checks": checks,
+        "observations": {"root_progress_while_child_active": root_progress},
         "scenario": scenario,
         "child_session_id": child_session_id,
         "child_path": child_path,

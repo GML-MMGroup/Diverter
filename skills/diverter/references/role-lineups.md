@@ -1,6 +1,6 @@
 # Role Lineups
 
-Choose capabilities first. Then keep only the roles that are available in the current Codex environment. The tables suggest Child Lanes; Root always keeps a distinct useful Root Lane for implicit delegation.
+Choose capabilities first. Then keep only the roles that are available in the current Codex environment. The tables suggest Child Contributions; Root always retains judgment, proportional verification, integration, and the final response.
 
 ## Capability Map
 
@@ -19,7 +19,7 @@ Choose capabilities first. Then keep only the roles that are available in the cu
 
 ## Common Child Lanes
 
-| Scenario | Child capability | Preferred role when available | Example Root Lane | Work mode |
+| Scenario | Child capability | Preferred role when available | Example Root Responsibility | Work mode |
 | --- | --- | --- | --- | --- |
 | General branch review | independent correctness review | `reviewer` | map the changed execution path and integrate findings | read-only |
 | Docs/API assumption | official contract verification | `docs-researcher` | trace the implementation and frame the decision | read-only |
@@ -29,7 +29,8 @@ Choose capabilities first. Then keep only the roles that are available in the cu
 | Web performance evidence | named metric audit | `web-performance-auditor` | map route/component constraints and synthesize risks | read-only |
 | Focused skill workflow | non-duplicative supporting check | matching specialist | focused skill keeps its core workflow | task-dependent |
 | Option research | bounded evidence collection | `search-specialist` | define comparison criteria and synthesize the decision | read-only |
-| Broad planning | one bounded planning package | `task-distributor` | ground constraints or develop another independent deliverable | read-only |
+| Broad planning | one bounded planning package | `task-distributor` | judge feasibility and integrate the plan | read-only |
+| Context-heavy exploration | compact evidence from large or noisy source material | `code-mapper` or `search-specialist` | evaluate the evidence and decide the final direction | read-only |
 
 ## Compression Rules
 
@@ -39,14 +40,14 @@ Choose capabilities first. Then keep only the roles that are available in the cu
 - If a missing capability is important, mention that the main thread can cover it after Dispatch Authorization.
 - If no relevant roles are available, stay silent during implicit checks and continue normally.
 - Never recommend 4 roles only to sound thorough.
-- Ordinary PR review defaults to one useful specialist alongside a substantive Root Lane; do not add every quality role.
+- Ordinary PR review may use one useful specialist when the review is bounded and materially improves expertise, coverage, independent verification, or Root context preservation; do not add every quality role.
 - For repository analysis plus official contract verification, use `docs-researcher` for the contract and keep repository mapping in Root.
 - Add `security-auditor` only for concrete security boundaries or explicit security audit requests.
 - Add `test-engineer` only for test strategy, coverage gaps, proof, or regression planning.
 - Add `test-automator` only when the user explicitly asks for test writes and the behavior scope is clear.
 - Add `web-performance-auditor` for Web-facing performance work or named metrics such as LCP, INP, or CLS.
 - For non-Web performance, use `code-mapper + reviewer` only if the task is multi-lane.
-- If more than 4 roles are triggered, keep only the most necessary independent deliverables; Root covers the rest.
+- If more than 4 roles are triggered, keep only the most necessary independent contributions; Root covers the rest.
 
 ## Write-Safety Rules
 

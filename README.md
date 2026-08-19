@@ -126,9 +126,9 @@ Diverter always names one Work Mode before dispatch.
 
 1. The `SessionStart` Hook loads the user-level Delegation Policy and full Session Contract, restoring both after compaction.
 2. Before each Root turn, `UserPromptSubmit` adds one short Turn Reminder; child turns are filtered deterministically through `agent_id` and receive no reminder.
-3. Preflight privately derives the strongest plausible Root/Child split before deciding. Ordinary `ROOT_ONLY` decisions return one short `Routing: ROOT_ONLY — <reason>` receipt; bypass, explicit opt-out, and native unavailability stay silent. Eligible work loads Diverter before task work and uses its policy-specific dispatch message as the receipt.
-4. Diverter selects the bounded Child Lane, Smallest Sufficient Lineup, and Work Mode. For implicit routing, it also requires a useful Root Lane; explicit delegation may leave Root coordinating and integrating. `ask` waits for approval; `auto` announces and dispatches immediately.
-5. For implicit routing, Root keeps making substantive progress while every child remains a leaf. Explicit delegation may coordinate and wait before Root integrates, verifies, and returns the final result.
+3. Preflight privately derives the strongest plausible bounded Child Contribution and Root responsibility before deciding. Ordinary `ROOT_ONLY` decisions return one short `Routing: ROOT_ONLY — <reason>` receipt; bypass, explicit opt-out, and native unavailability stay silent. Eligible work loads Diverter before task work and uses its policy-specific dispatch message as the receipt.
+4. Diverter selects the bounded Child Contribution, Smallest Sufficient Lineup, and Work Mode. Implicit routing requires a credible benefit such as Root Context Preservation, elapsed time, expertise, coverage, quality, or independent verification; it does not require a separate concurrent Root deliverable. `ask` waits for approval; `auto` announces and dispatches immediately.
+5. Root may continue useful work or wait for a needed Child result, while every child remains a leaf. Root then judges, proportionally verifies, integrates, and returns the final result.
 
 Related follow-ups return to the same native child, preserving the context it already built.
 

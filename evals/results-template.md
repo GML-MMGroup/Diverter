@@ -31,17 +31,17 @@
 | Routing Receipt violations |  |  |
 | `>4` role violations |  |  |
 | Fallback correctness rate |  |  |
-| Root Lane quality rate |  |  |
+| Root ownership quality rate |  |  |
 
 ## Prompt-by-Prompt Results
 
-| ID | Suite | Policy | Router Score / 7 | Delegated? | Roles used | Root Lane valid? | Routing Receipt valid? | Policy-appropriate ending? | Notes |
+| ID | Suite | Policy | Router Score / 7 | Delegated? | Roles used | Root responsibility valid? | Routing Receipt valid? | Policy-appropriate ending? | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  |  |  |  |
 
 ## Native Lifecycle Evidence
 
-| Run | Model | Family | Native spawn | Root progress before child completion | Same-child reuse | Leaf child | Write Ownership | Integration verification | Pass? |
+| Run | Model | Family | Native spawn | Concurrent Root progress observed | Same-child reuse | Leaf child | Write Ownership | Integration verification | Pass? |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |  |  |  |  |  |  |  |  |  |  |
 

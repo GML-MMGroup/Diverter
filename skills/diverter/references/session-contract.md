@@ -20,7 +20,7 @@ An affirmative delegation request that asks to see the lineup or wait for approv
 
 An affirmative request using `$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role is a candidate `ELIGIBLE`. Mere mention, quotation, explanation, hypothesis, negation, or scheduling language such as parallel or concurrent does not qualify.
 
-An Explicit Delegation Request bypasses only the implicit benefit threshold. It does not bypass the rules above, task executability, Codex permissions or sandboxing, safe Write Ownership, or native capability requirements. If the objective cannot yet be acted on safely, return `ROOT_ONLY`; ordinary Root behavior may clarify it.
+An Explicit Delegation Request bypasses only the requirement to independently establish material benefit. It does not require a separate concurrent Root Lane, and it does not bypass the rules above, task executability, Codex permissions or sandboxing, safe Write Ownership, or native capability requirements. If the objective cannot yet be acted on safely, return `ROOT_ONLY`; ordinary Root behavior may clarify it.
 
 A requested read-only specialist lane is sufficiently bounded when the current repository and task context identify what to inspect and the Child can report only verified findings. Do not require the user to name a file or link when that context safely bounds the requested inspection.
 
@@ -29,26 +29,27 @@ A requested read-only specialist lane is sufficiently bounded when the current r
 Without an Explicit Delegation Request, perform Task-shape Deliberation before classifying the prompt:
 
 1. Infer the concrete outcome and the work needed to produce it. Do not classify from surface wording alone.
-2. Construct the strongest plausible split with one bounded Child Lane and one distinct useful Root Lane.
-3. Test that candidate split against the five conditions below. Do not treat the absence of user-written lanes, delegation language, or multiple directions as evidence that no useful split exists.
+2. Construct the strongest plausible bounded Child Contribution and identify the Root responsibility that will use it.
+3. Test that candidate offload against the four conditions below. Do not treat the absence of user-written lanes, delegation language, multiple directions, or separate deliverables as evidence that no useful contribution exists.
 
 Keep this deliberation private. Do not expose chain-of-thought or add a separate reasoning report.
 
-Return candidate `ELIGIBLE` ONLY IF all five conditions are affirmatively established from the current prompt, existing conversation context, and this contract:
+Return candidate `ELIGIBLE` ONLY IF all four conditions are affirmatively established from the current prompt, existing conversation context, and this contract:
 
-1. One bounded, independently executable Child Lane has a clear deliverable.
-2. One distinct, useful Root Lane can make substantive progress while the child runs. Waiting, supervision, repeating the Child Lane, or performing a prerequisite for the same single audit or implementation decision does not count. When the entire requested outcome is one audit and report, mapping the audited flow or its boundaries is part of that audit, not a distinct Root Lane. This exclusion does not apply when Root must derive repository-specific constraints and a plan while a Child independently verifies a named external official contract.
-3. Separate execution offers a credible, non-trivial benefit in elapsed time, coverage or quality, relevant expertise, or independent verification. Mere theoretical divisibility is insufficient.
-4. Root and Child scopes are non-duplicative.
-5. Read and write ownership is safe and non-overlapping.
+1. One bounded Child Contribution has a clear scope, completion condition, and integration-ready handoff.
+2. The Child can complete that contribution without repeatedly waiting for Root decisions or an unfinished prerequisite.
+3. Separate execution offers a credible, non-trivial benefit in at least one of: Root Context Preservation, elapsed time, coverage or quality, relevant expertise, or independent verification. Mere theoretical divisibility is insufficient.
+4. Root and Child responsibilities are complementary, or intentionally overlap for independent verification, and all read and write ownership is safe.
 
-Reading the same artifact does not make two scopes duplicative when their evidence and outcomes are distinct. For example, component and accessibility acceptance analysis can remain in Root while a Child independently audits named Web metrics such as LCP, INP, and CLS.
+Root Context Preservation applies when the Child absorbs materially larger, noisier, or more exploratory source material and returns a compact, evidence-grounded handoff. A handoff expected to be as large or noisy as the source work does not establish this benefit.
 
-For a known regression with a named behavior boundary, a requested minimal fix recommendation and Prove-It test strategy are distinct outcomes: Root can trace the behavior and form the fix recommendation while `test-engineer` independently designs the regression proof.
+A separate concurrent Root Lane or separate Root deliverable is not required. Root may continue other work or wait for the Child result, but waiting alone is not a benefit. Root remains responsible for judgment, proportional verification, integration, and the final response.
 
-An explicitly selected focused skill may retain its core workflow and Root Lane while Diverter supplies a Supporting Child only for a separate, non-duplicative deliverable.
+Reading the same artifact does not make responsibilities duplicative when the questions differ or the overlap is intentional independent verification. Root's proportional verification of a Child result is not duplication.
 
-If any implicit condition is uncertain or absent, return `ROOT_ONLY`.
+An explicitly selected focused skill may retain its core workflow while Diverter supplies a Supporting Child for a bounded complementary contribution.
+
+If boundedness, autonomy, material benefit, or safe ownership is uncertain or absent, return `ROOT_ONLY`.
 
 ### 5. Native availability
 
@@ -67,4 +68,4 @@ The first routing result is final for that Root user prompt. After `ROOT_ONLY`, 
 
 The active `ask` or `auto` Delegation Policy does not change eligibility. It controls the Dispatch Workflow only after `ELIGIBLE`, and an explicit Task Policy Override retains its existing one-task scope.
 
-Trivial, strongly sequential, one-path, duplicative, or overlapping-write work normally fails the positive conditions above; these are examples, not a second eligibility standard.
+Trivial, ambiguous, low-benefit, unnecessarily duplicative, or overlapping-write work normally fails the positive conditions above; these are examples, not a second eligibility standard.

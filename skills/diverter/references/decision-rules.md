@@ -2,20 +2,20 @@
 
 Non-normative examples only. These examples illustrate common applications and cannot override the Session Contract or supply a missing eligibility condition.
 
-| Task shape | Example outcome | Child Lane | Root Lane |
+| Task shape | Example outcome | Child Contribution | Root Responsibility |
 | --- | --- | --- | --- |
 | Explicit delegation request | Candidate `ELIGIBLE` when remaining safeguards hold | requested bounded specialist work | remaining orchestration or task outcome |
 | Code path plus official docs | Candidate `ELIGIBLE` | verify the documented API contract | trace the implementation and frame the decision |
-| Focused skill ownership plus separate audit | Candidate `ELIGIBLE` | non-duplicative Supporting Child audit | focused skill keeps its core workflow |
+| Focused skill ownership plus bounded support | Candidate `ELIGIBLE` | complementary Supporting Child check | focused skill keeps its core workflow and integrates the check |
 | Known regression plus bounded test work | Candidate `ELIGIBLE` | design or implement the targeted proof | map the behavior boundary and integrate results |
 | Web interaction plus named Web metrics | Candidate `ELIGIBLE` | audit LCP, INP, or CLS risks | analyze component, accessibility, and design constraints |
-| Research with two deliverables | Candidate `ELIGIBLE` | gather one bounded evidence set | develop the synthesis or another distinct deliverable |
+| Context-heavy research or code mapping | Candidate `ELIGIBLE` | absorb noisy source material and return compact evidence | judge the evidence and integrate the final outcome |
 | Disjoint mutable artifacts | Candidate `ELIGIBLE` | edit one declared artifact | progress another independently owned artifact |
-| Specialist offload with no useful Root work | `ROOT_ONLY` implicitly | specialist could work | Root would only wait |
+| Specialist offload with no separate Root deliverable | Candidate `ELIGIBLE` when material benefit is established | complete one bounded specialist contribution | wait if needed, then judge, verify, and integrate |
 | Focused skill with duplicate helper | `ROOT_ONLY` | duplicates the selected skill | no independent benefit |
 | Tightly coupled or overlapping writes | `ROOT_ONLY` | conflicting ownership | serialize in Root |
-| One audit split into mapping then audit | `ROOT_ONLY` | prerequisite mapping is not an independent outcome | one coupled audit |
-| One refactor split into callers then implementation | `ROOT_ONLY` | caller mapping is only a prerequisite | one coupled implementation decision |
-| Vague risk language | `ROOT_ONLY` unless the positive conditions are established | no concrete boundary | no distinct deliverable |
+| Trivial fact lookup | `ROOT_ONLY` | bounded but too small to justify a handoff | answer directly |
+| Small local refactor with caller mapping | `ROOT_ONLY` when the handoff would not be materially smaller than direct inspection | low-value prerequisite | one local implementation decision |
+| Vague risk language | `ROOT_ONLY` unless the positive conditions are established | no concrete scope or completion condition | clarify the objective |
 
-Before using any implicit row, perform the Session Contract's Task-shape Deliberation. The user does not need to state the lanes. An ordinary `ROOT_ONLY` row produces one Routing Receipt; bypass, explicit opt-out, and native unavailability remain silent.
+Before using any implicit row, perform the Session Contract's Task-shape Deliberation. The user does not need to state the contribution or Root responsibility. An ordinary `ROOT_ONLY` row produces one Routing Receipt; bypass, explicit opt-out, and native unavailability remain silent.

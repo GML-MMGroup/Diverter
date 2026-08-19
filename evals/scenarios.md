@@ -3,7 +3,7 @@
 Diverter release validation has three evidence seams:
 
 1. **Preflight Delivery** — Hook input/output evidence proving the Session Contract is restored, every Root prompt gets one short Turn Reminder, and child prompts get none.
-2. **Router Contract** — deterministic and prompt-level evidence for Task-shape Deliberation, one Routing Receipt, eligibility, Root/Child lanes, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
+2. **Router Contract** — deterministic and prompt-level evidence for Task-shape Deliberation, one Routing Receipt, eligibility, bounded Child Contributions, Root responsibilities, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
 3. **Native Lifecycle** — persisted Codex records proving what actually spawned and happened over time.
 
 Final-response wording is never Native Lifecycle evidence.
@@ -56,14 +56,15 @@ The paired controls are central:
 - `gate-neg-focused-skill` ↔ `ultra-pos-focused-skill-support`;
 - `neg-10` ↔ `ultra-pos-regression-root-continues`;
 - `neg-02` ↔ `ultra-pos-disjoint-write` and `ultra-ownership-conflict`;
-- `neg-04` ↔ `ultra-pos-doc-check` and `latent-pos-doc-contract`;
+- `neg-04` ↔ `ultra-pos-doc-check`, `latent-pos-doc-contract`, and `latent-pos-context-offload`;
 - `neg-10` ↔ `latent-pos-regression`;
-- `gate-neg-focused-ui` ↔ `latent-pos-web-audit`; and
+- `gate-neg-focused-ui` ↔ `latent-pos-web-audit`;
+- `ultra-pos-context-offload` verifies useful specialist offload without a separate concurrent Root deliverable; and
 - `auto-idempotency` ↔ `ultra-reuse-same-scope`.
 
-Explicit-lane implicit positives must name a bounded Child Lane and a distinct useful Root Lane. Explicit delegation positives must name the requested Child Lane but may state Root coordination and integration instead of inventing a Root Lane. The negative half must not invent a Root Lane merely to trigger.
+Implicit positives must identify a bounded autonomous Child Contribution, a credible material benefit, safe ownership, and the Root responsibility that will judge and integrate it. Explicit delegation positives must name the requested Child Contribution and may state Root coordination and integration without independently proving material benefit. Neither path invents a separate Root deliverable.
 
-Latent positives state only a realistic outcome, omit routing instructions, and require Task-shape Deliberation to derive a bounded Child Lane plus a distinct useful Root Lane.
+Latent positives state only a realistic outcome, omit routing instructions, and require Task-shape Deliberation to derive a bounded Child Contribution plus Root judgment and integration. At least one latent positive must rely on Root Context Preservation rather than a second user-visible deliverable.
 
 For each Root user prompt, require one external routing result at most. Ordinary task-shape `ROOT_ONLY` uses one Routing Receipt; eligible work uses its policy-specific eligible receipt. Bypass, explicit opt-out, native absence, and missing-role fallbacks remain silent.
 
@@ -73,7 +74,7 @@ Every eligible receipt must be the first user-visible output and follow the lite
 
 - `ask` approval: the recommendation precedes approval and the first native spawn occurs only afterward.
 - `ask` refusal: zero spawn; Root continues without a `ROOT_ONLY` receipt.
-- `auto`: the eligible receipt precedes native spawn in the same turn, asks no permission question, and identifies lineup, Work Mode, and Root activity: the Root Lane for implicit eligibility or coordination and integration for an explicit request without one.
+- `auto`: the eligible receipt precedes native spawn in the same turn, asks no permission question, and identifies lineup, Work Mode, and Root responsibility: judgment, verification, integration, other retained work, or coordination for an explicit request.
 
 After authorization, reuse the shared lifecycle primarily under `auto`; do not duplicate the complete matrix under `ask`.
 
@@ -89,15 +90,14 @@ Optionally use a controlled host/task surface without native role-specific spawn
 
 Capture immutable root and child rollout JSONL for every native run. Retain the raw evidence privately and publish only sanitized IDs, timestamps, event types, role/model facts, and artifact hashes.
 
-### Family 1: one child plus Root
+### Family 1: context-preserving Child offload
 
-Use a domain-neutral task with two explicit deliverables. Require:
+Use a domain-neutral task whose Child must inspect materially larger or noisier source material and return a compact evidence-grounded handoff. Do not require a second Root deliverable. Require:
 
 - one role-specific spawn using `agent_type` and `fork_turns: "none"`;
 - persisted child role metadata;
 - spawn return before child completion;
-- substantive non-orchestration Root work during the child-active interval;
-- a bounded child result;
+- a bounded compact Child result;
 - Root integration plus a proportional independent verification action;
 - no equivalent duplicate spawn; and
 - no child descendant.
@@ -180,7 +180,7 @@ python3 scripts/verify-native-lifecycle.py \
   --ownership-manifest /absolute/path/to/ownership-manifest.json
 ```
 
-The verifier accepts real `custom_tool_call` / `exec` patch records, requires scoped Root progress and verification evidence, pairs child completion results by turn ID, checks normalized handoff scopes for duplicates, enforces exactly one child for the standard families, validates same-child follow-up ordering, freezes every Root turn's model and effort, and rejects hash changes or cross-lane mutations outside declared Write Ownership. Its root-only modes cover `ask-refused`, `native-absence`, and `missing-role`; `failure` accepts either a failed spawn with no Child rollout or a child-side abort/tool failure. Child tool failure evidence must match a preceding non-bookkeeping call, the report must identify the actual child task or role, post-failure verification must cover both prior Root work and takeover scope, and no substitute spawn is allowed.
+The verifier accepts real `custom_tool_call` / `exec` patch records, records concurrent Root progress when present, requires Root integration and verification evidence, pairs child completion results by turn ID, checks normalized handoff scopes for duplicates, enforces exactly one child for the standard families, validates same-child follow-up ordering, freezes every Root turn's model and effort, and rejects hash changes or cross-lane mutations outside declared Write Ownership. Its root-only modes cover `ask-refused`, `native-absence`, and `missing-role`; `failure` accepts either a failed spawn with no Child rollout or a child-side abort/tool failure. Child tool failure evidence must match a preceding non-bookkeeping call, the report must identify the actual child task or role, post-failure verification must cover both prior successful Root work when present and takeover scope, and no substitute spawn is allowed.
 
 An absent mandatory event is a failure, not an inferred pass.
 
@@ -210,7 +210,8 @@ A release is a No-Go if any of these occur:
 - a prompt governed by ordinary or eligible routing emits a missing, duplicate, or wrong-kind Routing Receipt;
 - `ask` spawns before approval or after refusal;
 - `auto` asks permission or fails to announce before spawn;
-- For implicit eligibility, the Root Lane is missing, passive, or duplicates the child;
+- For implicit eligibility, the Child Contribution is unbounded, cannot run autonomously, lacks material benefit, or has unsafe ownership;
+- For implicit eligibility, Root responsibility for judgment, proportional verification, and integration is missing;
 - For explicit eligibility, Root coordination or integration responsibility is missing;
 - an equivalent scope is spawned twice;
 - a related follow-up creates a replacement child;

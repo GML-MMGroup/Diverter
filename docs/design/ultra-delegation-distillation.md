@@ -14,7 +14,7 @@ Suggested short positioning:
 
 Suggested user-facing expansion:
 
-> Without enabling Ultra, Diverter helps non-Ultra Codex sessions decide when to delegate, which specialist to use, what the Root Session should continue doing, and how delegated results should be verified and integrated.
+> Without enabling Ultra, Diverter helps non-Ultra Codex sessions decide when to delegate, which specialist to use, and how Root should judge, verify, and integrate delegated results.
 
 Here, **distillation** means extracting and encoding orchestration rules and workflow discipline. It does not mean model-weight distillation, copying Ultra's private scheduler, or making a lower-effort model reason identically to Ultra.
 
@@ -39,13 +39,13 @@ Fresh installations explicitly ask the user to choose a Delegation Policy. `auto
 
 Recommending `auto` does not create a hidden `auto-safe` tier. After its Dispatch Announcement, `auto` continues to authorize suitable `read-only`, `mixed`, and `write-capable` delegation; the user task, Codex permissions, sandbox, explicit ownership, and write serialization remain the safety boundaries.
 
-### D2 — An effective Root lane is mandatory
+### D2 — A separate concurrent Root lane is not mandatory
 
-Every implicit dispatch requires distinct, useful Root work that can progress while a child runs. Independent specialist work without an effective Root lane does not qualify for implicit delegation; an explicit user request may still authorize it within the normal safety boundaries.
+Every implicit dispatch requires one bounded autonomous Child Contribution, credible material benefit, and safe ownership. Root need not produce a separate deliverable or make concurrent progress while the Child runs. Root remains accountable for judging, proportionally verifying, integrating, and returning the final outcome. Root Context Preservation is a material benefit when the Child absorbs substantially larger, noisier, or more exploratory source material and returns a compact evidence-grounded handoff.
 
 ### D3 — Focused skills may receive supporting children
 
-An explicitly selected focused skill retains the Root lane and owns the core workflow. Diverter may implicitly supply a supporting child when that child has a separate deliverable, does not duplicate or replace the focused skill, and does not violate the focused skill's own delegation constraints.
+An explicitly selected focused skill retains the core workflow. Diverter may implicitly supply a supporting child when that child has a bounded complementary contribution, does not replace the focused skill, and does not violate the focused skill's own delegation constraints.
 
 ### D4a — Reuse related native child context
 
@@ -83,11 +83,11 @@ Native capability absence before activation remains silent under D4c. Once Diver
 
 ### D7 — Default to the smallest sufficient lineup
 
-Implicit delegation starts with one child plus the Root lane. Add a child only for another necessary, independent, non-duplicative deliverable; the four-role limit remains a safety cap rather than a utilization target.
+Implicit delegation starts with one bounded Child Contribution plus Root ownership of judgment and integration. Add a child only for another necessary, independent contribution; the four-role limit remains a safety cap rather than a utilization target.
 
 ### D8 — Preserve outcome-bounded autonomy
 
-Diverter defines outcome and coordination invariants without prescribing a closed catalog of valid actions. The Root Session decides how to advance its lane and how to verify and integrate child work for the task at hand, provided its progress is substantive, distinct from the Child lane, traceable to the final outcome, and checked in proportion to risk.
+Diverter defines outcome and coordination invariants without prescribing a closed catalog of valid actions. The Root Session decides whether to continue useful work or wait for a needed Child result, then verifies and integrates that work in proportion to risk.
 
 This standard is intentionally domain-neutral. Examples may illustrate it, but the prompt must not turn examples from coding, research, writing, or any other domain into an exhaustive checklist.
 
@@ -111,7 +111,7 @@ Run the complete native lifecycle gate on one frozen non-Ultra Root configuratio
 
 The v0.4.0 release gate contains four real native lifecycle families:
 
-1. a normal one-child-plus-Root task proving dispatch, concurrent Root progress, leaf-child behavior, result integration, and proportional verification;
+1. a normal context-preserving offload proving dispatch, leaf-child behavior, compact result return, Root integration, and proportional verification without requiring concurrent Root progress;
 2. a related follow-up proving the same canonical child session is reused without a duplicate spawn;
 3. a domain-neutral mutable-artifact task proving bounded Write Ownership and final integration; and
 4. a failure after Dispatch Announcement proving concise reporting and Root takeover of the affected outcome.
@@ -143,20 +143,20 @@ The design should relax that threshold without returning to delegation based onl
 
 For implicit delegation, Diverter should dispatch when all of the following are true:
 
-1. **Bounded child task** — at least one concrete subtask has a clear scope and verifiable deliverable.
-2. **Independent progress** — the child can proceed without repeatedly waiting for Root decisions or an unfinished prerequisite.
-3. **Useful Root lane** — the Root Session has distinct, non-duplicative work it can continue while the child runs.
-4. **Material benefit** — delegation is expected to improve speed or final quality enough to justify coordination and token cost.
-5. **Safe ownership** — read/write boundaries are clear and concurrent writes do not overlap.
+1. **Bounded Child Contribution** — at least one concrete contribution has a clear scope, completion condition, and integration-ready handoff.
+2. **Autonomous execution** — the Child can proceed without repeatedly waiting for Root decisions or an unfinished prerequisite.
+3. **Material benefit** — delegation credibly improves Root Context Preservation, elapsed time, expertise, coverage, quality, or independent verification enough to justify coordination and token cost.
+4. **Safe responsibility and ownership** — Root and Child responsibilities are complementary or intentionally overlap for independent verification, and concurrent writes do not overlap.
 
 The key reinterpretation is:
 
 ```text
 v0.3.2: child lane A + child lane B
-target: child lane A + Root lane
+v0.4.0: child contribution + distinct Root lane
+target: bounded Child Contribution + Root judgment and integration
 ```
 
-One suitable child is sufficient. Additional children are justified only by additional independent deliverables.
+One suitable child is sufficient. Additional children are justified only by additional independent contributions.
 
 Explicit delegation requests may bypass the implicit benefit threshold, but never clarity, permissions, sandboxing, write boundaries, delegated-child recursion guards, or an explicit opt-out.
 
@@ -165,9 +165,10 @@ Explicit delegation requests may bypass the implicit benefit threshold, but neve
 Diverter should stay in the Root Session when:
 
 - the task is trivial or coordination would cost more than the work;
-- the work is one strong sequential chain;
-- no bounded child deliverable can be stated;
-- Root and child would investigate the same question;
+- no bounded Child Contribution or completion condition can be stated;
+- the Child cannot proceed autonomously;
+- delegation has no material benefit, including no meaningful Root Context Preservation;
+- Root and Child would unnecessarily repeat the same work;
 - concurrent writers would own the same mutable artifact or scope;
 - the request is ambiguous and must be clarified first;
 - the user opts out of delegation;
@@ -183,15 +184,15 @@ The Root Session remains accountable for the complete user outcome.
 ### Before dispatch
 
 - understand the user goal and success criteria;
-- identify the Root lane and each child lane;
-- confirm that the lanes do not duplicate one another;
+- identify each Child Contribution and the Root-owned responsibilities;
+- confirm that responsibilities are complementary or intentionally overlap for independent verification;
 - choose the smallest sufficient lineup;
 - define write ownership and verification;
-- announce both what the child will do and what Root will continue doing.
+- announce what the Child will do and how Root will judge, verify, or integrate it.
 
 ### While children run
 
-- make substantive, non-duplicative progress on the stated Root lane while useful work remains;
+- make useful non-duplicative progress when available, or wait when the Child result is needed first;
 - avoid repeating an investigation already assigned to a child;
 - reuse the same native child for related follow-up questions when possible;
 - keep write-capable work serialized unless ownership is explicitly disjoint.
@@ -254,13 +255,13 @@ The current 33 passing tests are v0.3.2 contract evidence, not v0.4.0 native lif
 The repository currently has no native lifecycle harness or event parser. In particular, existing tests do not prove:
 
 - a native role was actually resolved and dispatched;
-- the Root Session made substantive progress before child completion;
+- concurrent Root progress was observable when the scenario expected it;
 - a related follow-up reused the same canonical child identity;
 - the child created no descendants at runtime;
 - Root independently verified and integrated the child result; or
 - concurrent write ownership remained disjoint or serialized.
 
-Static contract tests remain appropriate for eligibility, `ask`/`auto` wording, Root/Child lane declarations, role removal, the leaf-child handoff, native spawn parameters, and removal of CLI references. Lifecycle claims require separate evidence from real native runs.
+Static contract tests remain appropriate for eligibility, `ask`/`auto` wording, Child Contribution and Root responsibility declarations, role removal, the leaf-child handoff, native spawn parameters, and removal of CLI references. Lifecycle claims require separate evidence from real native runs.
 
 User-facing release material converts passed evidence into capability-first statements. It does not need to reproduce the internal boundary analysis, but every advertised behavior must map to a passed contract or lifecycle gate.
 
@@ -273,13 +274,13 @@ A native probe during this design session confirmed that the supported host can 
 - a related follow-up entering a second turn in the same child session; and
 - no descendant spawn from that child.
 
-This proves host observability and native follow-up capability for the probe. It does not prove that Diverter's routing rules automatically choose reuse, maintain Root progress, or prevent descendants; those remain product-level end-to-end release evidence.
+This proves host observability and native follow-up capability for the probe. It does not prove that Diverter's routing rules automatically choose reuse, preserve Root ownership, or prevent descendants; those remain product-level end-to-end release evidence.
 
 The next evaluation should measure:
 
 - eligible-task trigger recall;
 - strict-negative false-positive rate;
-- substantive Root progress before child completion;
+- context-preserving offload followed by Root integration and verification;
 - duplicate dispatches for the same scope;
 - reuse of an existing child for related follow-ups;
 - overlapping write ownership;
@@ -304,7 +305,7 @@ Diverter can encode the discipline of Ultra-style delegation, but it cannot guar
 - claiming universal model parity from a single primary Root configuration;
 - reproducing Ultra's internal scheduler or model reasoning;
 - retaining or replacing the removed CLI Worker Backend with another compatibility executor;
-- defining an exhaustive catalog of acceptable Root progress or verification actions;
+- defining an exhaustive catalog of acceptable Root responsibilities or verification actions;
 - adding a dedicated unavailable-child recovery protocol beyond ordinary Root accountability;
 - building a custom lock manager or general-purpose workflow engine; or
 - changing Codex sandbox and permission semantics.

@@ -21,11 +21,13 @@ These are examples that should usually trigger delegation.
 12. `In Root, identify the settings save behavior boundary while an independent test lane adds only the bounded regression tests.`
 13. `In Root, map the Next.js rendering and data-loading boundaries while an independent performance audit checks LCP, INP, CLS, images, and client rendering.`
 14. `In Root, trace the branch architecture and release surface while an independent review checks code quality, security risk, and missing tests.`
+15. `Inspect the raw logs and exploratory traces in a fresh child context, return compact evidence with likely failure clusters, then let Root judge and integrate the diagnosis.`
+16. `先让一个代码检索角色调查所有相关调用点和兼容分支，返回简洁证据摘要，再由 Root 判断是否需要收敛实现。`
 
 Why these are positive examples:
 
-- they have a bounded Child Lane and a distinct useful Root Lane
+- they have a bounded Child Contribution with a clear completion condition
 - they are mostly read-heavy before any writes
-- they benefit from specialist viewpoints or parallel evidence gathering
-- the Root Lane can make substantive progress while the child runs
+- they benefit from specialist viewpoints, parallel work, independent verification, or Root Context Preservation
+- Root retains judgment, proportional verification, integration, and the final response
 - the smallest useful lineup can start with one child

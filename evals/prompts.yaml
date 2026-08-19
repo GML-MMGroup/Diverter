@@ -691,7 +691,7 @@ prompts:
       max_active_children: 1
       expected_reuse: false
     must_do:
-      - derive the distinct Root and Child lanes from the requested outcome
+      - derive the bounded Child Contribution and Root responsibility from the requested outcome
       - use the Dispatch Announcement as the single routing receipt
     must_not_do:
       - require the user to state lanes or delegation intent
@@ -716,7 +716,7 @@ prompts:
       max_active_children: 1
       expected_reuse: false
     must_do:
-      - derive the distinct Root and Child lanes from the requested outcome
+      - derive the bounded Child Contribution and Root responsibility from the requested outcome
       - use the Dispatch Announcement as the single routing receipt
     must_not_do:
       - require the user to state lanes or delegation intent
@@ -741,12 +741,38 @@ prompts:
       max_active_children: 1
       expected_reuse: false
     must_do:
-      - derive the distinct Root and Child lanes from the requested outcome
+      - derive the bounded Child Contribution and Root responsibility from the requested outcome
       - use the Dispatch Announcement as the single routing receipt
     must_not_do:
       - require the user to state lanes or delegation intent
       - emit a separate eligibility receipt
     notes: "Latent positive paired with gate-neg-focused-ui; named Web metrics create a separate specialist boundary."
+
+  - id: latent-pos-context-offload
+    policy: auto
+    surface: cli
+    smoke: true
+    category: positive
+    prompt: "调查当前仓库中所有影响插件安装路径解析的调用点、兼容分支和相关测试，汇总证据后判断实现是否需要收敛；先不要修改代码。"
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [code-mapper]
+    evaluator_metadata:
+      latent_task_shape: true
+      root_continuation: "wait if needed, then judge the compact evidence and integrate the final recommendation"
+      child_scope: "inspect the relevant call sites, compatibility branches, and tests"
+      root_scope: "judgment, proportional verification, and final synthesis"
+      benefit_claim: "Root Context Preservation from a compact evidence-grounded handoff over broad repository exploration"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - derive one bounded Child Contribution without inventing a separate Root deliverable
+      - identify Root Context Preservation as a material benefit
+      - use the Dispatch Announcement as the single routing receipt
+    must_not_do:
+      - require concurrent Root progress while the child runs
+      - emit a separate eligibility receipt
+    notes: "Latent positive for context-preserving repository exploration followed by Root judgment and integration."
 
   - id: ultra-pos-ui-root-continues
     policy: auto
@@ -765,9 +791,9 @@ prompts:
       max_active_children: 1
       expected_reuse: false
     must_do:
-      - name the Root Lane before dispatch
+      - name the Root responsibility before dispatch
       - dispatch exactly one child
-    notes: "Paired positive for gate-neg-focused-ui; the useful Root Lane is the only routing difference."
+    notes: "Positive control where useful concurrent Root work is available but no longer mandatory."
 
   - id: ultra-pos-focused-skill-support
     policy: auto
@@ -788,7 +814,7 @@ prompts:
     must_do:
       - preserve focused-skill ownership
       - describe code-mapper as a Supporting Child
-    notes: "Focused skills may receive support without surrendering the Root Lane."
+    notes: "Focused skills may receive bounded support without surrendering the core workflow."
 
   - id: ultra-pos-regression-root-continues
     surface: cli
@@ -843,7 +869,7 @@ prompts:
       max_active_children: 1
       expected_reuse: false
     must_do:
-      - keep the Root and Child deliverables distinct
+      - keep Root and Child responsibilities complementary
       - announce read-only work
     notes: "A shared filename alone is not an ownership conflict when both lanes are read-only and semantically independent."
 
@@ -861,7 +887,7 @@ prompts:
       benefit_claim: "official contract verification can run independently"
       max_active_children: 1
       expected_reuse: false
-    notes: "Paired positive for neg-04, where one blocking fact leaves no Root Lane."
+    notes: "Paired positive for neg-04, where the direct fact lookup is too small to justify delegation."
 
   - id: ultra-reuse-same-scope
     policy: auto
@@ -885,26 +911,27 @@ prompts:
       - create no equivalent second child
     notes: "Child Reuse is distinct from compact idempotency; this requires a persisted session and is not a cold-start smoke case."
 
-  - id: ultra-neg-no-root-lane
+  - id: ultra-pos-context-offload
     surface: shared
     smoke: true
-    category: negative
+    category: positive
     prompt: "Audit this authentication flow for permission bypasses and report the result."
-    expected_should_suggest: false
-    expected_roles: []
+    expected_should_suggest: true
+    expected_roles: [security-auditor]
     evaluator_metadata:
-      root_continuation: "none"
-      child_scope: "entire requested audit"
-      root_scope: "none"
-      benefit_claim: "none; Root would wait"
-      max_active_children: 0
+      root_continuation: "wait if needed, then judge, verify, and integrate the audit"
+      child_scope: "bounded authentication permission-bypass audit"
+      root_scope: "judgment, proportional verification, and final response"
+      benefit_claim: "relevant security expertise and independent verification"
+      max_active_children: 1
       expected_reuse: false
     must_do:
-      - "emit exactly one Routing: ROOT_ONLY receipt"
+      - dispatch exactly one security-auditor
+      - state Root judgment and integration without inventing another deliverable
     must_not_do:
-      - invent a Root Lane
-      - delegate the entire task implicitly
-    notes: "A concrete specialist task with no effective Root Lane remains Root-only implicitly."
+      - require a separate concurrent Root Lane
+      - treat waiting alone as the benefit
+    notes: "A bounded specialist contribution may be implicitly delegated without a separate concurrent Root deliverable."
 
   - id: ultra-neg-readonly-laundering
     surface: cli
@@ -917,15 +944,15 @@ prompts:
       root_continuation: "one coupled implementation decision"
       child_scope: "invented read-only mapping or review"
       root_scope: "understand and implement the same decision"
-      benefit_claim: "none; the proposed read-only lane is only a prerequisite"
+      benefit_claim: "none; the local caller scan is not materially smaller or more valuable than direct inspection"
       max_active_children: 0
       expected_reuse: false
     must_do:
       - "emit exactly one Routing: ROOT_ONLY receipt"
     must_not_do:
-      - reclassify prerequisite mapping or review as an independent Child Lane
-      - split one implementation decision across Root and Child
-    notes: "A read-only label cannot repair a tightly coupled task shape."
+      - claim Root Context Preservation for a small local scan
+      - split one tightly coupled write decision across Root and Child
+    notes: "A read-only label cannot create material benefit for a small tightly coupled task."
 
   - id: ultra-ownership-conflict
     surface: cli

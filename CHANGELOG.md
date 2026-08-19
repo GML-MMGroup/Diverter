@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.4.4 - 2026-08-19
+
+- Allow implicit delegation for one bounded Child Contribution when it materially preserves Root context or improves time, expertise, coverage, quality, or independent verification; a separate concurrent Root deliverable is no longer required.
+- Keep Root accountable for judgment, proportional verification, integration, and the final response whether it continues other work or waits for a required Child result.
+
 ## 0.4.3 - 2026-08-17
 
 - Require private Task-shape Deliberation before implicit `ROOT_ONLY` decisions and emit one concise Routing Receipt for ordinary Root-only routing.

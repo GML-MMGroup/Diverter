@@ -234,6 +234,23 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             "high",
         )
 
+    def read_only_args(self) -> tuple[str, ...]:
+        return (
+            "--expected-role",
+            "docs-researcher",
+            "--policy",
+            "auto",
+            "--require-followup",
+            "--root-progress-scope",
+            "root-progress-artifact.md",
+            "--verification-scope",
+            "verify-integrated-artifact",
+            "--expected-root-model",
+            "gpt-5.6-terra",
+            "--expected-root-effort",
+            "high",
+        )
+
     def test_accepts_real_native_shapes_progress_reuse_and_ownership(self) -> None:
         root_records, child_records, manifest = self.happy_records()
 
@@ -555,6 +572,26 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             json.loads(result.stdout)["checks"]["root_integration_verification"]
         )
 
+    def test_accepts_context_offload_without_parallel_root_progress(self) -> None:
+        root_records, child_records, manifest = self.happy_records()
+        root_records.pop(5)
+        child_records[3] = exec_call(
+            "2026-08-13T10:00:05Z",
+            'await tools.exec_command({"cmd":"inspect-noisy-source-material"})',
+            "child-read",
+        )
+
+        result = self.run_verifier(
+            root_records, child_records, *self.read_only_args()
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+        report = json.loads(result.stdout)
+        self.assertFalse(
+            report["observations"]["root_progress_while_child_active"]
+        )
+        self.assertTrue(report["checks"]["root_integration_verification"])
+
     def test_rejects_same_child_followup_before_terminal(self) -> None:
         root_records, child_records, manifest = self.happy_records()
         root_records[7]["timestamp"] = "2026-08-13T10:00:05.500000Z"
@@ -566,7 +603,7 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertFalse(json.loads(result.stdout)["checks"]["same_child_followup"])
 
-    def test_rejects_bookkeeping_as_root_progress(self) -> None:
+    def test_records_bookkeeping_as_no_parallel_root_progress(self) -> None:
         root_records, child_records, manifest = self.happy_records()
         root_records[5] = call(
             "2026-08-13T10:00:04Z",
@@ -574,28 +611,42 @@ class NativeLifecycleVerifierTest(unittest.TestCase):
             '{"explanation":"root-progress-artifact.md"}',
             "not-progress",
         )
-
-        result = self.run_verifier(
-            root_records, child_records, *self.common_args(), manifest=manifest
+        child_records[3] = exec_call(
+            "2026-08-13T10:00:05Z",
+            'await tools.exec_command({"cmd":"inspect-noisy-source-material"})',
+            "child-read",
         )
 
-        self.assertEqual(result.returncode, 1)
-        self.assertFalse(json.loads(result.stdout)["checks"]["root_progress_while_child_active"])
+        result = self.run_verifier(
+            root_records, child_records, *self.read_only_args()
+        )
 
-    def test_rejects_wrapped_bookkeeping_as_root_progress(self) -> None:
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertFalse(
+            json.loads(result.stdout)["observations"]["root_progress_while_child_active"]
+        )
+
+    def test_records_wrapped_bookkeeping_as_no_parallel_root_progress(self) -> None:
         root_records, child_records, manifest = self.happy_records()
         root_records[5] = exec_call(
             "2026-08-13T10:00:04Z",
             'await tools.update_plan({"explanation":"root-progress-artifact.md"})',
             "not-progress",
         )
-
-        result = self.run_verifier(
-            root_records, child_records, *self.common_args(), manifest=manifest
+        child_records[3] = exec_call(
+            "2026-08-13T10:00:05Z",
+            'await tools.exec_command({"cmd":"inspect-noisy-source-material"})',
+            "child-read",
         )
 
-        self.assertEqual(result.returncode, 1)
-        self.assertFalse(json.loads(result.stdout)["checks"]["root_progress_while_child_active"])
+        result = self.run_verifier(
+            root_records, child_records, *self.read_only_args()
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertFalse(
+            json.loads(result.stdout)["observations"]["root_progress_while_child_active"]
+        )
 
     def test_rejects_root_reasoning_drift_across_resume(self) -> None:
         root_records, child_records, manifest = self.happy_records()

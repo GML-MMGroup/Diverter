@@ -8,7 +8,7 @@ Every child receives a self-contained, leaf-only handoff.
 | `goal` | exact Child Lane outcome |
 | `success_criteria` | observable definition of done |
 | `scope_in` | owned evidence, artifact, or boundary |
-| `scope_out` | excluded adjacent work and the Root Lane |
+| `scope_out` | excluded adjacent work and Root-owned responsibilities |
 | `relevant_context` | files, URLs, IDs, facts, or entrypoints needed from a fresh start |
 | `constraints` | task, safety, and process limits |
 | `deliverable` | integration-ready result expected by Root |

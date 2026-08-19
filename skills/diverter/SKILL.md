@@ -20,13 +20,13 @@ Diverter distills Ultra-inspired task decomposition and role routing for non-Ult
 For an eligible task:
 
 - choose the Smallest Sufficient Lineup of 1-4 available roles;
-- assign every child one bounded independent Child Lane;
-- for implicit eligibility, declare the distinct useful Root Lane that will progress while children run;
+- assign every child one bounded independent Child Contribution;
+- for implicit eligibility, declare the Root responsibility that will judge and integrate the contribution;
 - state exactly one Work Mode: `read-only`, `mixed`, or `write-capable`;
 - apply the loaded `ask` or `auto` Delegation Policy; and
 - integrate and proportionally verify child results before answering the user.
 
-Only implicit eligibility requires a distinct useful Root Lane and material benefit. An Explicit Delegation Request may have no distinct Root Lane; Root still owns orchestration, integration, verification, and the final outcome.
+Implicit eligibility requires material benefit; an Explicit Delegation Request bypasses that benefit threshold. Neither implicit nor explicit eligibility requires a separate concurrent Root Lane or Root deliverable. Root judgment, proportional verification, integration, and ownership of the final response are valid Root responsibilities.
 
 If the Missing-Contract fallback returns `ROOT_ONLY`, follow the Session Contract's Routing Receipt and silence rules. If native dispatch is unavailable, continue silently in the Root Session.
 
@@ -57,7 +57,7 @@ Follow this sequence:
 7. Classify the complete workflow's Work Mode.
 8. Produce the policy-specific Delegation Contract.
 9. Dispatch only after Dispatch Authorization.
-10. Continue the declared Root Lane when one exists; otherwise coordinate the explicitly requested child. Collect results, resolve conflicts, verify proportionally, and integrate the final outcome.
+10. Continue useful non-duplicative Root work when available; otherwise coordinate and wait for the Child result. Collect results, resolve conflicts, verify proportionally, and integrate the final outcome.
 
 ## Delegation Policy
 
@@ -87,7 +87,7 @@ Diverter uses the Native Subagent Backend exclusively. Before announcement or di
 - Do not require or pass runtime `model` or `reasoning_effort` overrides. The installed Bundled Subagent definition owns those settings.
 - Do not use a generic child as a substitute for a missing requested role.
 - If native subagent dispatch is unavailable, do not announce Diverter, report a backend problem, or ask what to do. Continue silently in the Root Session.
-- If a role is unavailable, drop it and keep its capability in the Root Lane. If no useful role remains, continue silently in Root.
+- If a role is unavailable, drop it and keep its capability under the Root responsibility. If no useful role remains, continue silently in Root.
 
 ## Capability Selection
 
@@ -108,13 +108,14 @@ Select capabilities first, then map only to roles available in the current Codex
 
 Smallest Sufficient Lineup rules:
 
-- Default to one child. Pair it with the required Root Lane for implicit eligibility.
-- When a focused skill owns the Root Lane, select only a separate, non-duplicative Supporting Child.
-- Add another child only for another necessary, independent, non-duplicative deliverable.
+- Default to one child. Pair it with a clear Root responsibility for judgment and integration.
+- When a focused skill owns the core workflow, select only a bounded complementary Supporting Child.
+- Add another child only for another necessary, independent Child Contribution.
 - Never exceed four roles; four is a safety cap, not a target.
 - Prefer the central specialist over a generic reviewer when the concrete boundary is security, test strategy, or Web performance.
 - Prefer `search-specialist` for open-ended strategy or option evidence; reserve `docs-researcher` for a named documentation or API contract.
-- When repository analysis is paired with official contract verification, assign the official contract to `docs-researcher` and keep repository mapping and synthesis in Root.
+- Use `code-mapper` or `search-specialist` when a bounded evidence search materially preserves Root context; require a compact, evidence-grounded handoff.
+- When repository analysis is paired with official contract verification, assign the official contract to `docs-researcher` and keep final judgment and synthesis in Root.
 - Add `test-automator` only for explicitly requested, behaviorally clear test writes.
 - Add `web-performance-auditor` for Web-facing performance work or named Web metrics such as LCP, INP, or CLS, while Root may separately own component, accessibility, or design analysis.
 - If a capability lacks an available role, Root covers it; never invent a replacement.
@@ -123,7 +124,7 @@ Smallest Sufficient Lineup rules:
 
 Render exactly one user-facing routing receipt using the applicable literal template below. It must be the first user-visible output for the eligible prompt. Do not wrap it in a code fence or add eligibility, loading, rationale, recommendation, or announcement prose around it. This restriction applies to the routing message; later normal progress and final-result messages remain allowed.
 
-Repeat `Child:` once per selected role in lineup order. Each `Child:` value contains the exact role name and one concise task summary. `Root:` contains one concise task summary; when an Explicit Delegation Request has no distinct Root Lane, summarize Root's coordination and integration instead of inventing work. Do not include steps, file scope, success criteria, verification, or deliverables in these summaries. Those details belong in the internal handoff.
+Repeat `Child:` once per selected role in lineup order. Each `Child:` value contains the exact role name and one concise task summary. `Root:` summarizes Root's judgment, verification, integration, or other retained task responsibility; do not invent a separate deliverable. Do not include steps, file scope, success criteria, verification, or deliverables in these summaries. Those details belong in the internal handoff.
 
 Keep the literal field labels, exact role names, and Work Mode tokens in English. Write task summaries and the final action text in the user's language.
 
@@ -179,13 +180,14 @@ Use this recursion guard:
 
 The child is always a Leaf Child. Root alone owns decomposition, follow-up routing, integration, verification, and the final response.
 
-## Root Progress and Integration
+## Root Responsibility and Integration
 
-After an implicitly eligible dispatch, Root must make substantive, distinct, traceable progress on the declared Root Lane while the child is active. After an explicit dispatch with no distinct Root Lane, Root may coordinate and wait for the requested child before integration. Choose task-appropriate work under Outcome-Bounded Autonomy; do not force research, writing, planning, design, and code into one action checklist.
+After any eligible dispatch, Root may make useful non-duplicative progress while the Child is active or coordinate and wait when the Child result is needed first. Neither path changes Root accountability. Choose task-appropriate work under Outcome-Bounded Autonomy; do not force research, writing, planning, design, and code into one action checklist.
 
 Root must:
 
-- avoid duplicating the Child Lane;
+- avoid unnecessary duplication of the Child Contribution;
+- treat proportional verification as a Root responsibility, not duplicate work;
 - preserve successful results if another lane fails;
 - map each child result into the final outcome;
 - resolve stale or conflicting evidence rather than trusting it blindly; and

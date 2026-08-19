@@ -164,7 +164,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertLess(native_stop, trigger)
         self.assertIn("Do not evaluate, load, or mention Diverter", result.stdout)
 
-    def test_session_start_exposes_root_child_eligibility_and_native_absence(
+    def test_session_start_exposes_context_preserving_eligibility_and_native_absence(
         self,
     ) -> None:
         result = subprocess.run(
@@ -175,15 +175,16 @@ class PluginContractTest(unittest.TestCase):
         )
 
         gate = result.stdout
-        self.assertIn("One bounded, independently executable Child Lane", gate)
-        self.assertIn("One distinct, useful Root Lane", gate)
-        self.assertIn("Waiting, supervision", gate)
+        self.assertIn("One bounded Child Contribution", gate)
+        self.assertIn("clear scope, completion condition", gate)
+        self.assertIn("Root Context Preservation", gate)
+        self.assertIn("compact, evidence-grounded handoff", gate)
+        self.assertIn("A separate concurrent Root Lane", gate)
+        self.assertIn("Root may continue other work or wait", gate)
         self.assertIn("continues an already announced or dispatched workflow", gate)
-        self.assertIn("mapping the audited flow", gate)
-        self.assertIn("Reading the same artifact", gate)
-        self.assertIn("LCP, INP, and CLS", gate)
-        self.assertIn("known regression with a named behavior boundary", gate)
-        self.assertIn("`test-engineer` independently designs", gate)
+        self.assertIn("intentionally overlap for independent verification", gate)
+        self.assertNotIn("One distinct, useful Root Lane", gate)
+        self.assertNotIn("mapping the audited flow", gate)
         self.assertIn("An affirmative request", gate)
         self.assertIn(
             "`$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role",
@@ -198,7 +199,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("`ROOT_ONLY`", gate)
         self.assertIn("`ELIGIBLE`", gate)
         self.assertIn("Task-shape Deliberation", gate)
-        self.assertIn("strongest plausible split", gate)
+        self.assertIn("strongest plausible bounded Child Contribution", gate)
         self.assertIn("absence of user-written lanes", gate)
         self.assertIn("Keep this deliberation private", gate)
         self.assertIn("Routing: ROOT_ONLY", gate)
@@ -214,7 +215,7 @@ class PluginContractTest(unittest.TestCase):
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())
 
         self.assertEqual(manifest["name"], "diverter")
-        self.assertEqual(manifest["version"], "0.4.3")
+        self.assertEqual(manifest["version"], "0.4.4")
         self.assertEqual(manifest["interface"]["displayName"], "Diverter")
         self.assertEqual(manifest["skills"], "./skills/")
         self.assertNotIn("hooks", manifest)
@@ -275,6 +276,7 @@ class PluginContractTest(unittest.TestCase):
     def test_core_skill_selects_policy_and_native_lifecycle(self) -> None:
         skill_path = ROOT / "skills" / "diverter" / "SKILL.md"
         skill = skill_path.read_text()
+        interface = (ROOT / "agents" / "openai.yaml").read_text()
 
         self.assertTrue(skill_path.is_file())
         self.assertFalse((ROOT / "SKILL.md").exists())
@@ -304,7 +306,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Native Capability Check", skill)
         self.assertIn("Native Subagent Backend", skill)
         self.assertIn("agent_type", skill)
-        self.assertIn("Root Lane", skill)
+        self.assertIn("Root responsibility", skill)
         self.assertIn("Child Lane", skill)
         self.assertIn("Supporting Child", skill)
         self.assertIn("Smallest Sufficient Lineup", skill)
@@ -314,6 +316,9 @@ class PluginContractTest(unittest.TestCase):
         self.assertNotIn("CLI Worker Backend", skill)
         self.assertNotIn("scripts/run-cli-agent.py", skill)
         self.assertIn("delegation_context: delegated-subagent", skill)
+        self.assertIn("bounded native Child Contribution", interface)
+        self.assertIn("Root judge and integrate", interface)
+        self.assertNotIn("useful Root Lane", interface)
 
     def test_core_skill_uses_session_contract_as_the_preflight_authority(self) -> None:
         skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
@@ -340,9 +345,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("terminal Root-only recovery state", contract)
         self.assertIn("Do not call `spawn_agent`", contract)
         self.assertIn("requested read-only specialist lane", contract)
-        self.assertIn(
-            "derive repository-specific constraints and a plan", contract
-        )
+        self.assertIn("materially larger, noisier, or more exploratory", contract)
         self.assertIn("Non-normative examples", rules)
         self.assertIn("cannot override the Session Contract", rules)
         self.assertNotIn("Practical tie-breakers", rules)
@@ -369,7 +372,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Focused skill ownership", rules)
         self.assertIn("Vague risk language", rules)
 
-    def test_explicit_dispatch_does_not_require_an_implicit_root_lane(self) -> None:
+    def test_implicit_dispatch_does_not_require_a_separate_root_lane(self) -> None:
         skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
         message_contract = (
             ROOT
@@ -381,20 +384,20 @@ class PluginContractTest(unittest.TestCase):
         rubric = (ROOT / "evals" / "rubric.md").read_text()
         scenarios = (ROOT / "evals" / "scenarios.md").read_text()
 
-        self.assertIn("Only implicit eligibility requires", skill)
+        self.assertIn("Neither implicit nor explicit eligibility requires", skill)
         self.assertIn(
-            "An Explicit Delegation Request may have no distinct Root Lane",
+            "Root judgment, proportional verification, integration, and ownership",
             skill,
         )
         self.assertIn("for implicit eligibility, declare", skill)
-        self.assertIn("for implicit eligibility", message_contract)
-        self.assertIn("for explicit eligibility", message_contract)
-        self.assertIn("Implicit eligibility", rubric)
-        self.assertIn("explicit eligibility", rubric)
-        self.assertIn("Explicit-lane implicit positives", scenarios)
+        self.assertIn("For implicit eligibility", message_contract)
+        self.assertIn("For explicit eligibility", message_contract)
+        self.assertIn("Every eligible route", rubric)
+        self.assertIn("implicit eligible positives", rubric)
+        self.assertIn("Child Contribution", scenarios)
         self.assertIn("Latent positives", scenarios)
         self.assertIn("Explicit delegation positives", scenarios)
-        self.assertIn("For implicit eligibility, the Root Lane", scenarios)
+        self.assertIn("For implicit eligibility, Root responsibility", scenarios)
         self.assertIn("For explicit eligibility, Root coordination", scenarios)
 
     def test_routing_receipt_is_one_external_result_without_a_new_score(self) -> None:
@@ -472,7 +475,7 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Reject a loading preface", scenarios)
         self.assertIn("`Why:` field", scenarios)
 
-    def test_positive_examples_do_not_restore_single_lane_implicit_routes(self) -> None:
+    def test_positive_examples_include_context_preserving_offload(self) -> None:
         examples = (
             ROOT / "skills" / "diverter" / "references" / "examples-positive.md"
         ).read_text()
@@ -482,9 +485,10 @@ class PluginContractTest(unittest.TestCase):
             if line.split(".", 1)[0].isdigit()
         }
 
-        for number in range(9, 15):
-            self.assertIn(" while ", numbered[number].lower())
-            self.assertIn("Root", numbered[number])
+        self.assertIn("raw logs", numbered[15].lower())
+        self.assertIn("compact evidence", numbered[15].lower())
+        self.assertIn("调用点", numbered[16])
+        self.assertIn("简洁证据摘要", numbered[16])
 
     def test_native_role_spawn_uses_no_history_or_model_overrides(self) -> None:
         skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
@@ -596,10 +600,10 @@ class PluginContractTest(unittest.TestCase):
 
         self.assertIn("agent_id", guide)
         self.assertIn("Codex CLI `0.145.0`", guide)
-        self.assertIn("For implicit routing", english)
-        self.assertIn("对于隐式路由", chinese)
-        self.assertIn("Explicit delegation may coordinate and wait", english)
-        self.assertIn("显式委派可以协调并等待", chinese)
+        self.assertIn("Implicit routing requires a credible benefit", english)
+        self.assertIn("隐式路由需要具备", chinese)
+        self.assertIn("Root may continue useful work or wait", english)
+        self.assertIn("Root 可以继续推进有价值的工作，也可以等待", chinese)
         self.assertTrue(adr.is_file())
         adr_text = adr.read_text()
         for term in (
@@ -640,6 +644,7 @@ class PluginContractTest(unittest.TestCase):
             "latent-pos-doc-contract",
             "latent-pos-regression",
             "latent-pos-web-audit",
+            "latent-pos-context-offload",
             "ultra-pos-ui-root-continues",
             "ultra-pos-focused-skill-support",
             "ultra-pos-regression-root-continues",
@@ -647,7 +652,7 @@ class PluginContractTest(unittest.TestCase):
             "ultra-pos-same-file-readonly",
             "ultra-pos-doc-check",
             "ultra-reuse-same-scope",
-            "ultra-neg-no-root-lane",
+            "ultra-pos-context-offload",
             "ultra-neg-readonly-laundering",
             "ultra-ownership-conflict",
         ):
@@ -672,7 +677,7 @@ class PluginContractTest(unittest.TestCase):
             (ROOT / "evals" / "fixtures" / "settings-save" / "settings_save.py").is_file()
         )
         self.assertIn("sanitized_failure_reporting", rubric)
-        self.assertIn("root_lane_quality", rubric)
+        self.assertIn("root_ownership_quality", rubric)
         self.assertIn("Routing Receipt violations", rubric)
         self.assertIn("lifecycle_evidence", rubric)
         self.assertIn("Router Score / 7", results_template)
@@ -705,6 +710,7 @@ class PluginContractTest(unittest.TestCase):
             "latent-pos-doc-contract",
             "latent-pos-regression",
             "latent-pos-web-audit",
+            "latent-pos-context-offload",
         ):
             block = prompts.split(f"  - id: {case_id}\n", 1)[1].split(
                 "\n  - id:", 1

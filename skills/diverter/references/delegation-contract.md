@@ -12,7 +12,7 @@ Match the user's language in the reason. Do not emit this receipt for bypass, ex
 
 ## Shared Information
 
-Each selected child gets one `Child:` line in lineup order with its exact role name and a concise, user-facing summary of its task. The `Root:` line summarizes the distinct Root Lane for implicit eligibility; for explicit eligibility without one, it summarizes coordination and integration instead of inventing work. The receipt also states exactly one Work Mode: `read-only`, `mixed`, or `write-capable`.
+Each selected child gets one `Child:` line in lineup order with its exact role name and a concise, user-facing summary of its task. For implicit eligibility, the `Root:` line summarizes Root's judgment, proportional verification, integration, or other retained responsibility. For explicit eligibility, it may summarize coordination and integration. Never invent a separate Root deliverable. The receipt also states exactly one Work Mode: `read-only`, `mixed`, or `write-capable`.
 
 Task summaries say who will do what. They do not expose handoff steps, file scope, success criteria, verification, deliverables, or routing rationale. Never list alternatives, invent roles, describe results that do not exist, or imply a child started before the receipt.
 
@@ -28,19 +28,19 @@ Use the `auto` template in `../SKILL.md`, end with an immediate-start statement 
 
 ## Explicit Delegation Requests
 
-An Explicit Delegation Request may have no distinct Root Lane. Do not invent one or claim material lane benefit; state the requested child assignment and Root's coordination and integration responsibility instead.
+An Explicit Delegation Request does not need independently established material benefit. Do not invent a separate Root deliverable; state the requested child assignment and Root's coordination and integration responsibility instead.
 
 ## Focused Skills
 
-Name the explicitly selected skill's retained Root Lane and describe the delegated role as a Supporting Child. Do not imply that Diverter replaces the skill.
+Name the explicitly selected skill's retained core responsibility and describe the delegated role as a Supporting Child. Do not imply that Diverter replaces the skill.
 
 ## Failure Cases
 
 Avoid:
 
-- no declared Root Lane for implicit eligibility;
-- Root work that duplicates the Child Lane;
-- more roles than independent deliverables;
+- no bounded Child Contribution or Root integration responsibility;
+- unnecessary Root work that duplicates the Child Contribution;
+- more roles than independent Child Contributions;
 - an `ask` message without a permission question;
 - an `auto` message that asks a question or pauses;
 - redispatching an equivalent scope instead of Child Reuse;
