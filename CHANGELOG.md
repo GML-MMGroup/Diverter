@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.4.6 - 2026-08-21
+
+- Treat an active skill's explicit subagent requirement as a Required Skill Route, while preserving focused-skill ownership and deduplicating equivalent routes under Diverter's single orchestration path.
+
 ## 0.4.5 - 2026-08-20
 
 - Restore positive-signal implicit routing with explicit exclusions and read-heavy tie-breakers instead of requiring every eligibility factor to be affirmatively proven.

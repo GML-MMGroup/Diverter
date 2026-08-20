@@ -53,7 +53,7 @@ Follow this sequence:
 3. Trust the completed Preflight, or run the Missing-Contract fallback above.
 4. Resolve the Delegation Policy.
 5. Confirm the Native Capability Check remains satisfied before mentioning Diverter or proposing a lineup.
-6. Select the Smallest Sufficient Lineup from available roles.
+6. Resolve applicable skill requirements, add any Required Skill Route, then select the Smallest Sufficient Lineup from available roles.
 7. Classify the complete workflow's Work Mode.
 8. Produce the policy-specific Delegation Contract.
 9. Dispatch only after Dispatch Authorization.
@@ -87,6 +87,7 @@ Diverter uses the Native Subagent Backend exclusively. Before announcement or di
 - Do not require or pass runtime `model` or `reasoning_effort` overrides. The installed Bundled Subagent definition owns those settings.
 - Do not use a generic child as a substitute for a missing requested role.
 - If native subagent dispatch is unavailable, do not announce Diverter, report a backend problem, or ask what to do. Continue silently in the Root Session.
+- If a Required Skill Route cannot resolve to an available role, do not drop it into Root or claim it ran. Diverter stays inactive and the focused skill handles the unavailable dependency under its own contract.
 - If a role is unavailable, drop it and keep its capability under the Root responsibility. If no useful role remains, continue silently in Root.
 
 ## Capability Selection
@@ -109,7 +110,10 @@ Select capabilities first, then map only to roles available in the current Codex
 Smallest Sufficient Lineup rules:
 
 - Default to one child. Pair it with a clear Root responsibility for judgment and integration.
-- When a focused skill owns the core workflow, select only a bounded complementary Supporting Child.
+- Add every Required Skill Route before optional task-derived routes. Keep the focused skill's core workflow in Root and use Diverter as the only dispatcher.
+- Preserve a required installed role when named; otherwise map the required capability or child task to a matching available installed role.
+- Merge routes only when their objective boundary, integration-ready result, and write policy and ownership match. Retain the required status and create one spawn; a shared role alone does not make routes equivalent.
+- When a focused skill does not require delegation but can benefit from support, select only a bounded complementary Supporting Child.
 - Add another child only for another necessary, independent Child Contribution.
 - Never exceed four roles; four is a safety cap, not a target.
 - Prefer the central specialist over a generic reviewer when the concrete boundary is security, test strategy, or Web performance.

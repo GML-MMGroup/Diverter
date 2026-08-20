@@ -43,9 +43,9 @@ Recommending `auto` does not create a hidden `auto-safe` tier. After its Dispatc
 
 Implicit routing leans positive when read-heavy exploration, code-plus-docs verification, independent evidence, specialist review, or Root Context Preservation makes one bounded Child useful. Boundedness, autonomy, and safe ownership remain dispatch safeguards rather than an all-conditions-must-pass benefit test. Root need not produce a separate deliverable or make concurrent progress while the Child runs, and remains accountable for judging, proportionally verifying, integrating, and returning the final outcome.
 
-### D3 — Focused skills may receive supporting children
+### D3 — Focused skills retain ownership while Diverter absorbs required children
 
-An explicitly selected focused skill retains the core workflow. Diverter may implicitly supply a supporting child when that child has a bounded complementary contribution, does not replace the focused skill, and does not violate the focused skill's own delegation constraints.
+An explicitly selected focused skill retains the core workflow. Diverter may implicitly supply a supporting child when that child has a bounded complementary contribution, does not replace the focused skill, and does not violate the focused skill's own delegation constraints. When the active skill explicitly requires a subagent, Diverter treats its child task as a Required Skill Route with the same force as an affirmative user delegation request, becomes the sole dispatcher, and merges any equivalent task-derived route into one spawn.
 
 ### D4a — Reuse related native child context
 
@@ -64,6 +64,8 @@ The CLI Worker Backend was a compatibility path for an earlier period when nativ
 When the native subagent capability is unavailable, Diverter does not activate, report a backend problem, or ask how to continue. The Root Session completes the task normally, so Diverter behaves as though it were absent even when the task would otherwise qualify. This is a pre-activation bypass, not a recovered execution failure under Sanitized Failure Reporting.
 
 If an individual role is unavailable, Diverter removes it from the lineup and the Root Session covers that capability. If no eligible role remains, the task stays entirely in the Root Session.
+
+An unavailable role named by a Required Skill Route is not an optional capability: Diverter does not substitute it, drop it into Root, or claim it ran. The focused skill's unavailable-dependency behavior remains responsible for the task outcome.
 
 ### D4d — Use the minimal native capability contract
 

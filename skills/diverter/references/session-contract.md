@@ -16,9 +16,19 @@ If the user affirmatively prohibits delegation, return `ROOT_ONLY`.
 
 An affirmative delegation request that asks to see the lineup or wait for approval is not an opt-out. Treat it as a one-task `ask` policy override after eligibility is established.
 
-### 3. Explicit Delegation Request
+### 3. Explicit Delegation Request and Required Skill Route
 
 An affirmative request using `$diverter`, `subagent`, `delegate`, `委派`, `子代理`, or a named installed agent role is a candidate `ELIGIBLE`. Mere mention, quotation, explanation, hypothesis, negation, or scheduling language such as parallel or concurrent does not qualify.
+
+A Required Skill Route exists when another active skill explicitly requires a subagent contribution for the current task. Here, active means selected and loaded for the current task, not merely available, mentioned in repository text, or listed in a skill catalog. A requirement may use `must`, `required`, or an unqualified imperative such as `use`, `spawn`, or `delegate`; optional language such as `may`, `can`, `consider`, `optional`, or `recommended` does not create a Required Skill Route.
+
+Treat a Required Skill Route as an Explicit Delegation Request with the same force as an affirmative user request, and carry the skill-defined child task into Diverter's selected lineup as a required route.
+
+The focused skill retains its core workflow while Diverter remains the sole Orchestration Owner. If the skill names an available installed role, preserve it. If it names only a capability or child task, map that requirement to a matching available installed role. Two routes are equivalent only when their objective boundary, integration-ready result, and write policy and ownership match; a shared role name alone is insufficient. Merge equivalent skill-required and task-derived contributions into one route, retain its required status, and create one spawn.
+
+If a Required Skill Route cannot map to an available installed role, fit within the four-role safety cap, or satisfy safe Write Ownership, Diverter cannot activate for that task. Do not silently drop the route, substitute a generic role, or claim the requirement was completed; continue under the focused skill's own unavailable-dependency behavior.
+
+Resolve every applicable skill's known delegation requirements before composing an eligible lineup and receipt. If loading an applicable skill reveals a Required Skill Route after an initial silent `ROOT_ONLY`, that discovery may trigger the one allowed reconsideration before implementation.
 
 An Explicit Delegation Request bypasses only the requirement to independently establish material benefit. It does not require a separate concurrent Root Lane, and it does not bypass the rules above, task executability, Codex permissions or sandboxing, safe Write Ownership, or native capability requirements. If the objective cannot yet be acted on safely, return `ROOT_ONLY`; ordinary Root behavior may clarify it.
 
@@ -76,7 +86,7 @@ Before final activation, confirm that native role-specific subagent dispatch and
 
 `SessionStart`, resume, clear, and compact restore context but never emit a Routing Receipt by themselves. Only `ELIGIBLE` produces a routing receipt.
 
-An emitted `ELIGIBLE` receipt is final for that normalized scope. A silent `ROOT_ONLY` decision may be reconsidered once if user clarification or lightweight read-only Root discovery materially changes the task shape before implementation; never announce the earlier non-delegation or duplicate an eligible dispatch.
+An emitted `ELIGIBLE` receipt is final for that normalized scope. A silent `ROOT_ONLY` decision may be reconsidered once if user clarification, lightweight read-only Root discovery, or a mandatory skill load materially changes the task shape before implementation; never announce the earlier non-delegation or duplicate an eligible dispatch.
 
 The active `ask` or `auto` Delegation Policy does not change eligibility. It controls the Dispatch Workflow only after `ELIGIBLE`, and an explicit Task Policy Override retains its existing one-task scope.
 

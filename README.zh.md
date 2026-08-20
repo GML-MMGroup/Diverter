@@ -127,7 +127,7 @@ Diverter 在分派前始终明确标注一种工作模式。
 1. `SessionStart` Hook 加载用户级委派策略和完整 Session Contract，并在 compact 后恢复两者。
 2. 每个 Root turn 开始前，`UserPromptSubmit` 只注入一条简短 Turn Reminder；子代理 turn 通过 `agent_id` 被确定性过滤，不接收提醒。
 3. Preflight 会在内部判断强正向任务信号、明确排除项，以及偏读或偏写的 tie-breaker。所有 `ROOT_ONLY` 都保持沉默；适合委派的任务会在任何任务工作前加载 Diverter，并把对应策略的分派消息作为回执。
-4. Diverter 再选择有边界的 Child Contribution、最小充分阵容和 Work Mode。偏读探索、代码与文档核对、独立证据、专业审查和 Root 上下文节约都会让判断倾向委派，同时不要求另一个并行的 Root 交付物。`ask` 等待批准，`auto` 告知后立即分派。
+4. Diverter 再选择有边界的 Child Contribution、最小充分阵容和 Work Mode。偏读探索、代码与文档核对、独立证据、专业审查和 Root 上下文节约都会让判断倾向委派，同时不要求另一个并行的 Root 交付物。当另一个 active skill 明确要求使用子代理时，Diverter 会把该子任务吸收为一条必选且去重的 route，focused skill 继续保留核心流程。`ask` 等待批准，`auto` 告知后立即分派。
 5. Root 可以继续推进有价值的工作，也可以等待必要的 Child 结果；所有子代理仍保持叶子节点。随后由 Root 负责判断、按风险验证、整合和最终交付。
 
 相关追问会回到同一个原生子代理，延续它已经建立的上下文。

@@ -34,6 +34,9 @@ Choose capabilities first. Then keep only the roles that are available in the cu
 
 ## Compression Rules
 
+- Resolve Required Skill Routes first: preserve an available named role, or map a capability-only requirement through the Capability Map.
+- If a Required Skill Route has no available mapping, do not substitute, drop it into Root, or claim it ran; Diverter stays inactive and the focused skill handles its unavailable dependency.
+- Deduplicate routes only when their objective boundary, integration-ready result, and write policy and ownership match; role identity alone is insufficient, and a merged route retains required status.
 - Recommend exactly one lineup made only of available roles.
 - Start with one role. Add another only for another necessary, independent Child Lane.
 - If one unavailable capability is non-essential, drop it and keep the remaining useful lineup.
@@ -47,7 +50,7 @@ Choose capabilities first. Then keep only the roles that are available in the cu
 - Add `test-automator` only when the user explicitly asks for test writes and the behavior scope is clear.
 - Add `web-performance-auditor` for Web-facing performance work or named metrics such as LCP, INP, or CLS.
 - For non-Web performance, use `code-mapper + reviewer` only if the task is multi-lane.
-- If more than 4 roles are triggered, keep only the most necessary independent contributions; Root covers the rest.
+- If Required Skill Routes alone exceed four roles, Diverter stays inactive rather than dropping one. If optional routes would push the lineup above four, keep the required routes and only the most necessary optional contributions.
 
 ## Write-Safety Rules
 

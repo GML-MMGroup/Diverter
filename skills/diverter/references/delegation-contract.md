@@ -28,7 +28,7 @@ An Explicit Delegation Request does not need independently established material 
 
 ## Focused Skills
 
-Name the explicitly selected skill's retained core responsibility and describe the delegated role as a Supporting Child. Do not imply that Diverter replaces the skill.
+Name the explicitly selected skill's retained core responsibility and describe the delegated role as a Supporting Child. A Required Skill Route must appear in the lineup exactly once; do not imply that Diverter replaces the skill or let the focused skill create a second spawn.
 
 ## Failure Cases
 

@@ -3,7 +3,7 @@
 Diverter release validation has three evidence seams:
 
 1. **Preflight Delivery** — Hook input/output evidence proving the Session Contract is restored, every Root prompt gets one short Turn Reminder, and child prompts get none.
-2. **Router Contract** — deterministic and prompt-level evidence for Task-shape Deliberation, silent non-delegation, eligible Routing Receipts, bounded Child Contributions, Root responsibilities, focused-skill support, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
+2. **Router Contract** — deterministic and prompt-level evidence for Task-shape Deliberation, silent non-delegation, eligible Routing Receipts, bounded Child Contributions, Root responsibilities, focused-skill support, Required Skill Routes, `ask`/`auto`, role removal, native absence, leaf handoffs, reuse instructions, and Write Ownership.
 3. **Native Lifecycle** — persisted Codex records proving what actually spawned and happened over time.
 
 Final-response wording is never Native Lifecycle evidence.
@@ -54,6 +54,9 @@ The paired controls are central:
 
 - `gate-neg-focused-ui` ↔ `ultra-pos-ui-root-continues`;
 - `gate-neg-focused-skill` ↔ `ultra-pos-focused-skill-support`;
+- `gate-pos-required-skill-named-role` ↔ `gate-neg-optional-skill-route` and `gate-neg-required-skill-user-optout`;
+- `gate-pos-required-skill-dedup` verifies that the skill-required and task-derived contribution creates one route and one spawn;
+- `gate-neg-required-skill-child-recursion` verifies that delegated-child BYPASS prevents recursive required routes;
 - `neg-10` ↔ `ultra-pos-regression-root-continues`;
 - `neg-02` ↔ `ultra-pos-disjoint-write` and `ultra-ownership-conflict`;
 - `neg-04` ↔ `ultra-pos-doc-check`, `latent-pos-doc-contract`, and `latent-pos-context-offload`;
@@ -63,6 +66,8 @@ The paired controls are central:
 - `auto-idempotency` ↔ `ultra-reuse-same-scope`.
 
 Implicit positives must match a strong positive task-shape signal, avoid the clear exclusions, and produce a bounded autonomous Child Contribution with safe ownership plus a Root responsibility that will judge and integrate it. Do not require every possible benefit to be independently proven. Explicit delegation positives must name the requested Child Contribution and may state Root coordination and integration without independently proving material benefit. Neither path invents a separate Root deliverable.
+
+A mandatory subagent instruction from another active skill creates a Required Skill Route and has the same eligibility force as an Explicit Delegation Request. Preserve an available named role or map a capability-only requirement to an installed role, keep the focused skill's core workflow in Root, and merge equivalent routes into one spawn. Optional skill language does not create a required route, and no Required Skill Route overrides an earlier Preflight stop or safety boundary.
 
 Latent positives state only a realistic outcome, omit routing instructions, and require Task-shape Deliberation to derive a bounded Child Contribution plus Root judgment and integration. At least one latent positive must rely on Root Context Preservation rather than a second user-visible deliverable.
 
@@ -81,6 +86,8 @@ After authorization, reuse the shared lifecycle primarily under `auto`; do not d
 ### Missing role
 
 Physically omit or remove the requested role from the isolated role home. Do not tell the model to “assume” it is unavailable. The role is removed from the lineup, Root covers the capability, and no substitute role is invented.
+
+For a role named by a Required Skill Route, require zero eligible receipt, zero spawn, zero substitute, and no claim that the route ran. Diverter stays inactive; evaluate any focused-skill fallback separately under that skill's contract.
 
 ### Native absence diagnostic
 

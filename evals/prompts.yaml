@@ -553,6 +553,104 @@ prompts:
       - interpose Diverter before the explicitly selected focused skill
     notes: "Focused skill ownership suppresses implicit Diverter routing."
 
+  - id: gate-pos-required-skill-named-role
+    policy: ask
+    surface: shared
+    smoke: true
+    category: positive
+    session_context: "Active focused skill instruction: You MUST use the installed `docs-researcher` to verify the named API contract before completing this task."
+    prompt: "Use the active skill to update the migration guidance for the named API."
+    expected_should_suggest: true
+    expected_roles: [docs-researcher]
+    must_do:
+      - treat the mandatory skill instruction as a Required Skill Route
+      - preserve the focused skill's core workflow in Root
+      - include the required route exactly once
+      - ask for Dispatch Authorization and stop before spawning
+    notes: "A mandatory active-skill child requirement has the same eligibility force as an Explicit Delegation Request."
+
+  - id: gate-pos-required-skill-capability
+    policy: auto
+    surface: shared
+    smoke: false
+    category: positive
+    session_context: "Active focused skill instruction: Delegate one read-only test-strategy review to a subagent before finalizing a repository rule change."
+    prompt: "Apply the active skill to revise this routing rule."
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [test-engineer]
+    must_do:
+      - map the required capability to an available installed role
+      - keep Diverter as the sole dispatcher
+      - emit the eligible receipt before spawning
+    notes: "A capability-only Required Skill Route is mapped through the installed role set."
+
+  - id: gate-neg-optional-skill-route
+    surface: shared
+    smoke: true
+    category: negative
+    session_context: "Active focused skill instruction: You may use a code-mapper if repository exploration would materially help."
+    prompt: "Fix the typo in this README heading."
+    expected_should_suggest: false
+    expected_roles: []
+    must_not_do:
+      - treat optional skill language as a Required Skill Route
+      - emit a routing receipt
+    notes: "May/can/consider language remains subject to ordinary implicit eligibility."
+
+  - id: gate-neg-required-skill-user-optout
+    surface: shared
+    smoke: true
+    category: negative
+    session_context: "Active focused skill instruction: You MUST use one reviewer subagent for this task."
+    prompt: "Do not use subagents for this task; explain the function directly."
+    expected_should_suggest: false
+    expected_roles: []
+    must_do:
+      - honor the user's explicit opt-out
+    must_not_do:
+      - let the Required Skill Route override an earlier Preflight stop
+      - emit a routing receipt
+    notes: "Explicit opt-out remains authoritative over a skill-required route."
+
+  - id: gate-pos-required-skill-dedup
+    policy: auto
+    surface: shared
+    smoke: true
+    category: positive
+    session_context: "Active focused skill instruction: You MUST use one reviewer to audit this diff for correctness regressions."
+    prompt: "Review this branch against main for correctness regressions and integrate the result."
+    expected_should_suggest: true
+    expected_should_dispatch: true
+    expected_roles: [reviewer]
+    evaluator_metadata:
+      root_continuation: "focused skill keeps its core workflow and integrates the audit"
+      child_scope: "audit the diff for correctness regressions"
+      root_scope: "judgment, proportional verification, and final integration"
+      benefit_claim: "the Required Skill Route and ordinary task-shape routing identify the same contribution"
+      max_active_children: 1
+      expected_reuse: false
+    must_do:
+      - merge the equivalent required and user-requested contributions
+      - dispatch exactly one reviewer
+    notes: "Equivalent routes are absorbed into one required route rather than spawning twice."
+
+  - id: gate-neg-required-skill-child-recursion
+    surface: shared
+    smoke: true
+    category: negative
+    session_context: "Active focused skill instruction: You MUST use one reviewer subagent for this task."
+    prompt: "delegation_context: delegated-subagent; parent Dispatch Authorization already granted; leaf child; execute this handoff only\n\ngoal: Inspect the assigned diff and report verified findings.\nwrite_policy: read-only"
+    expected_should_suggest: false
+    expected_roles: []
+    must_do:
+      - execute only the delegated handoff
+    must_not_do:
+      - activate a Required Skill Route
+      - spawn a descendant
+      - emit a routing receipt
+    notes: "The delegated-child BYPASS remains earlier and stronger than a skill-required route."
+
   - id: gate-pos-explicit-delegation
     surface: shared
     smoke: true

@@ -196,6 +196,26 @@ class PluginContractTest(unittest.TestCase):
         )
         self.assertIn("scheduling language", gate)
         self.assertIn("focused skill that can use one bounded Supporting Child", gate)
+        self.assertIn("A Required Skill Route exists", gate)
+        self.assertIn("another active skill explicitly requires", gate)
+        self.assertIn("not merely available, mentioned in repository text", gate)
+        self.assertIn("an unqualified imperative", gate)
+        self.assertIn("same force as an affirmative user request", gate)
+        self.assertIn("does not create a Required Skill Route", gate)
+        self.assertIn("Diverter remains the sole Orchestration Owner", gate)
+        self.assertIn("objective boundary, integration-ready result", gate)
+        self.assertIn("retain its required status, and create one spawn", gate)
+        self.assertIn("Do not silently drop the route", gate)
+        self.assertIn("loading an applicable skill reveals a Required Skill Route", gate)
+        self.assertIn("before composing an eligible lineup and receipt", gate)
+        self.assertLess(
+            gate.index("### 2. Explicit opt-out"),
+            gate.index("A Required Skill Route exists"),
+        )
+        self.assertLess(
+            gate.index("A Required Skill Route exists"),
+            gate.index("### 4. Implicit eligibility"),
+        )
         self.assertIn("Supporting Child", gate)
         self.assertIn("native role-specific subagent dispatch", gate)
         self.assertIn("continue silently in the Root Session", gate)
@@ -219,7 +239,7 @@ class PluginContractTest(unittest.TestCase):
         hooks = json.loads((ROOT / "hooks" / "hooks.json").read_text())
 
         self.assertEqual(manifest["name"], "diverter")
-        self.assertEqual(manifest["version"], "0.4.5")
+        self.assertEqual(manifest["version"], "0.4.6")
         self.assertEqual(manifest["interface"]["displayName"], "Diverter")
         self.assertEqual(manifest["skills"], "./skills/")
         self.assertNotIn("hooks", manifest)
@@ -314,6 +334,8 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Child Lane", skill)
         self.assertIn("Supporting Child", skill)
         self.assertIn("Smallest Sufficient Lineup", skill)
+        self.assertIn("Add every Required Skill Route before optional task-derived routes", skill)
+        self.assertIn("Retain the required status and create one spawn", skill)
         self.assertIn("assign the official contract to `docs-researcher`", skill)
         self.assertIn("Child Reuse", skill)
         self.assertIn("Write Ownership", skill)
@@ -331,6 +353,12 @@ class PluginContractTest(unittest.TestCase):
         ).read_text()
         rules = (
             ROOT / "skills" / "diverter" / "references" / "decision-rules.md"
+        ).read_text()
+        lineups = (
+            ROOT / "skills" / "diverter" / "references" / "role-lineups.md"
+        ).read_text()
+        handoff = (
+            ROOT / "skills" / "diverter" / "references" / "handoff-schema.md"
         ).read_text()
 
         for phrase in (
@@ -375,6 +403,10 @@ class PluginContractTest(unittest.TestCase):
         self.assertIn("Explicit delegation request", rules)
         self.assertIn("Focused skill ownership", rules)
         self.assertIn("Vague risk language", rules)
+        self.assertIn("Resolve Required Skill Routes first", lineups)
+        self.assertIn("role identity alone is insufficient", lineups)
+        self.assertIn("originating skill requirement", handoff)
+        self.assertIn("focused skill's core workflow in `scope_out`", handoff)
 
     def test_implicit_dispatch_does_not_require_a_separate_root_lane(self) -> None:
         skill = (ROOT / "skills" / "diverter" / "SKILL.md").read_text()
@@ -643,6 +675,12 @@ class PluginContractTest(unittest.TestCase):
             "auto-idempotency",
             "gate-neg-focused-ui",
             "gate-pos-ui-audit",
+            "gate-pos-required-skill-named-role",
+            "gate-pos-required-skill-capability",
+            "gate-neg-optional-skill-route",
+            "gate-neg-required-skill-user-optout",
+            "gate-pos-required-skill-dedup",
+            "gate-neg-required-skill-child-recursion",
             "gate-pos-named-role",
             "gate-neg-scheduling-only",
             "gate-neg-quoted-delegation",
@@ -670,6 +708,39 @@ class PluginContractTest(unittest.TestCase):
             "ultra-ownership-conflict",
         ):
             self.assertIn(f"id: {case_id}", prompts)
+
+        required_named = prompts.split(
+            "  - id: gate-pos-required-skill-named-role\n", 1
+        )[1].split("\n  - id:", 1)[0]
+        optional = prompts.split("  - id: gate-neg-optional-skill-route\n", 1)[1].split(
+            "\n  - id:", 1
+        )[0]
+        capability = prompts.split(
+            "  - id: gate-pos-required-skill-capability\n", 1
+        )[1].split("\n  - id:", 1)[0]
+        optout = prompts.split(
+            "  - id: gate-neg-required-skill-user-optout\n", 1
+        )[1].split("\n  - id:", 1)[0]
+        dedup = prompts.split("  - id: gate-pos-required-skill-dedup\n", 1)[1].split(
+            "\n  - id:", 1
+        )[0]
+        recursion = prompts.split(
+            "  - id: gate-neg-required-skill-child-recursion\n", 1
+        )[1].split("\n  - id:", 1)[0]
+        self.assertIn("expected_should_suggest: true", required_named)
+        self.assertIn("expected_roles: [docs-researcher]", required_named)
+        self.assertIn("policy: ask", required_named)
+        self.assertIn("Dispatch Authorization", required_named)
+        self.assertIn("policy: auto", capability)
+        self.assertIn("expected_should_dispatch: true", capability)
+        self.assertIn("expected_should_suggest: false", optional)
+        self.assertIn("expected_should_suggest: false", optout)
+        self.assertIn("policy: auto", dedup)
+        self.assertIn("expected_should_dispatch: true", dedup)
+        self.assertIn("max_active_children: 1", dedup)
+        self.assertIn("dispatch exactly one reviewer", dedup)
+        self.assertIn("expected_should_suggest: false", recursion)
+        self.assertIn("spawn a descendant", recursion)
 
         scenarios = (ROOT / "evals" / "scenarios.md").read_text()
         rubric = (ROOT / "evals" / "rubric.md").read_text()

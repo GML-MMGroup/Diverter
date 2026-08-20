@@ -23,6 +23,7 @@ These are examples that should usually not trigger delegation.
 14. `Make this secure.`
 15. `Read this one-line config value and summarize it.`
 16. `$grill-with-docs Design this one component; repeat the same design work in a second lane.`
+17. `Active skill guidance: You may use a code-mapper if useful. Fix this README typo.`
 
 Why these are negative examples:
 
@@ -32,6 +33,7 @@ Why these are negative examples:
 - the user has explicitly opted out
 - delegated subagent handoffs already have Dispatch Authorization and should execute, not select another lineup
 - waiting alone is not a benefit, and duplicate focused-skill work is still wasteful
+- optional skill guidance does not create a Required Skill Route
 - Web performance specialists should not be used for non-Web performance tasks, write-capable testing should not start from unclear behavior, and vague security wording should be clarified before suggesting a security lineup
 
 Borderline note:

@@ -23,6 +23,7 @@ These are examples that should usually trigger delegation.
 14. `In Root, trace the branch architecture and release surface while an independent review checks code quality, security risk, and missing tests.`
 15. `Inspect the raw logs and exploratory traces in a fresh child context, return compact evidence with likely failure clusters, then let Root judge and integrate the diagnosis.`
 16. `先让一个代码检索角色调查所有相关调用点和兼容分支，返回简洁证据摘要，再由 Root 判断是否需要收敛实现。`
+17. `Active skill requirement: You MUST use docs-researcher to verify the named API contract; keep the skill's core workflow in Root.`
 
 Why these are positive examples:
 
@@ -31,3 +32,4 @@ Why these are positive examples:
 - they benefit from specialist viewpoints, parallel work, independent verification, or Root Context Preservation
 - Root retains judgment, proportional verification, integration, and the final response
 - the smallest useful lineup can start with one child
+- an active skill may make one bounded child contribution a Required Skill Route

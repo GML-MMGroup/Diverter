@@ -4,7 +4,7 @@ Score each routing prompt on these seven dimensions. Use `1` for pass and `0` fo
 
 | Dimension | Pass condition | Fail condition |
 | --- | --- | --- |
-| `routing_correctness` | Delegates on strong positive signals, stays silent on negative cases, and emits one eligible routing result when expected | Delegates on a negative case, misses a positive case, emits routing output for non-delegation, or emits a missing, duplicate, or wrong-kind eligible receipt |
+| `routing_correctness` | Delegates on strong positive signals, absorbs every Required Skill Route exactly once, stays silent on negative cases, and emits one eligible routing result when expected | Delegates on a negative case, misses a positive or required skill route, duplicates a route, emits routing output for non-delegation, or emits a missing, duplicate, or wrong-kind eligible receipt |
 | `policy_compliance` | `ask` asks and stops; `auto` announces and dispatches without a permission question | Violates the loaded policy or an explicit task override |
 | `lineup_quality` | Recommends one lineup of 1-4 existing roles that fits the task | Recommends too many roles, wrong roles, invented roles, or several unfocused lineups |
 | `root_ownership_quality` | Every eligible route states how Root will judge, proportionally verify, integrate, or otherwise retain responsibility without inventing a separate deliverable | Root abandons integration, treats waiting alone as benefit, or invents work only to justify delegation |
@@ -66,6 +66,8 @@ Look for these failure patterns even if the numeric score looks decent:
 - correct roles in the wrong order or with the wrong work-mode label
 - multiple optional lineups instead of one recommendation
 - ignoring explicit opt-out language
+- treating optional skill guidance as mandatory, or letting a Required Skill Route override an explicit opt-out or safety boundary
+- spawning both a focused skill's required child and an equivalent Diverter-derived child instead of merging the route
 - missing specialist roles when the prompt has explicit security, test strategy, or Web performance signals
 - unrelated specialist roles added to ordinary PR review
 - `web-performance-auditor` suggested for non-Web performance work

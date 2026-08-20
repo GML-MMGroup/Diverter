@@ -17,6 +17,8 @@ Every child receives a self-contained, leaf-only handoff.
 | `write_ownership` | exclusive mutable artifact or bounded scope; `none` for read-only |
 | `open_questions` | unresolved unknowns to keep visible |
 
+For a Required Skill Route, preserve the skill-defined child task in `goal` and `deliverable`, identify the originating skill requirement in `relevant_context` or `constraints`, and keep the focused skill's core workflow in `scope_out`.
+
 Recommended template:
 
 ```md
